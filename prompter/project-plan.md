@@ -49,40 +49,45 @@ Jasa Raharja's sports community needs a centralized platform to organize, discov
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | React (Vite) + TypeScript + Tailwind CSS |
-| **Backend** | Convex (self-hosted, open-source) |
-| **Database** | Convex built-in (document DB with real-time sync) |
-| **Real-Time** | Convex subscriptions (built-in) |
+| **Frontend** | React + TypeScript + Tailwind CSS (via Inertia.js) |
+| **Backend** | Laravel 12 |
+| **Database** | PostgreSQL |
+| **Real-Time** | Laravel Reverb (WebSocket) |
+| **ORM** | Eloquent + Laravel migrations |
 | **PWA** | Vite PWA plugin + Web Push API |
 | **Containerization** | Docker + Docker Compose |
 
 ## Integrations
 
-- Real-time (Convex built-in subscriptions)
-- Push Notifications (Web Push API)
+- Real-time (Laravel Reverb — WebSocket server for live scoring)
+- Push Notifications (Web Push API + Laravel queues)
 
 ## Non-Functional Requirements
 
 - **Users**: <1k (internal community)
 - **SEO**: Not needed (internal app)
-- **Security**: Standard auth (email/password)
+- **Security**: Standard auth (email/password via Laravel Breeze)
 
 ## Deployment
 
 - **Host**: VPS (DigitalOcean, Hetzner, or similar)
 - **Container**: Docker + Docker Compose
 - **Environments**: Production only
-- **Convex**: Self-hosted via Docker
+- **Services**: PHP-FPM + nginx + PostgreSQL + Reverb
 
 ## Recommended Next Steps
 
-1. `npm create convex@latest` — Scaffold React + Convex project
-2. Configure Vite PWA plugin
-3. Set up Docker Compose for self-hosted Convex
-4. Implement auth and user profiles
-5. Build activity CRUD and joining flow
-6. Add team management
-7. Build league/competition system
-8. Implement live scoring with Convex subscriptions
-9. Build leaderboard system
-10. Add push notifications
+1. `composer create-project laravel/laravel:^12.0 jrclub` — Scaffold Laravel project
+2. Install Inertia.js + React + TypeScript + Tailwind CSS
+3. Install Laravel Breeze (Inertia/React stack) for auth scaffolding
+4. Install Laravel Reverb for WebSocket support
+5. Configure Vite PWA plugin
+6. Set up Docker Compose (PHP-FPM, nginx, PostgreSQL, Reverb)
+7. Define PostgreSQL migrations and Eloquent models
+8. Implement auth and user profiles
+9. Build activity CRUD and joining flow
+10. Add team management
+11. Build league/competition system
+12. Implement live scoring with Reverb broadcasts
+13. Build leaderboard system
+14. Add push notifications via queue jobs

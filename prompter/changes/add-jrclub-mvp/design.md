@@ -1,15 +1,16 @@
 ## Context
 
-JR Club is a greenfield PWA for Jasa Raharja's internal sports community (<1k users). The app must support real-time live scoring, team management, and league competitions. Self-hosted Convex on a VPS with Docker is the deployment target.
+JR Club is a greenfield PWA for Jasa Raharja's internal sports community (<1k users). The app must support real-time live scoring, team management, and league competitions. Dockerized on a VPS (single production environment).
 
 ## Goals / Non-Goals
 
 - Goals:
   - Deliver a mobile-first PWA with offline-capable shell
-  - Real-time live scoring using Convex subscriptions
-  - Simple role-based access (Member / Admin)
-  - Dockerized self-hosted Convex backend on VPS
-  - Push notifications via Web Push API
+  - Real-time live scoring using Laravel Reverb (WebSocket)
+  - Simple role-based access (Member / Admin) via Laravel Gates
+  - Full-stack Inertia.js — no separate REST/GraphQL API
+  - Push notifications via Web Push API + Laravel queues
+  - Dockerized deployment on VPS (PHP-FPM + nginx + PostgreSQL + Reverb)
 
 - Non-Goals:
   - SEO optimization (internal app)
@@ -17,70 +18,76 @@ JR Club is a greenfield PWA for Jasa Raharja's internal sports community (<1k us
   - Chat/messaging (v2)
   - File uploads / media storage (v2)
   - Multi-tenant architecture
+  - Separate mobile app (React Native, etc.)
 
 ## Decisions
 
-- **Frontend: React (Vite) + TypeScript + Tailwind CSS**
-  - Why: No SSR needed (internal app), Vite is fast, Tailwind accelerates mobile-first UI
-  - Alternatives: Next.js (overkill without SEO needs), React Native (PWA is simpler for this scope)
+- **Backend: Laravel 12**
+  - Why: Mature full-stack framework, excellent Inertia integration, built-in auth (Breeze), Eloquent ORM, Reverb for WebSockets, queues for notifications
+  - Alternatives: Node/Express (less batteries-included), Convex (OSS self-hosting less mature)
 
-- **Backend: Convex (self-hosted)**
-  - Why: Built-in real-time subscriptions eliminate WebSocket boilerplate, document DB fits the data model, self-hosted keeps data on client infrastructure
-  - Alternatives: Express + PostgreSQL + Socket.io (more boilerplate), Supabase (real-time less mature)
+- **Frontend: React + TypeScript + Inertia.js**
+  - Why: Inertia eliminates the need for a separate API layer — Laravel controllers return Inertia::render() directly. React for reactive UI, TypeScript for type safety.
+  - Alternatives: Vue (less TypeScript adoption in team), Next.js (overkill without SEO needs)
 
-- **PWA: Vite PWA Plugin + Workbox**
-  - Why: Standard approach for Vite-based PWAs, handles service worker generation and caching
+- **Database: PostgreSQL**
+  - Why: Richer feature set than MySQL, JSON support, better for complex standings queries
+  - Alternatives: MySQL (fine but less capable for complex aggregates)
 
-- **Auth: Convex Auth**
-  - Why: Integrated with Convex, supports email/password out of the box
-  - Alternatives: Clerk (adds external dependency), custom JWT (unnecessary complexity)
+- **Real-Time: Laravel Reverb**
+  - Why: First-party Laravel WebSocket server, uses the same Broadcasting API as Pusher. Zero external service dependency, self-hosted in Docker.
+  - Alternatives: Pusher (external service + cost), Soketi (third-party OSS), Socket.io (not Laravel-native)
 
-- **Deployment: Docker Compose on VPS**
-  - Why: Self-hosted Convex requires containerization, single VPS is sufficient for <1k users
-  - Services: Convex backend, React frontend (nginx), reverse proxy
+- **Auth: Laravel Breeze (Inertia/React stack)**
+  - Why: Official Laravel starter kit with Inertia + React scaffolding, email/password out of the box
+  - Alternatives: Jetstream (heavier), Sanctum SPA (requires separate API setup)
 
-## Data Model Overview
+- **PWA: Vite PWA Plugin (vite-plugin-pwa)**
+  - Why: Works seamlessly with Laravel's Vite integration, handles Workbox service worker generation and web manifest
 
-```
-Users
-  - _id, name, email, role (member|admin), createdAt
+## Data Model
 
-Sports
-  - _id, name, icon, maxPlayersPerTeam, description
+```sql
+users
+  id, name, email, password, role (member|admin), email_verified_at, push_subscription (json), timestamps
 
-Activities
-  - _id, sportId, createdBy, title, description, location, dateTime, maxParticipants, status (open|full|completed|cancelled)
+sports
+  id, name, icon, max_players_per_team, description, timestamps
 
-ActivityParticipants
-  - _id, activityId, userId, joinedAt
+activities
+  id, sport_id, created_by, title, description, location, scheduled_at, max_participants, status (open|full|completed|cancelled), timestamps
 
-Teams
-  - _id, name, sportId, createdBy, createdAt
+activity_participants
+  id, activity_id, user_id, joined_at
 
-TeamMembers
-  - _id, teamId, userId, role (member|captain), joinedAt
+teams
+  id, name, sport_id, created_by, timestamps
 
-Leagues
-  - _id, name, sportId, description, startDate, endDate, status (upcoming|active|completed), createdBy
+team_members
+  id, team_id, user_id, role (member|captain), joined_at
 
-LeagueTeams
-  - _id, leagueId, teamId, registeredAt
+leagues
+  id, name, sport_id, description, start_date, end_date, status (upcoming|active|completed), created_by, timestamps
 
-Matches
-  - _id, leagueId, homeTeamId, awayTeamId, scheduledAt, status (scheduled|live|completed), homeScore, awayScore
+league_teams
+  id, league_id, team_id, registered_at
 
-Leaderboard (derived/computed)
-  - leagueId, teamId, played, won, drawn, lost, goalsFor, goalsAgainst, points
+matches
+  id, league_id, home_team_id, away_team_id, scheduled_at, status (scheduled|live|completed), home_score (default 0), away_score (default 0), timestamps
+
+league_standings (computed view or cached table)
+  league_id, team_id, played, won, drawn, lost, goals_for, goals_against, points
 ```
 
 ## Risks / Trade-offs
 
-- **Convex self-hosting maturity** — Self-hosted Convex is newer than the cloud version. Mitigation: pin to a stable release, monitor Convex OSS releases.
-- **Single VPS** — No redundancy for <1k users. Mitigation: automated backups, VPS provider snapshots. Scale to multi-node if usage grows.
-- **PWA limitations** — iOS has limited push notification support. Mitigation: use Web Push API which iOS Safari now supports (iOS 16.4+).
+- **Inertia full-page reloads on navigation** — Inertia handles this via XHR, so navigation is SPA-like. Not a real risk.
+- **Reverb scaling** — single-server Reverb is sufficient for <1k users. Scale to Pusher-compatible service if needed later.
+- **PWA on iOS** — Web Push API requires iOS 16.4+ Safari. Mitigation: document minimum requirements, graceful degradation for older iOS.
+- **Standing computation** — Computed on the fly via Eloquent aggregation queries. Cache with Laravel Cache if queries become slow (unlikely at <1k scale).
 
 ## Open Questions
 
 - Does Jasa Raharja have specific security/compliance requirements for data hosting?
-- Should the app support multiple languages (Bahasa Indonesia + English)?
-- Are there existing employee directories to integrate with for user provisioning?
+- Should the app support Bahasa Indonesia (localization)?
+- Are there existing employee directories (LDAP/AD) for user provisioning?
