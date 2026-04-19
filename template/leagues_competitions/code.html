@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JR CLUB - Leagues</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eff1f3",
+                        "secondary": "#376093",
+                        "tertiary-container": "#b55002",
+                        "inverse-primary": "#a7c8ff",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-fixed": "#331100",
+                        "on-secondary-fixed-variant": "#1b487a",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#414752",
+                        "primary-fixed-dim": "#a7c8ff",
+                        "surface-container-low": "#f2f4f6",
+                        "tertiary-fixed": "#ffdbca",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#f7f9fb",
+                        "on-secondary-container": "#275284",
+                        "secondary-fixed": "#d4e3ff",
+                        "surface-bright": "#f7f9fb",
+                        "tertiary-fixed-dim": "#ffb68f",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "on-primary-fixed": "#001b3c",
+                        "tertiary": "#8f3d00",
+                        "on-secondary-fixed": "#001c39",
+                        "primary-fixed": "#d5e3ff",
+                        "error": "#ba1a1a",
+                        "on-background": "#191c1e",
+                        "on-primary-container": "#eef2ff",
+                        "on-tertiary-container": "#ffeee8",
+                        "on-surface": "#191c1e",
+                        "on-error": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "surface-dim": "#d8dadc",
+                        "on-primary-fixed-variant": "#004788",
+                        "on-primary": "#ffffff",
+                        "outline": "#717784",
+                        "inverse-surface": "#2d3133",
+                        "secondary-container": "#9fc6ff",
+                        "outline-variant": "#c1c6d5",
+                        "surface-container-highest": "#e0e3e5",
+                        "primary": "#0056a4",
+                        "surface-variant": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#006ecf",
+                        "surface-tint": "#005eb2",
+                        "on-tertiary-fixed-variant": "#773200"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {},
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; color: #191c1e; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
+        .glass-panel { background: rgba(247, 249, 251, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased pb-28 min-h-screen">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-50 glass-panel shadow-[0px_12px_32px_rgba(15,23,42,0.06)] flex justify-between items-center px-6 py-4">
+<div class="text-xl font-black tracking-tighter text-slate-900 uppercase">JR CLUB</div>
+<div class="flex items-center gap-4 text-blue-700">
+<button aria-label="Add" class="hover:bg-slate-100 transition-colors rounded-full p-2">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-surface-container-lowest">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a professional individual with a clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCglqOpOIawCMrsahuq8K_hG87ACaX88Erb86p3-ok62n-SFXMka2EGh52SoY8RZ-JNcbw06LLDThTvZ6tFGQb8Orkf2PqHz135OFFgnDt25yXiIlAPpSZzUslSB4PYjDCo04VKkENVQ5tUw4pPpEpLmn9wmRG69P-p9_koANIQbUfkfu33X9MZEOuM3O1lPUqQew4TdvrdCRetJyvMQq_7LdEAk3qBqXWesBEapAAZArdUHCV7zlxxoSE6QMwkoWGWMSPdmKGeplY"/>
+</div>
+</div>
+</header>
+<main class="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-12 space-y-8">
+<!-- Leagues Header & Featured Card -->
+<section class="space-y-4">
+<h1 class="text-3xl font-bold tracking-tight text-on-surface">Leagues</h1>
+<div class="bg-surface-container-lowest rounded-xl p-6 relative overflow-hidden flex flex-col justify-end min-h-[200px] shadow-[0px_12px_32px_rgba(15,23,42,0.06)]">
+<!-- Decorative Team/League Background -->
+<div class="absolute -right-10 -bottom-10 opacity-10 w-64 h-64 bg-primary rounded-full blur-3xl"></div>
+<div class="relative z-10 space-y-2">
+<span class="text-xs font-bold uppercase tracking-widest text-primary">Season 2024</span>
+<h2 class="text-2xl font-black tracking-tight text-on-surface">JR Premier League</h2>
+<p class="text-sm text-on-surface-variant max-w-md">The ultimate test of endurance and teamwork across all regional branches.</p>
+</div>
+</div>
+</section>
+<!-- Segmented Control -->
+<div class="flex bg-surface-container-high rounded-full p-1 w-full max-w-sm mx-auto shadow-sm">
+<button class="flex-1 py-2 text-sm font-semibold rounded-full bg-surface-container-lowest text-primary shadow-sm transition-all">Standings</button>
+<button class="flex-1 py-2 text-sm font-medium rounded-full text-on-surface-variant hover:text-on-surface transition-all">Fixtures</button>
+<button class="flex-1 py-2 text-sm font-medium rounded-full text-on-surface-variant hover:text-on-surface transition-all">Results</button>
+</div>
+<!-- Standings Table -->
+<section class="bg-surface-container-high rounded-lg p-1">
+<div class="bg-surface-container-lowest rounded-md overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+<th class="p-3 w-12 text-center">Rnk</th>
+<th class="p-3">Team</th>
+<th class="p-3 text-center w-10">P</th>
+<th class="p-3 text-center w-10">W</th>
+<th class="p-3 text-center w-10">D</th>
+<th class="p-3 text-center w-10">L</th>
+<th class="p-3 text-center w-12 text-primary">Pts</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<!-- Rank 1 -->
+<tr class="border-b border-surface-container-high bg-primary/5 hover:bg-primary/10 transition-colors">
+<td class="p-3 text-center font-bold text-tertiary-container">1</td>
+<td class="p-3 font-semibold text-on-surface flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-bold">JT</div>
+                                Jabar Titans
+                            </td>
+<td class="p-3 text-center text-on-surface-variant">10</td>
+<td class="p-3 text-center text-on-surface-variant">8</td>
+<td class="p-3 text-center text-on-surface-variant">1</td>
+<td class="p-3 text-center text-on-surface-variant">1</td>
+<td class="p-3 text-center font-bold text-primary">25</td>
+</tr>
+<!-- Rank 2 -->
+<tr class="border-b border-surface-container-high bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="p-3 text-center font-bold text-on-surface-variant">2</td>
+<td class="p-3 font-medium text-on-surface flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center text-xs text-secondary font-bold">JS</div>
+                                Jatim Spartans
+                            </td>
+<td class="p-3 text-center text-on-surface-variant">10</td>
+<td class="p-3 text-center text-on-surface-variant">7</td>
+<td class="p-3 text-center text-on-surface-variant">2</td>
+<td class="p-3 text-center text-on-surface-variant">1</td>
+<td class="p-3 text-center font-bold text-primary">23</td>
+</tr>
+<!-- Rank 3 -->
+<tr class="border-b border-surface-container-high bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="p-3 text-center font-bold text-on-surface-variant">3</td>
+<td class="p-3 font-medium text-on-surface flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-tertiary-container/20 flex items-center justify-center text-xs text-tertiary-container font-bold">JK</div>
+                                JKT Knights
+                            </td>
+<td class="p-3 text-center text-on-surface-variant">10</td>
+<td class="p-3 text-center text-on-surface-variant">6</td>
+<td class="p-3 text-center text-on-surface-variant">3</td>
+<td class="p-3 text-center text-on-surface-variant">1</td>
+<td class="p-3 text-center font-bold text-primary">21</td>
+</tr>
+<!-- Rank 4 -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="p-3 text-center text-on-surface-variant">4</td>
+<td class="p-3 text-on-surface flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-variant flex items-center justify-center text-xs text-on-surface-variant font-bold">SM</div>
+                                Sumut Mavericks
+                            </td>
+<td class="p-3 text-center text-on-surface-variant">10</td>
+<td class="p-3 text-center text-on-surface-variant">5</td>
+<td class="p-3 text-center text-on-surface-variant">2</td>
+<td class="p-3 text-center text-on-surface-variant">3</td>
+<td class="p-3 text-center font-bold text-primary">17</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Recent Results -->
+<section class="space-y-4">
+<h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant">Recent Results</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- Result Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)] flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">JT</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Jabar Titans</p>
+<p class="text-xs text-on-surface-variant">Home</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xl font-black text-primary">3</span>
+<span class="text-xs font-bold text-outline-variant">-</span>
+<span class="text-xl font-black text-on-surface-variant">1</span>
+</div>
+<div class="flex items-center gap-3 flex-row-reverse text-right">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant font-bold text-sm">SM</div>
+<div>
+<p class="text-sm font-medium text-on-surface">Sumut Mavericks</p>
+<p class="text-xs text-on-surface-variant">Away</p>
+</div>
+</div>
+</div>
+<!-- Result Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)] flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-tertiary-container/10 flex items-center justify-center text-tertiary-container font-bold text-sm">JK</div>
+<div>
+<p class="text-sm font-medium text-on-surface">JKT Knights</p>
+<p class="text-xs text-on-surface-variant">Home</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xl font-black text-on-surface-variant">0</span>
+<span class="text-xs font-bold text-outline-variant">-</span>
+<span class="text-xl font-black text-on-surface-variant">0</span>
+</div>
+<div class="flex items-center gap-3 flex-row-reverse text-right">
+<div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold text-sm">JS</div>
+<div>
+<p class="text-sm font-medium text-on-surface">Jatim Spartans</p>
+<p class="text-xs text-on-surface-variant">Away</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-4 left-4 right-4 rounded-full z-50 glass-panel shadow-[0px_12px_32px_rgba(15,23,42,0.12)]">
+<div class="flex justify-around items-center w-full max-w-md mx-auto p-2 font-['Inter'] text-[10px] font-bold uppercase tracking-widest text-blue-700">
+<button aria-label="Activities" class="flex flex-col items-center justify-center text-slate-500 hover:text-blue-600 transition-all px-4 py-2">
+<span class="material-symbols-outlined mb-1" data-icon="fitness_center">fitness_center</span>
+<span>Activities</span>
+</button>
+<button aria-label="Leagues" class="flex flex-col items-center justify-center bg-blue-700 text-white rounded-full px-4 py-2 scale-110 shadow-md">
+<span class="material-symbols-outlined mb-1 fill" data-icon="workspace_premium" data-weight="fill">workspace_premium</span>
+<span>Leagues</span>
+</button>
+<button aria-label="Rankings" class="flex flex-col items-center justify-center text-slate-500 hover:text-blue-600 transition-all px-4 py-2">
+<span class="material-symbols-outlined mb-1" data-icon="leaderboard">leaderboard</span>
+<span>Rankings</span>
+</button>
+<button aria-label="Profile" class="flex flex-col items-center justify-center text-slate-500 hover:text-blue-600 transition-all px-4 py-2">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span>Profile</span>
+</button>
+</div>
+</nav>
+</body></html>

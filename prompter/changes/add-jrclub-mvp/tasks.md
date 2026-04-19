@@ -1,3 +1,8 @@
+## 0. UI Reference
+> Before implementing any page, read the corresponding template in `template/<name>/code.html`.
+> The design system tokens are in `prompter/design-system.md`.
+> Screens: `template/<name>/screen.png` for visual reference.
+
 ## 1. Project Setup
 - [x] 1.1 Scaffold Laravel project: `composer create-project laravel/laravel:^12.0`
 - [ ] 1.2 Install Inertia.js server-side adapter (`inertiajs/inertia-laravel`)
@@ -11,18 +16,22 @@
 - [ ] 1.10 Define Eloquent models with relationships
 
 ## 2. User Authentication
+> Template: `template/authentication_login/code.html`
 - [ ] 2.1 Scaffold auth via Laravel Breeze (register, login, logout, password reset)
 - [ ] 2.2 Add `role` column to users table (member|admin) with migration
 - [ ] 2.3 Define Laravel Gates/Policies for admin-only actions
 - [ ] 2.4 Seed default admin user
+- [ ] 2.5 Implement login page matching template (gradient background, bottom-border inputs, "Request access" link)
 
 ## 3. User Profiles
+> Template: `template/user_profile/code.html`
 - [ ] 3.1 Create profile page (Inertia React) — name, email, role, stats
 - [ ] 3.2 Implement profile edit (name update)
 - [ ] 3.3 Add activity history section to profile page
 - [ ] 3.4 Create public profile view for other users (hide email)
 
 ## 4. Sport Activities
+> Template: `template/sport_activities_feed/code.html`
 - [ ] 4.1 Seed sports data (Padel, Basketball, Futsal, Badminton, Volleyball)
 - [ ] 4.2 Create ActivityController with index, show, store, update, destroy
 - [ ] 4.3 Create activity list page (Inertia React) with sport type filter
@@ -33,6 +42,7 @@
 - [ ] 4.8 Implement admin status management (complete, cancel)
 
 ## 5. Team Management
+> Template: `template/team_management/code.html`
 - [ ] 5.1 Create TeamController with CRUD
 - [ ] 5.2 Create team creation form (admin only)
 - [ ] 5.3 Implement add/remove roster member (admin only)
@@ -40,6 +50,7 @@
 - [ ] 5.5 Create "My Teams" page listing user's teams
 
 ## 6. Leagues & Competitions
+> Template: `template/leagues_competitions/code.html`
 - [ ] 6.1 Create LeagueController with CRUD
 - [ ] 6.2 Create league creation form (admin only)
 - [ ] 6.3 Implement team registration to league (admin, sport-type validated)
@@ -49,6 +60,7 @@
 - [ ] 6.7 Implement league status transitions (upcoming → active → completed)
 
 ## 7. Live Scoring
+> Template: `template/live_match_detail/code.html`
 - [ ] 7.1 Create MatchController with start, update-score, end actions
 - [ ] 7.2 Define `MatchScoreUpdated` broadcast event (Reverb channel)
 - [ ] 7.3 Create live scoring admin interface (increment/decrement scores)
@@ -56,6 +68,7 @@
 - [ ] 7.5 Implement end match — finalize score, recalculate standings
 
 ## 8. Leaderboards
+> Template: `template/leaderboards/code.html`
 - [ ] 8.1 Create league leaderboard page (standings from league query)
 - [ ] 8.2 Create overall leaderboard page filtered by sport type
 - [ ] 8.3 Add player stats computation (activities joined, matches played, win rate)

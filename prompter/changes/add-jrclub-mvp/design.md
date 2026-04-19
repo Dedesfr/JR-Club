@@ -2,6 +2,23 @@
 
 JR Club is a greenfield PWA for Jasa Raharja's internal sports community (<1k users). The app must support real-time live scoring, team management, and league competitions. Dockerized on a VPS (single production environment).
 
+### UI Templates
+
+Approved HTML/Tailwind templates are provided in `template/`. Every page implementation MUST match its corresponding template. Do not invent layouts or components — translate the template to React/Inertia.
+
+| Template | Path | Inertia Page |
+|----------|------|--------------|
+| Login | `template/authentication_login/code.html` | `Pages/Auth/Login.tsx` |
+| Activity Feed | `template/sport_activities_feed/code.html` | `Pages/Activities/Index.tsx` |
+| Leagues & Competitions | `template/leagues_competitions/code.html` | `Pages/Leagues/Index.tsx` |
+| Live Match Detail | `template/live_match_detail/code.html` | `Pages/Matches/Show.tsx` |
+| Team Management | `template/team_management/code.html` | `Pages/Teams/Index.tsx` |
+| Leaderboards | `template/leaderboards/code.html` | `Pages/Leaderboards/Index.tsx` |
+| User Profile | `template/user_profile/code.html` | `Pages/Profile/Show.tsx` |
+
+Design system specification: `template/rahardja_kinetic/DESIGN.md`
+Extracted Tailwind tokens: `prompter/design-system.md`
+
 ## Goals / Non-Goals
 
 - Goals:
