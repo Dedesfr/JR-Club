@@ -33,6 +33,7 @@ export type League = {
     description?: string;
     status: string;
     start_date: string;
+    end_date?: string;
     sport: Sport;
     teams?: Team[];
     matches?: GameMatch[];

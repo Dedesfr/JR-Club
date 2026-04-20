@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Activity Details - Padel</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e0e3e5",
+                    "on-tertiary-fixed-variant": "#783200",
+                    "on-surface": "#191c1e",
+                    "tertiary-fixed": "#ffdbca",
+                    "surface-container-high": "#e6e8ea",
+                    "primary-fixed": "#d5e3ff",
+                    "on-secondary-fixed": "#001b3c",
+                    "on-primary-fixed-variant": "#004788",
+                    "tertiary": "#6c2c00",
+                    "outline-variant": "#c2c6d3",
+                    "surface-container": "#eceef0",
+                    "on-background": "#191c1e",
+                    "on-tertiary-container": "#ffbe9c",
+                    "on-surface-variant": "#424751",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "inverse-primary": "#a7c8ff",
+                    "on-secondary-fixed-variant": "#004788",
+                    "inverse-on-surface": "#eff1f3",
+                    "tertiary-fixed-dim": "#ffb690",
+                    "on-primary-fixed": "#001b3c",
+                    "primary": "#003f7b",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#a7c8ff",
+                    "secondary-fixed-dim": "#a7c8ff",
+                    "secondary": "#005eb2",
+                    "on-secondary-container": "#003365",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#d5e3ff",
+                    "outline": "#727782",
+                    "surface-dim": "#d8dadc",
+                    "primary-container": "#0056a4",
+                    "error-container": "#ffdad6",
+                    "background": "#f7f9fb",
+                    "inverse-surface": "#2d3133",
+                    "surface": "#f7f9fb",
+                    "surface-bright": "#f7f9fb",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#331100",
+                    "surface-tint": "#165ead",
+                    "surface-variant": "#e0e3e5",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#903e01",
+                    "secondary-container": "#529cff",
+                    "surface-container-low": "#f2f4f6",
+                    "on-primary-container": "#b0cdff",
+                    "on-primary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {},
+            "fontFamily": {
+                    "headline": [
+                            "Inter"
+                    ],
+                    "body": [
+                            "Inter"
+                    ],
+                    "label": [
+                            "Inter"
+                    ]
+            }
+        },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb; /* Global Surface */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface antialiased flex flex-col min-h-screen">
+<!-- TopAppBar Semantic Shell -->
+<header class="bg-white/85 dark:bg-slate-900/85 backdrop-blur-md sticky top-0 w-full z-50 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] no-border flex items-center justify-between px-6 py-4">
+<button class="hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors active:scale-95 duration-200 p-2 rounded-full flex items-center justify-center text-[#003f7b] dark:text-blue-400">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-bold tracking-[-0.04em] text-lg text-[#003f7b] dark:text-blue-400">Activity Details</h1>
+<button class="hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors active:scale-95 duration-200 p-2 rounded-full flex items-center justify-center text-[#003f7b] dark:text-blue-400">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</header>
+<main class="flex-grow pb-24 px-4 pt-6 space-y-6 max-w-lg mx-auto w-full">
+<!-- Hero Section -->
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] flex flex-col items-center text-center space-y-4">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined text-3xl" data-icon="sports_tennis" style="font-variation-settings: 'FILL' 1;">sports_tennis</span>
+</div>
+<h2 class="font-black text-3xl tracking-[-0.04em] text-on-surface">Padel Men's Double</h2>
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full">Intermediate</span>
+</section>
+<!-- Info Block -->
+<section class="bg-surface-container-low rounded-xl p-5 space-y-4">
+<div class="flex items-center space-x-3">
+<span class="material-symbols-outlined text-primary" data-icon="calendar_today">calendar_today</span>
+<div>
+<p class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Date &amp; Time</p>
+<p class="font-bold text-on-surface tracking-[-0.02em]">TODAY, 18:00</p>
+</div>
+</div>
+<div class="flex items-center space-x-3">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+<div>
+<p class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Location</p>
+<p class="font-bold text-on-surface tracking-[-0.02em]">Center Court A - JR Club Downtown</p>
+</div>
+</div>
+</section>
+<!-- Description -->
+<section class="px-2">
+<h3 class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant mb-2">Details</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                Intermediate level double match. Looking for one more player to complete the set. Bring your own racket, balls will be provided.
+            </p>
+</section>
+<!-- Participants Section -->
+<section class="px-2 space-y-4">
+<div class="flex justify-between items-end mb-2">
+<h3 class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Participants (3/4)</h3>
+</div>
+<div class="space-y-3">
+<!-- Player 1 -->
+<div class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center space-x-3">
+<img alt="Avatar of Alex M." class="w-10 h-10 rounded-full object-cover" data-alt="Portrait of a smiling young man in athletic gear outdoors with soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbsKVOJ-gtEiVTpJ31_e4Zdkz0miaOIdIHFlPCuKQCpDbtH7pdYI4Esqu2n0qgXu2LmRhHCCj_-zGXATTZo0K9cmExEhltxVri6kwdIgto5HVdDVO_dg0Zd_t_KR5SN5f3aDzB03BzQ9t9whpE0CA8VlZT-w70UUYyNWLtUpbIEcuz_T3XLJbvKuaDPmf_EvPapIZR42wBLc_kkSXojxtPcagm6Kz-jUTv8EyTxu0CqwopNTFd6N8kOHHHRgGjZyjlfgBt6aAVZPn7"/>
+<div>
+<p class="font-bold text-on-surface tracking-[-0.02em]">Alex M. <span class="text-xs font-normal text-on-surface-variant">(Organizer)</span></p>
+</div>
+</div>
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Advanced</span>
+</div>
+<!-- Player 2 -->
+<div class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center space-x-3">
+<img alt="Avatar of David K." class="w-10 h-10 rounded-full object-cover" data-alt="Close up portrait of a man looking off camera in a bright sunny environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6mbOJcWarGUUxBX2Zq0nCaH6Ylq_zD9uPlkFtn_MgMc2AxefRLwMT_WGroWq7UmpIq-mbG1wF2IXcr3x9mWoQ00IyluVIWTUV0pfh-H6czO480-O4O038thejbvPguTbY5I4N5Iuru-zZx2jvasDkvpyI0XZMdISdrGwDDmC3FC-1F7z1J27RWM1MuKlV6EwHXu9c4nC9-yYmLRDmih2CbzgUIqYHZctmfNHCcfO0DxlfoJjDxg5X5M2737MtIVSynikrrK3uo9ui"/>
+<div>
+<p class="font-bold text-on-surface tracking-[-0.02em]">David K.</p>
+</div>
+</div>
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Intermediate</span>
+</div>
+<!-- Player 3 -->
+<div class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center space-x-3">
+<img alt="Avatar of Sam R." class="w-10 h-10 rounded-full object-cover" data-alt="Portrait of a young man smiling with a blurred urban background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhcxQ4Q-e4h1j_snKRrC5JAYIwRApOH0kB_e6Aus8hT92sGF_WmVw6gUQszFzePB8Lepa6Y69A42-zH1z_bIatMHvCBt8kEZq52npCZkiOWzD4mFwXzEyrDFAzY4pY5foSPvMp-mIJmkesrL_jtrrbktpf0bmbtPteDtsfOD8JYMNkBrxiJoT0q25-f4BaXXCA0CKJEaaKUwEsYizUHEFhVjH-zZxWt_TpsTb0FPTE9zWatCdqP0BoWsfx2SfpJsrrB9yoTFz4iZlL"/>
+<div>
+<p class="font-bold text-on-surface tracking-[-0.02em]">Sam R.</p>
+</div>
+</div>
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Intermediate</span>
+</div>
+<!-- Empty Slot -->
+<div class="flex items-center space-x-3 p-3 border-2 border-dashed border-outline-variant rounded-lg opacity-60">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+</div>
+<p class="font-bold text-on-surface-variant tracking-[-0.02em]">Waiting for player...</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Sticky CTA -->
+<div class="fixed bottom-0 w-full p-4 bg-gradient-to-t from-surface to-transparent pb-safe z-50">
+<button class="w-full max-w-lg mx-auto block bg-gradient-to-br from-primary to-primary-container text-on-primary rounded text-[0.875rem] font-bold uppercase tracking-[0.05em] py-4 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.2)] active:scale-95 transition-transform duration-200">
+            JOIN ACTIVITY
+        </button>
+</div>
+</body></html>
