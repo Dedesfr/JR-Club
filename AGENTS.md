@@ -24,3 +24,12 @@ A project-level design system is generated and maintained at `prompter/design-sy
 - Contains design tokens: colors, typography, spacing, borders, shadows, breakpoints, and components
 - Consult this file when building UI components or making styling decisions to ensure consistency
 - Regenerate it by invoking the `design-system-generator` skill with updated source material
+
+## JR Club MVP
+
+- Stack: Laravel 12, Inertia React TypeScript, Tailwind CSS, Laravel Reverb, database queues, and PWA service worker support.
+- Domain models: sports, activities, activity participants, teams, team members, leagues, league teams, and matches.
+- Roles: `users.role` is `member` or `admin`; admin-only write actions are guarded by the `admin` Gate.
+- Seed credentials for local development: `admin@jasaraharja.co.id` / `password`.
+- Main authenticated routes: `/activities`, `/teams`, `/leagues`, `/matches/{match}`, `/leaderboards`, and `/profile/show`.
+- UI screens should continue translating the approved templates under `template/*/code.html` and tokens from `prompter/design-system.md`.

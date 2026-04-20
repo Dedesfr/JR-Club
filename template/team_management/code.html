@@ -1,93 +1,84 @@
 <!DOCTYPE html>
 
-<html lang="en"><head>
+<html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>JR CLUB - Team Roster</title>
+<title>JR CLUB - Team Management</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "inverse-on-surface": "#eff1f3",
-                        "secondary": "#376093",
-                        "tertiary-container": "#b55002",
-                        "inverse-primary": "#a7c8ff",
-                        "surface-container-high": "#e6e8ea",
-                        "on-tertiary-fixed": "#331100",
-                        "on-secondary-fixed-variant": "#1b487a",
-                        "on-secondary": "#ffffff",
-                        "on-error-container": "#93000a",
-                        "on-surface-variant": "#414752",
-                        "primary-fixed-dim": "#a7c8ff",
-                        "surface-container-low": "#f2f4f6",
-                        "tertiary-fixed": "#ffdbca",
-                        "surface-container-lowest": "#ffffff",
-                        "surface": "#f7f9fb",
-                        "on-secondary-container": "#275284",
-                        "secondary-fixed": "#d4e3ff",
-                        "surface-bright": "#f7f9fb",
-                        "tertiary-fixed-dim": "#ffb68f",
-                        "secondary-fixed-dim": "#a4c9ff",
-                        "on-primary-fixed": "#001b3c",
-                        "tertiary": "#8f3d00",
-                        "on-secondary-fixed": "#001c39",
-                        "primary-fixed": "#d5e3ff",
-                        "error": "#ba1a1a",
-                        "on-background": "#191c1e",
-                        "on-primary-container": "#eef2ff",
-                        "on-tertiary-container": "#ffeee8",
-                        "on-surface": "#191c1e",
-                        "on-error": "#ffffff",
-                        "surface-container": "#eceef0",
-                        "on-tertiary": "#ffffff",
-                        "background": "#f7f9fb",
-                        "surface-dim": "#d8dadc",
-                        "on-primary-fixed-variant": "#004788",
-                        "on-primary": "#ffffff",
-                        "outline": "#717784",
-                        "inverse-surface": "#2d3133",
-                        "secondary-container": "#9fc6ff",
-                        "outline-variant": "#c1c6d5",
-                        "surface-container-highest": "#e0e3e5",
-                        "primary": "#0056a4",
-                        "surface-variant": "#e0e3e5",
-                        "error-container": "#ffdad6",
-                        "primary-container": "#006ecf",
-                        "surface-tint": "#005eb2",
-                        "on-tertiary-fixed-variant": "#773200"
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    fontFamily: {
-                        "headline": ["Inter", "sans-serif"],
-                        "body": ["Inter", "sans-serif"],
-                        "label": ["Inter", "sans-serif"]
-                    }
-                }
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed-dim": "#a7c8ff",
+                    "secondary": "#005eb2",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#a7c8ff",
+                    "primary": "#003f7b",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#d8dadc",
+                    "primary-container": "#0056a4",
+                    "outline": "#727782",
+                    "secondary-fixed": "#d5e3ff",
+                    "on-secondary-container": "#003365",
+                    "on-error": "#ffffff",
+                    "background": "#f7f9fb",
+                    "surface": "#f7f9fb",
+                    "inverse-surface": "#2d3133",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#f7f9fb",
+                    "tertiary-container": "#903e01",
+                    "surface-variant": "#e0e3e5",
+                    "on-secondary": "#ffffff",
+                    "surface-tint": "#165ead",
+                    "on-tertiary-fixed": "#331100",
+                    "surface-container-low": "#f2f4f6",
+                    "secondary-container": "#529cff",
+                    "on-primary-container": "#b0cdff",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#ffdbca",
+                    "on-surface": "#191c1e",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-tertiary-fixed-variant": "#783200",
+                    "surface-container-high": "#e6e8ea",
+                    "primary-fixed": "#d5e3ff",
+                    "on-primary-fixed-variant": "#004788",
+                    "on-secondary-fixed": "#001b3c",
+                    "surface-container": "#eceef0",
+                    "outline-variant": "#c2c6d3",
+                    "tertiary": "#6c2c00",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#424751",
+                    "on-tertiary-container": "#ffbe9c",
+                    "on-background": "#191c1e",
+                    "on-secondary-fixed-variant": "#004788",
+                    "inverse-primary": "#a7c8ff",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-primary-fixed": "#001b3c",
+                    "tertiary-fixed-dim": "#ffb690"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
             }
-        }
+          },
+        },
+      }
     </script>
 <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .material-symbols-outlined[data-weight="fill"] { font-variation-settings: 'FILL' 1; }
-        
-        /* Editorial Styling Enforcements */
-        .glass-panel { background: rgba(247, 249, 251, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        .tonal-shadow { box-shadow: 0px 12px 32px rgba(15, 23, 42, 0.06); }
-        .editorial-display { letter-spacing: -0.02em; }
-        .editorial-label { letter-spacing: 0.05em; text-transform: uppercase; }
-        .editorial-gradient { background: linear-gradient(135deg, #0056a4 0%, #006ecf 100%); }
+        body { font-family: 'Inter', sans-serif; }
     </style>
 <style>
     body {
@@ -95,153 +86,140 @@
     }
   </style>
   </head>
-<body class="bg-surface text-on-surface antialiased min-h-screen pb-24 md:pb-0">
-<!-- TopAppBar (Web) -->
-<header class="hidden md:flex justify-between items-center px-6 py-4 w-full sticky top-0 z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md shadow-[0px_12px_32px_rgba(15,23,42,0.06)]">
+<body class="bg-surface text-on-surface pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md shadow-sm">
+<div class="flex items-center justify-between px-6 py-4 w-full">
 <div class="flex items-center gap-4">
-<h1 class="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase font-['Inter'] antialiased">JR CLUB</h1>
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold overflow-hidden">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Portrait of a smiling young man in a clean studio setting, soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaPybxRpGctIbQ01nmzeuLPvt1o_xiF-6jDj86IxlAnRz1YwgPPodnrRJC9WKROwo5j3mFr25SrfngqObzlB1wk6VGry73LQOGDJBV_AU6xBwzDw0BiwN-BA5ZZB9W_7d7V-UwDGni6QwVFtlFlL6HCcp70Mrv4_qu1v5f8m3cBy8NealVKQylhxHZRT0cZKwAX7AW5Zun9a3IPxhPrHcI732uw0kfPk1z9dIfVd6gO7214niC4OPgPByWOdENayX2P2hsu7QF7eyj"/>
 </div>
-<nav class="flex gap-8">
-<a class="text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors px-3 py-2 rounded-md" href="#">Activities</a>
-<a class="text-blue-700 dark:text-blue-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors px-3 py-2 rounded-md scale-95 duration-200" href="#">Leagues</a>
-<a class="text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors px-3 py-2 rounded-md" href="#">Rankings</a>
-<a class="text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors px-3 py-2 rounded-md" href="#">Profile</a>
-</nav>
-<div class="flex items-center gap-4">
-<button class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors">
-<span class="material-symbols-outlined" data-icon="add">add</span>
+<h1 class="text-xl font-black tracking-tighter text-primary dark:text-blue-400">JR CLUB</h1>
+</div>
+<button class="scale-95 active:transition-transform hover:opacity-80 transition-opacity text-primary dark:text-blue-400">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
 </button>
-<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-surface-container-lowest shadow-sm">
-<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="close up professional portrait of a confident young man in a well-lit studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAI2Goj6sfNO-4eXi94HvUDIzhXtw8zySbl0ypzNjzqGJy9lWVZEH1e_zTUzaSJDldIVxKe0-ZPtUSxfuBF_sXft_kvbsG7tbYDEfvw5lk6cIjNc1gA8FFYYIqbmggXXojqwrxhbPbSKyLTP9upbFADEFFhw2tNWmUvFz8-HQLr9X7lPlIeKRVYa4JDpevt_C6P8A9JnJ7zUs_Oqtlrc39O3ut2T1eO2kLNBLwpR0J5OgP5I2oCjv9L_cu5TA3BICjttSgzJDv9Rzg"/>
-</div>
 </div>
 </header>
-<!-- Mobile Header (Transparent back) -->
-<header class="md:hidden sticky top-0 z-40 w-full px-4 py-4 flex justify-between items-center bg-transparent backdrop-blur-sm">
-<button class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-colors">
-<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+<main class="pt-24 px-4 max-w-md mx-auto flex flex-col gap-8">
+<!-- Hero Card -->
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] flex flex-col gap-6">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant mb-2 block">Team Management</span>
+<h2 class="text-3xl font-black tracking-tight text-on-surface leading-none">FC Kinetica</h2>
+</div>
+<div class="bg-surface-container-low p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="flex flex-col">
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Players</span>
+<span class="text-4xl font-black tracking-tighter text-on-surface">12</span>
+</div>
+<div class="w-px bg-surface-container-highest"></div>
+<div class="flex flex-col">
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Trophies</span>
+<span class="text-4xl font-black tracking-tighter text-on-surface">2</span>
+</div>
+</div>
+</section>
+<!-- Roster List -->
+<section class="flex flex-col gap-4">
+<h3 class="text-xl font-bold tracking-tight text-on-surface px-2">Active Roster</h3>
+<div class="bg-surface-container-low rounded-lg p-2 flex flex-col gap-2">
+<!-- Row 1 (Captain) -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-primary-container">
+<img alt="Player" class="w-full h-full object-cover" data-alt="Portrait of a serious male athlete in sportswear, studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAK3SdHTIL0GMsAE3cUjRL1morAyCiQww8xSf6GV1qv9ToYKBA2D4kvUf1A8t3ByfYZEsfmjZNKe7nQkcp7j9_4xX8I6HJN8FsFaBXujlLfUQ6tT-iF1oGf5_iFKZMTViNVYvkOItas1wMfzbw6VeekMlHQjlEZBfc_dCVTCiZvHGTDx_vMYHm1b3LNJUE4hQtg6eP8trncGZVu6C1RButuTIv-39HxxR31rlpXb56SpWKgk0XcIOTiNfwEcxgRl8JTzQ241k8OWqpI"/>
+</div>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface tracking-tight">Marcus Vance</span>
+<span class="text-sm text-on-surface-variant">m.vance@jrclub.com</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] bg-primary text-on-primary px-2 py-1 rounded">Captain</span>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">more_vert</span>
 </button>
-</header>
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-[-72px] md:mt-8 space-y-8">
-<!-- Team Hero Section -->
-<section class="relative w-full rounded-2xl overflow-hidden min-h-[300px] flex flex-col justify-end p-6 md:p-10 editorial-gradient shadow-[0px_12px_32px_rgba(15,23,42,0.15)]">
-<!-- Background Texture/Image Overlay -->
-<div class="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&amp;fit=crop&amp;q=80&amp;w=1200')] bg-cover bg-center mix-blend-overlay" data-alt="abstract dynamic sports stadium lighting with geometric shadows and strong contrasts"></div>
-<div class="relative z-10 flex flex-col md:flex-row items-start md:items-end gap-6 w-full">
-<div class="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-white flex items-center justify-center p-2 shadow-lg shrink-0">
-<img alt="Team Logo" class="w-full h-full object-contain" data-alt="minimalist modern corporate sports team logo featuring geometric shapes in blue and orange" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUl_kNQO9Ey40-8lLc_wAOT8TiqN35g5zef4_dvQy8FxjIfUrYM2wvXD-SKUtiJHiMka2rVgjF0esdbBrIKtN8dAxZ9_S7ctqt67JmXHORS7P2hceAu1XoxFsoSttwnoX11M5iu4plC9_g51gbj0jCR1DY2xkdzBJGEbCRD1JfxdAd8OSsVXbZR_e63w2Fv0tqe6qrAghYBMttQd4hNteGl_Xu6ABW82hgzv4cHb1xlBCpxkHfY9ORqjjUqPHTtQdP5IL8xyXmvJM"/>
-</div>
-<div class="flex-grow">
-<span class="text-white/80 font-label text-[10px] uppercase tracking-widest block mb-1">Corporate League Division A</span>
-<h1 class="text-4xl md:text-5xl font-black text-white editorial-display leading-tight">Jakarta Central Dynamics</h1>
-</div>
-<div class="shrink-0">
-<button class="bg-white text-primary px-6 py-3 rounded-full font-bold text-sm tracking-wide shadow-lg hover:bg-surface transition-transform active:scale-95">Follow Team</button>
 </div>
 </div>
-</section>
-<!-- Metrics Block (Bento Grid Style) -->
-<section class="grid grid-cols-3 gap-4 md:gap-6">
-<div class="bg-surface-container-lowest p-5 rounded-xl tonal-shadow flex flex-col justify-center">
-<span class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest block mb-2">Matches Played</span>
-<span class="text-3xl font-black text-primary editorial-display">12</span>
-</div>
-<div class="bg-surface-container-lowest p-5 rounded-xl tonal-shadow flex flex-col justify-center">
-<span class="text-on-surface-variant font-label text-[10px] uppercase tracking-widest block mb-2">Win Rate</span>
-<span class="text-3xl font-black text-primary editorial-display">75%</span>
-</div>
-<div class="bg-inverse-surface p-5 rounded-xl shadow-lg flex flex-col justify-center">
-<span class="text-surface-variant font-label text-[10px] uppercase tracking-widest block mb-2">Season Points</span>
-<span class="text-3xl font-black text-primary-fixed editorial-display">24</span>
-</div>
-</section>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-<!-- Left Column: Roster List -->
-<section class="lg:col-span-2 space-y-4">
-<div class="flex justify-between items-end mb-6">
-<div>
-<h2 class="text-2xl font-bold text-on-surface editorial-display">Active Roster</h2>
-<p class="text-sm text-on-surface-variant">2023/2024 Season</p>
-</div>
-</div>
-<div class="bg-surface-container-high rounded-xl p-2 space-y-2">
-<!-- Roster Item 1 (Captain) -->
-<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between hover:bg-surface transition-colors cursor-pointer group">
+<!-- Row 2 -->
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-lowest transition-colors">
 <div class="flex items-center gap-4">
-<div class="relative">
-<img alt="Player Avatar" class="w-12 h-12 rounded-full object-cover border-2 border-surface" data-alt="portrait of a serious male athlete looking forward with a solid dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU8Pikk7SVFkrRG5LBmrLVorZiDGI3sozS-QXBf4O2ULml-E2oh4jkQkg32c8o5k6uDn0nxaC_JxPXc6_pNkz-MiY_D-A4f0Ca8FEr4ogo6jvTkRuPtbsgP2MulIi-cO_2zrXLqQy_mVHDpJzVNpkuu_g8B0C4fIBaa9OqmgY1Mg_GIS7zBcC1qLog-_jWkSUXUMDgn-nrKI38DFs76Vh6sn2yK3JhW1AwpqwnCQHdM_QZ4i9h6Xo6SJwcf-nqOJIEynQA_Dq1D9o"/>
-<div class="absolute -bottom-1 -right-1 w-5 h-5 bg-tertiary rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-surface" title="Captain">C</div>
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="Player" class="w-full h-full object-cover" data-alt="Portrait of a smiling female athlete looking confident" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-Q4J9f1UJlB4rNLhWUwWW7uCQCN92BbGRFz8gNw-e-iemJPjdDn86vx6PoPkkzJjw7ZJ7Ru3ssXyWXWXI5y8TmFRr_wYeH0xwoHfNdJvJeJCgI59DqQrnZxeib43w6bPU5j4Ju3mfZg0gGgbxKJHZ4IKKoV55auvunnfXACCxxzIJOfMgl4kDdVqjWIazKPEjKWDtOkwlR5C4QEucODbbFW_PIpUe9sySFNiwVr7v4GMMNDHhb_7rB2l7UB0PkTrqBUFhQBqMuzO1"/>
 </div>
-<div>
-<h3 class="font-bold text-on-surface group-hover:text-primary transition-colors">Budi Santoso</h3>
-<p class="text-xs text-on-surface-variant font-label tracking-wide">Forward • #10</p>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface tracking-tight">Sarah Jenkins</span>
+<span class="text-sm text-on-surface-variant">s.jenkins@jrclub.com</span>
 </div>
 </div>
-<span class="material-symbols-outlined text-outline-variant group-hover:text-primary" data-icon="chevron_right">chevron_right</span>
+<div class="flex items-center gap-3">
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] bg-surface-container-high text-on-surface px-2 py-1 rounded">Member</span>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
 </div>
-<!-- Roster Item 2 -->
-<div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between hover:bg-surface transition-colors cursor-pointer group">
+</div>
+<!-- Row 3 -->
+<div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-lowest transition-colors">
 <div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-surface">
-<img alt="Player Avatar" class="w-full h-full object-cover" data-alt="portrait of a confident female athlete with hair pulled back against a light background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdO07lP4JGRDseYbTJ8kFjqkdFWxi5ckbgyIk2NYFoxdOdd6fQPofaRSTUauGIPKVfeVKNHfKELpUFOkFmR9Hmev90rzsyJFoV8tYfBVcB7O3KHibZyALUijqIcuQFkA71UsnxJwSoCgVQTrsJt93qPZNOe6bmM3I46APIxriTz0S21rhjYmXUdgRSS4VR6c441DwLgHX_2qBHDdMRPS09L4RH9jvfiTnk8a19vp3dfehR0yD4D5Vd6DnYop_x5t7VliKaWuRWyQs"/>
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="Player" class="w-full h-full object-cover" data-alt="Portrait of a focused male athlete, close up, warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmfTSSAT5yKJ-do0Z3wZ0JN6uluS8CuSKo-6k1YlOkxAXW4KH7p6KPbbJnSBctUUk6YeBtwCffDsTkiVe2sIOepeltUUrihphWZf0ZEg-1PjqG83L0JYqBHtKkeJzFvTiMKQKDvGyJd2z-X2inbFkMcug6kK51srFUUu7nzWL96obX08P-N9F5yb50Urgratx72jfCKQuRt4s7s7kM0g6XHdDzN0-iXdXV62cE2xZu-nUCXiNF1NhVwLr3LchFChvulMWFclH50y41"/>
 </div>
-<div>
-<h3 class="font-bold text-on-surface group-hover:text-primary transition-colors">Siti Rahmawati</h3>
-<p class="text-xs text-on-surface-variant font-label tracking-wide">Midfielder • #8</p>
+<div class="flex flex-col">
+<span class="font-bold text-on-surface tracking-tight">David Cho</span>
+<span class="text-sm text-on-surface-variant">d.cho@jrclub.com</span>
 </div>
 </div>
-<span class="material-symbols-outlined text-outline-variant group-hover:text-primary" data-icon="chevron_right">chevron_right</span>
+<div class="flex items-center gap-3">
+<span class="text-[0.6875rem] font-bold uppercase tracking-[0.05em] bg-surface-container-high text-on-surface px-2 py-1 rounded">Member</span>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
 </div>
 </div>
 </section>
-<!-- Right Column: Upcoming Matches -->
-<aside class="space-y-4">
-<div class="flex justify-between items-end mb-6">
-<h2 class="text-xl font-bold text-on-surface editorial-display">Upcoming</h2>
-<a class="text-sm font-bold text-primary hover:text-primary-container transition-colors uppercase tracking-wider text-[10px]" href="#">View All</a>
-</div>
-<!-- Match Card 1 -->
-<div class="bg-surface-container-lowest p-5 rounded-xl tonal-shadow hover:scale-[0.98] transition-transform cursor-pointer">
-<div class="flex justify-between items-center mb-4">
-<span class="bg-surface-container px-2 py-1 rounded text-[10px] font-bold text-on-surface-variant tracking-wider uppercase">Oct 15, 14:00</span>
-<span class="text-xs font-bold text-tertiary-container bg-tertiary-fixed px-2 py-1 rounded">League Match</span>
-</div>
-<div class="flex items-center justify-between">
-<div class="flex flex-col items-center gap-2">
-<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden">
-<img alt="Home Team" class="w-full h-full object-contain p-1" data-alt="minimalist logo geometric blue" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcN4rcBsg09KEnaZmVSUTAPctD6zbXjW5aGpMadDE1WPZJC4HCWAtnLbBCK1gqFhicn7MalHQxG4OKwg0IPG_HglNBVDEhH3lKQ5LiWvh4jMknihNYjndduLr7-dvVzEWOL9i8KJHJH8f1D8Z-4E6AmLJ9znR8UJlc_bJthbYmepEi2icE6OaDbl41BLA4KRz4yYAmrFg4fl98gsfrS0uN_dlssNGWz_XRMIKc74GdvJuA2T0eMxR0cJL4ERYh2tOH2TXdyLZ3e0w"/>
-</div>
-<span class="text-[10px] font-bold text-center leading-tight">JCD</span>
-</div>
-<span class="text-lg font-black text-outline-variant editorial-display px-2">VS</span>
-<div class="flex flex-col items-center gap-2">
-<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden">
-<span class="material-symbols-outlined text-outline" data-icon="shield">shield</span>
-</div>
-<span class="text-[10px] font-bold text-center leading-tight">West Branch</span>
-</div>
-</div>
-</div>
-</aside>
-</div>
 </main>
-<!-- BottomNavBar (Mobile) -->
-<nav class="md:hidden fixed bottom-4 left-4 right-4 rounded-full z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md shadow-[0px_12px_32px_rgba(15,23,42,0.12)] flex justify-around items-center w-full max-w-md mx-auto p-2">
-<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:text-blue-600 dark:hover:text-blue-300 transition-all font-['Inter'] text-[10px] font-bold uppercase tracking-widest" href="#">
-<span class="material-symbols-outlined mb-1" data-icon="fitness_center">fitness_center</span>
-<span class="hidden sm:block">Activities</span>
+<!-- Floating Action Button -->
+<div class="fixed bottom-28 right-6 z-40">
+<button class="flex items-center gap-2 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full px-6 py-4 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.12)] hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person_add</span>
+<span class="font-bold text-[0.875rem] uppercase tracking-widest">Add Member</span>
+</button>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md rounded-full px-4 py-2 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg shadow-[0_12px_32px_-4px_rgba(25,28,30,0.12)] md:hidden">
+<ul class="flex justify-between items-center w-full">
+<li>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-full transition-all scale-95 active:transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1">explore</span>
+<span class="font-bold text-[10px] uppercase tracking-widest">Activities</span>
 </a>
-<a class="flex flex-col items-center justify-center bg-blue-700 text-white rounded-full px-4 py-2 scale-110 hover:text-blue-600 dark:hover:text-blue-300 transition-all font-['Inter'] text-[10px] font-bold uppercase tracking-widest shadow-lg" href="#">
-<span class="material-symbols-outlined mb-1" data-icon="workspace_premium" data-weight="fill">workspace_premium</span>
-<span class="hidden sm:block">Leagues</span>
+</li>
+<li>
+<a class="bg-gradient-to-br from-primary to-primary-container text-white rounded-full px-4 py-2 flex flex-col items-center justify-center scale-95 active:transition-transform duration-200 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.12)]" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+<span class="font-bold text-[10px] uppercase tracking-widest">Leagues</span>
 </a>
-<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:text-blue-600 dark:hover:text-blue-300 transition-all font-['Inter'] text-[10px] font-bold uppercase tracking-widest" href="#">
-<span class="material-symbols-outlined mb-1" data-icon="leaderboard">leaderboard</span>
-<span class="hidden sm:block">Rankings</span>
+</li>
+<li>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-full transition-all scale-95 active:transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1">leaderboard</span>
+<span class="font-bold text-[10px] uppercase tracking-widest">Rankings</span>
 </a>
-<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:text-blue-600 dark:hover:text-blue-300 transition-all font-['Inter'] text-[10px] font-bold uppercase tracking-widest" href="#">
-<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
-<span class="hidden sm:block">Profile</span>
+</li>
+<li>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-full transition-all scale-95 active:transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-bold text-[10px] uppercase tracking-widest">Profile</span>
 </a>
+</li>
+</ul>
 </nav>
 </body></html>

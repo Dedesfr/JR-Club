@@ -1,0 +1,63 @@
+import defaultTheme from 'tailwindcss/defaultTheme';
+import forms from '@tailwindcss/forms';
+
+/** @type {import('tailwindcss').Config} */
+export default {
+    content: [
+        './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
+        './storage/framework/views/*.php',
+        './resources/views/**/*.blade.php',
+        './resources/js/**/*.tsx',
+    ],
+
+    theme: {
+        extend: {
+            colors: {
+                primary: '#003f7b',
+                'primary-container': '#0056a4',
+                'primary-fixed': '#d5e3ff',
+                'primary-fixed-dim': '#a7c8ff',
+                'on-primary': '#ffffff',
+                'on-primary-fixed': '#001b3c',
+                'on-primary-fixed-variant': '#004788',
+                'on-primary-container': '#eef2ff',
+                secondary: '#005eb2',
+                'secondary-container': '#529cff',
+                'secondary-fixed': '#d4e3ff',
+                'on-secondary-fixed': '#001c39',
+                tertiary: '#6c2c00',
+                'tertiary-container': '#903e01',
+                'tertiary-fixed': '#ffdbca',
+                'on-tertiary-fixed': '#331100',
+                surface: '#f7f9fb',
+                'surface-container-lowest': '#ffffff',
+                'surface-container-low': '#f2f4f6',
+                'surface-container': '#eceef0',
+                'surface-container-high': '#e6e8ea',
+                'surface-container-highest': '#e0e3e5',
+                'surface-variant': '#e0e3e5',
+                'on-surface': '#191c1e',
+                'on-surface-variant': '#414752',
+                'inverse-surface': '#2d3133',
+                'inverse-on-surface': '#eff1f3',
+                outline: '#717784',
+                'outline-variant': '#c1c6d5',
+                error: '#ba1a1a',
+            },
+            borderRadius: {
+                DEFAULT: '0.25rem',
+                lg: '0.5rem',
+                xl: '0.75rem',
+                full: '9999px',
+            },
+            fontFamily: {
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                headline: ['Inter', ...defaultTheme.fontFamily.sans],
+                body: ['Inter', ...defaultTheme.fontFamily.sans],
+                label: ['Inter', ...defaultTheme.fontFamily.sans],
+            },
+        },
+    },
+
+    plugins: [forms],
+};
