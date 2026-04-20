@@ -37,7 +37,6 @@ class LeagueController extends Controller
         return Inertia::render('Leagues/Index', [
             'leagues' => $leagues,
             'activeLeague' => $activeLeague,
-            'standings' => $activeLeague?->standings() ?? [],
             'sports' => Sport::orderBy('name')->get(),
             'teams' => Team::with('sport')->orderBy('name')->get(),
             'canManage' => $request->user()->can('admin'),

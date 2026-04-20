@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/matches/{match}/end', [MatchController::class, 'end'])->name('matches.end');
 
     Route::get('/leaderboards', [LeaderboardController::class, 'index'])->name('leaderboards.index');
+    Route::get('/leaderboards/leagues', [LeaderboardController::class, 'leagues'])->name('leaderboards.leagues');
     Route::get('/profile/show', [ProfileShowController::class, 'me'])->name('profile.show');
     Route::get('/members/{user}', [ProfileShowController::class, 'public'])->name('profile.public');
     Route::post('/push-subscription', [PushSubscriptionController::class, 'store'])->name('push-subscription.store');

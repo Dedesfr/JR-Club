@@ -2,9 +2,7 @@ import JRClubLayout from '@/Layouts/JRClubLayout';
 import { League, LeagueStandingGroup, Sport, Standing, Team } from '@/types/jrclub';
 import { Head, Link } from '@inertiajs/react';
 
-export default function Index({ leagues, activeLeague, standings, sports, teams, canManage }: { leagues: League[]; activeLeague?: League; standings: Standing[] | LeagueStandingGroup[]; sports: Sport[]; teams: Team[]; canManage: boolean }) {
-    const isGroupStandings = standings.some((row) => 'group' in row);
-
+export default function Index({ leagues, activeLeague, sports, teams, canManage }: { leagues: League[]; activeLeague?: League; sports: Sport[]; teams: Team[]; canManage: boolean }) {
     return (
         <JRClubLayout active="Leagues">
             <Head title="Leagues" />
@@ -75,69 +73,6 @@ export default function Index({ leagues, activeLeague, standings, sports, teams,
                         </Link>
                     ))}
                 </div>
-            </section>
-
-            <section className="mt-8 space-y-3">
-                <div>
-                    <h2 className="text-lg font-black uppercase tracking-[-0.04em] text-on-surface">Standings</h2>
-                    <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{activeLeague?.name ?? 'Active league'}</p>
-                </div>
-                <div className="overflow-hidden rounded-xl bg-surface-container-high">
-                    {standings.length === 0 ? (
-                        <p className="p-4 text-sm text-on-surface-variant">No standings available yet.</p>
-                    ) : isGroupStandings ? (
-                        (standings as LeagueStandingGroup[]).map((group) => (
-                            <div key={group.group} className="border-b border-outline-variant/20 last:border-b-0">
-                                <div className="bg-surface-container-low px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary">{group.group}</div>
-                                {group.entries.map((row, index) => (
-                                    <div key={row.id} className={`${index === 0 ? 'mx-1 my-1 rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0_12px_32px_-4px_rgba(25,28,30,0.12)]' : index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'} flex items-center px-4 py-3 text-sm`}>
-                                        <div className="w-8 font-bold">{index + 1}</div>
-                                        <div className="flex flex-grow items-center gap-2">
-                                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-high text-[10px] font-bold text-on-surface">{row.entry.label.charAt(0)}</div>
-                                            <span className="font-bold">{row.entry.label}</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-lg font-black">{row.points}</div>
-                                            <div className="text-[10px] font-bold uppercase tracking-widest opacity-70">Pts</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ))
-                    ) : (
-                        (standings as Standing[]).map((row, index) => (
-                            <Link
-                                key={row.team.id}
-                                href={route('teams.show', row.team.id)}
-                                className={`${index === 0 ? 'mx-1 my-1 scale-[1.02] rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0_12px_32px_-4px_rgba(25,28,30,0.12)]' : index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'} flex items-center px-4 py-3 text-sm`}
-                            >
-                                <div className="w-8 font-bold">{index + 1}</div>
-                                <div className="flex flex-grow items-center gap-2">
-                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-high text-[10px] font-bold text-on-surface">
-                                        {row.team.name.charAt(0)}
-                                    </div>
-                                    <span className="font-bold">{row.team.name}</span>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-lg font-black">{row.points}</div>
-                                    <div className="text-[10px] font-bold uppercase tracking-widest opacity-70">Pts</div>
-                                </div>
-                            </Link>
-                        ))
-                    )}
-                </div>
-            </section>
-
-            <section className="mt-8 grid gap-4 sm:grid-cols-2">
-                {(activeLeague?.matches ?? []).map((match) => (
-                    <Link key={match.id} href={route('matches.show', match.id)} className="rounded-xl bg-surface-container-lowest p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
-                        <div className="flex items-center justify-between">
-                                    <span className="font-bold">{match.home_label ?? match.home_team?.name ?? 'TBD'}</span>
-                                    <span className="text-xl font-black text-primary">{match.home_score} - {match.away_score}</span>
-                                    <span className="font-medium">{match.away_label ?? match.away_team?.name ?? 'TBD'}</span>
-                                </div>
-                            </Link>
-                        ))}
             </section>
         </JRClubLayout>
     );

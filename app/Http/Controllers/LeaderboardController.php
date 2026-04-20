@@ -14,9 +14,6 @@ class LeaderboardController extends Controller
 {
     public function index(Request $request): Response
     {
-        $sportId = $request->integer('sport_id') ?: null;
-        $league = League::with(['teams', 'matches.homeTeam', 'matches.awayTeam'])->when($sportId, fn ($query) => $query->where('sport_id', $sportId))->latest()->first();
-
         $players = User::query()
             ->withCount(['activities as activities_joined'])
             ->get()
@@ -46,11 +43,64 @@ class LeaderboardController extends Controller
             ->values();
 
         return Inertia::render('Leaderboards/Index', [
+            'players' => $players,
+        ]);
+    }
+
+    public function leagues(Request $request): Response
+    {
+        $sportId = $request->integer('sport_id') ?: null;
+        $leagueId = $request->integer('league_id') ?: null;
+        
+        $leaguesQuery = League::query()->orderByDesc('created_at');
+        if ($sportId) {
+            $leaguesQuery->where('sport_id', $sportId);
+        }
+        $leagues = $leaguesQuery->get(['id', 'name']);
+        
+        if (!$leagueId && $leagues->isNotEmpty()) {
+            $leagueId = $leagues->first()->id;
+        }
+
+        $league = null;
+        $upperBracket = [];
+        $lowerBracket = [];
+
+        if ($leagueId) {
+            $league = League::with([
+                'teams', 
+                'matches.homeTeam', 
+                'matches.awayTeam',
+                'matches.homeEntry.player1',
+                'matches.homeEntry.player2',
+                'matches.homeEntry.substitutes',
+                'matches.awayEntry.player1',
+                'matches.awayEntry.player2',
+                'matches.awayEntry.substitutes',
+                'matches.sets',
+                'upperChampion.player1',
+                'upperChampion.player2',
+                'upperChampion.substitutes',
+                'lowerChampion.player1',
+                'lowerChampion.player2',
+                'lowerChampion.substitutes',
+            ])->find($leagueId);
+
+            if ($league) {
+                $upperBracket = $league->matches->where('stage', 'upper')->groupBy('round')->sortKeys()->values();
+                $lowerBracket = $league->matches->where('stage', 'lower')->groupBy('round')->sortKeys()->values();
+            }
+        }
+
+        return Inertia::render('Leaderboards/Leagues', [
             'sports' => Sport::orderBy('name')->get(),
             'selectedSportId' => $sportId,
+            'leagues' => $leagues,
+            'selectedLeagueId' => $leagueId,
             'league' => $league,
             'standings' => $league?->standings() ?? [],
-            'players' => $players,
+            'upperBracket' => $upperBracket,
+            'lowerBracket' => $lowerBracket,
         ]);
     }
 }
