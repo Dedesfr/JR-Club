@@ -1,10 +1,9 @@
 import JRClubLayout from '@/Layouts/JRClubLayout';
 import { Activity, Sport } from '@/types/jrclub';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 
 export default function Index({ sports, activities, selectedSport, canManage }: { sports: Sport[]; activities: Activity[]; selectedSport?: string; canManage: boolean }) {
-    const form = useForm({ sport_id: sports[0]?.id ?? '', title: '', description: '', location: '', scheduled_at: '', max_participants: 8 });
     const user = usePage<PageProps>().props.auth.user;
 
     const join = (activity: Activity) => router.post(route('activities.join', activity.id), {}, { preserveScroll: true });
@@ -23,16 +22,7 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
                             Ready to play,<br />{user.name.split(' ')[0]}?
                         </h1>
                     </div>
-                    {canManage ? (
-                        <button
-                            type="button"
-                            onClick={() => document.getElementById('create-activity-form')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="flex scale-95 items-center gap-1 rounded-full bg-gradient-to-br from-primary to-primary-container px-4 py-2.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-white shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]"
-                        >
-                            <span className="material-symbols-outlined text-[16px]">add</span>
-                            Create
-                        </button>
-                    ) : null}
+                    {canManage ? <Link href={route('admin.activities.index')} className="flex scale-95 items-center gap-1 rounded-full bg-gradient-to-br from-primary to-primary-container px-4 py-2.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-white shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]"><span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>Admin</Link> : null}
                 </div>
             </section>
 
@@ -52,26 +42,6 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
                 ))}
                 </div>
             </section>
-
-            {canManage ? (
-                <form
-                    id="create-activity-form"
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        form.post(route('activities.store'), { preserveScroll: true, onSuccess: () => form.reset('title', 'description', 'location', 'scheduled_at') });
-                    }}
-                    className="mb-6 grid gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]"
-                >
-                    <input className="rounded-md border-0 bg-surface-container-low" placeholder="Activity title" value={form.data.title} onChange={(e) => form.setData('title', e.target.value)} />
-                    <input className="rounded-md border-0 bg-surface-container-low" placeholder="Location" value={form.data.location} onChange={(e) => form.setData('location', e.target.value)} />
-                    <select className="rounded-md border-0 bg-surface-container-low" value={form.data.sport_id} onChange={(e) => form.setData('sport_id', Number(e.target.value))}>
-                        {sports.map((sport) => <option key={sport.id} value={sport.id}>{sport.name}</option>)}
-                    </select>
-                    <input className="rounded-md border-0 bg-surface-container-low" type="datetime-local" value={form.data.scheduled_at} onChange={(e) => form.setData('scheduled_at', e.target.value)} />
-                    <input className="rounded-md border-0 bg-surface-container-low" type="number" min="2" value={form.data.max_participants} onChange={(e) => form.setData('max_participants', Number(e.target.value))} />
-                    <button className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-2 font-bold text-on-primary">Create Activity</button>
-                </form>
-            ) : null}
 
             <main className="flex flex-col gap-6">
                 {activities.map((activity) => {

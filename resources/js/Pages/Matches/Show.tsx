@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 
 export default function Show({ match, canManage }: { match: GameMatch; canManage: boolean }) {
     const [score, setScore] = useState({ home: match.home_score, away: match.away_score, status: match.status });
+    const homeLabel = match.home_label ?? match.home_team?.name ?? 'TBD';
+    const awayLabel = match.away_label ?? match.away_team?.name ?? 'TBD';
 
     useEffect(() => {
         const echo = (window as any).Echo;
@@ -40,7 +42,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                         <span className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-inverse-on-surface/70">{match.league?.name}</span>
                     </div>
                     <div className="relative flex items-center justify-between px-6 py-10">
-                        <TeamBlock name={match.home_team.name} />
+                        <TeamBlock name={homeLabel} />
                         <div className="z-10 flex flex-col items-center justify-center">
                             <div className="flex items-center gap-4">
                                 <span className="text-6xl font-black tracking-[-0.04em]">{score.home}</span>
@@ -48,7 +50,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                                 <span className="text-6xl font-black tracking-[-0.04em] text-inverse-on-surface/50">{score.away}</span>
                             </div>
                         </div>
-                        <TeamBlock name={match.away_team.name} muted />
+                        <TeamBlock name={awayLabel} muted />
                     </div>
                 </section>
 
@@ -63,10 +65,24 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                     </div>
                 </section>
 
+                {(match.sets ?? []).length > 0 ? (
+                    <section className="rounded-xl bg-surface-container-lowest p-5 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
+                        <h2 className="mb-3 text-lg font-black uppercase tracking-[-0.04em] text-on-surface">Set Scores</h2>
+                        <div className="grid gap-2">
+                            {match.sets?.map((set) => (
+                                <div key={set.id} className="flex items-center justify-between rounded-lg bg-surface-container-low px-4 py-3 text-sm font-bold text-on-surface">
+                                    <span>Set {set.set_number}</span>
+                                    <span>{set.home_points} - {set.away_points}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                ) : null}
+
                 <section className="flex flex-col gap-3">
                     <h2 className="mb-1 text-lg font-black uppercase tracking-[-0.04em] text-on-surface">Play-by-Play</h2>
                     <div className="relative flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] before:absolute before:bottom-0 before:left-[43px] before:top-0 before:w-[2px] before:bg-surface-container-high">
-                        <TimelineEvent icon="sports_score" time="Live" title={`${match.home_team.name} ${score.home} - ${score.away} ${match.away_team.name}`} detail="Latest score update" />
+                         <TimelineEvent icon="sports_score" time="Live" title={`${homeLabel} ${score.home} - ${score.away} ${awayLabel}`} detail="Latest score update" />
                         <TimelineEvent icon="change_circle" time="Kickoff" title="Match started" detail={new Date(match.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
                     </div>
                 </section>
@@ -76,12 +92,12 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                         <button onClick={() => router.post(route('matches.start', match.id))} className="rounded bg-gradient-to-br from-primary to-primary-container px-5 py-4 text-sm font-bold uppercase tracking-widest text-white">Start Match</button>
                         <div className="flex items-center justify-between gap-3">
                             <button onClick={() => saveScore(score.home - 1, score.away)} className="h-10 w-10 rounded-full bg-surface-container-high font-bold">-</button>
-                            <span className="font-bold">{match.home_team.name}</span>
+                            <span className="font-bold">{homeLabel}</span>
                             <button onClick={() => saveScore(score.home + 1, score.away)} className="h-10 w-10 rounded-full bg-primary font-bold text-on-primary">+</button>
                         </div>
                         <div className="flex items-center justify-between gap-3">
                             <button onClick={() => saveScore(score.home, score.away - 1)} className="h-10 w-10 rounded-full bg-surface-container-high font-bold">-</button>
-                            <span className="font-bold">{match.away_team.name}</span>
+                            <span className="font-bold">{awayLabel}</span>
                             <button onClick={() => saveScore(score.home, score.away + 1)} className="h-10 w-10 rounded-full bg-primary font-bold text-on-primary">+</button>
                         </div>
                         <button onClick={() => router.post(route('matches.end', match.id))} className="rounded bg-tertiary px-5 py-4 text-sm font-bold uppercase tracking-widest text-white">End Match</button>

@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'gender',
         'push_subscription',
     ];
 
@@ -66,6 +67,19 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Team::class, 'team_members')
             ->withPivot(['role', 'joined_at'])
+            ->withTimestamps();
+    }
+
+    public function leagueEntries()
+    {
+        return LeagueEntry::query()
+            ->where('player1_id', $this->id)
+            ->orWhere('player2_id', $this->id);
+    }
+
+    public function substituteLeagueEntries()
+    {
+        return $this->belongsToMany(LeagueEntry::class, 'league_entry_substitutes')
             ->withTimestamps();
     }
 }

@@ -1,6 +1,16 @@
 <?php
 
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\Admin\ActivityController as AdminActivityController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\LeagueBracketController as AdminLeagueBracketController;
+use App\Http\Controllers\Admin\LeagueController as AdminLeagueController;
+use App\Http\Controllers\Admin\LeagueEntryController as AdminLeagueEntryController;
+use App\Http\Controllers\Admin\LeagueGroupController as AdminLeagueGroupController;
+use App\Http\Controllers\Admin\LeagueMatchController as AdminLeagueMatchController;
+use App\Http\Controllers\Admin\SportController as AdminSportController;
+use App\Http\Controllers\Admin\TeamController as AdminTeamController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\MatchController;
@@ -9,7 +19,6 @@ use App\Http\Controllers\ProfileShowController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::redirect('/', '/activities');
 
@@ -43,6 +52,41 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::prefix('admin')->name('admin.')->middleware('can:admin')->group(function () {
+        Route::get('/', AdminDashboardController::class)->name('dashboard');
+
+        Route::get('/leagues', [AdminLeagueController::class, 'index'])->name('leagues.index');
+        Route::get('/leagues/create', [AdminLeagueController::class, 'create'])->name('leagues.create');
+        Route::post('/leagues', [AdminLeagueController::class, 'store'])->name('leagues.store');
+        Route::get('/leagues/{league}', [AdminLeagueController::class, 'show'])->name('leagues.show');
+        Route::patch('/leagues/{league}', [AdminLeagueController::class, 'update'])->name('leagues.update');
+        Route::delete('/leagues/{league}', [AdminLeagueController::class, 'destroy'])->name('leagues.destroy');
+        Route::post('/leagues/{league}/entries', [AdminLeagueEntryController::class, 'store'])->name('leagues.entries.store');
+        Route::delete('/leagues/{league}/entries/{entry}', [AdminLeagueEntryController::class, 'destroy'])->name('leagues.entries.destroy');
+        Route::post('/leagues/{league}/groups', [AdminLeagueGroupController::class, 'store'])->name('leagues.groups.store');
+        Route::patch('/leagues/{league}/groups/{groupEntry}', [AdminLeagueGroupController::class, 'update'])->name('leagues.groups.update');
+        Route::post('/leagues/{league}/brackets', [AdminLeagueBracketController::class, 'store'])->name('leagues.brackets.store');
+
+        Route::post('/matches/{match}/sets', [AdminLeagueMatchController::class, 'store'])->name('matches.sets.store');
+        Route::post('/matches/{match}/complete', [AdminLeagueMatchController::class, 'complete'])->name('matches.complete');
+
+        Route::get('/sports', [AdminSportController::class, 'index'])->name('sports.index');
+        Route::get('/sports/{sport}/edit', [AdminSportController::class, 'edit'])->name('sports.edit');
+        Route::patch('/sports/{sport}', [AdminSportController::class, 'update'])->name('sports.update');
+
+        Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
+        Route::get('/activities/{activity}/edit', [AdminActivityController::class, 'edit'])->name('activities.edit');
+        Route::patch('/activities/{activity}', [AdminActivityController::class, 'update'])->name('activities.update');
+
+        Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
+        Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+
+        Route::get('/teams', [AdminTeamController::class, 'index'])->name('teams.index');
+        Route::get('/teams/{team}/edit', [AdminTeamController::class, 'edit'])->name('teams.edit');
+        Route::patch('/teams/{team}', [AdminTeamController::class, 'update'])->name('teams.update');
+    });
 });
 
 require __DIR__.'/auth.php';

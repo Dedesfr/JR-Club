@@ -28,8 +28,9 @@ A project-level design system is generated and maintained at `prompter/design-sy
 ## JR Club MVP
 
 - Stack: Laravel 12, Inertia React TypeScript, Tailwind CSS, Laravel Reverb, database queues, and PWA service worker support.
-- Domain models: sports, activities, activity participants, teams, team members, leagues, league teams, and matches.
+- Domain models: sports, activities, activity participants, teams, team members, leagues, league teams, league entries, league groups, league group entries, matches, and match sets.
 - Roles: `users.role` is `member` or `admin`; admin-only write actions are guarded by the `admin` Gate.
 - Seed credentials for local development: `admin@jasaraharja.co.id` / `password`.
-- Main authenticated routes: `/activities`, `/teams`, `/leagues`, `/matches/{match}`, `/leaderboards`, and `/profile/show`.
+- Main authenticated routes: `/activities`, `/teams`, `/leagues`, `/matches/{match}`, `/leaderboards`, `/profile/show`, and the admin area under `/admin`.
+- Badminton leagues use `category` (`MS`, `WS`, `MD`, `WD`, `XD`), derived `entry_type`, `participant_total`, group/bracket advancement counts, and set-based scoring with `sets_to_win` / `points_per_set`.
 - UI screens should continue translating the approved templates under `template/*/code.html` and tokens from `prompter/design-system.md`.

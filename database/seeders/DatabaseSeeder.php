@@ -25,18 +25,20 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@jasaraharja.co.id',
             'password' => 'password',
             'role' => 'admin',
+            'gender' => 'male',
         ]);
 
         $members = collect([
-            ['Budi Santoso', 'budi@jasaraharja.co.id'],
-            ['Siti Rahmawati', 'siti@jasaraharja.co.id'],
-            ['Andi Wijaya', 'andi@jasaraharja.co.id'],
-            ['Maya Putri', 'maya@jasaraharja.co.id'],
+            ['Budi Santoso', 'budi@jasaraharja.co.id', 'male'],
+            ['Siti Rahmawati', 'siti@jasaraharja.co.id', 'female'],
+            ['Andi Wijaya', 'andi@jasaraharja.co.id', 'male'],
+            ['Maya Putri', 'maya@jasaraharja.co.id', 'female'],
         ])->map(fn ($member) => User::factory()->create([
             'name' => $member[0],
             'email' => $member[1],
             'password' => 'password',
             'role' => 'member',
+            'gender' => $member[2],
         ]));
 
         $sports = collect([
@@ -114,5 +116,8 @@ class DatabaseSeeder extends Seeder
             'home_score' => 1,
             'away_score' => 1,
         ]);
+
+        $this->call(MensDoublesLeagueSeeder::class);
+        $this->call(CompletedMensDoublesLeagueSeeder::class);
     }
 }

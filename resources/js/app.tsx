@@ -1,4 +1,5 @@
 import '../css/app.css';
+import 'flatpickr/dist/flatpickr.min.css';
 import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/react';

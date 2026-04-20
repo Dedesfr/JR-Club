@@ -3,6 +3,7 @@ export interface User {
     name: string;
     email: string;
     role: 'member' | 'admin';
+    gender?: 'male' | 'female' | null;
     email_verified_at?: string;
 }
 

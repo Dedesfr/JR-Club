@@ -22,9 +22,16 @@ class LeaderboardController extends Controller
             ->get()
             ->map(function (User $user) {
                 $teamIds = $user->teams()->pluck('teams.id');
-                $played = GameMatch::where('status', 'completed')
+                $teamMatchesPlayed = GameMatch::where('status', 'completed')
                     ->where(fn ($query) => $query->whereIn('home_team_id', $teamIds)->orWhereIn('away_team_id', $teamIds))
                     ->count();
+                $entryIds = $user->leagueEntries()
+                    ->pluck('league_entries.id')
+                    ->merge($user->substituteLeagueEntries()->pluck('league_entries.id'));
+                $entryMatchesPlayed = GameMatch::where('status', 'completed')
+                    ->where(fn ($query) => $query->whereIn('home_entry_id', $entryIds)->orWhereIn('away_entry_id', $entryIds))
+                    ->count();
+                $played = $teamMatchesPlayed + $entryMatchesPlayed;
 
                 return [
                     'id' => $user->id,

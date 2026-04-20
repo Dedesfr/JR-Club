@@ -16,7 +16,7 @@ class MatchController extends Controller
     public function show(GameMatch $match): Response
     {
         return Inertia::render('Matches/Show', [
-            'match' => $match->load(['league.sport', 'homeTeam', 'awayTeam']),
+            'match' => $match->load(['league.sport', 'homeTeam', 'awayTeam', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.substitutes', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.substitutes', 'sets']),
             'canManage' => request()->user()->can('admin'),
         ]);
     }
@@ -25,8 +25,8 @@ class MatchController extends Controller
     {
         Gate::authorize('admin');
         $match->update(['status' => 'live']);
-        SendPushNotification::dispatch('Match starting', "{$match->homeTeam->name} vs {$match->awayTeam->name} is live.");
-        broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam'])));
+        SendPushNotification::dispatch('Match starting', "{$match->home_label} vs {$match->away_label} is live.");
+        broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.substitutes', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.substitutes', 'sets'])));
 
         return back();
     }
@@ -40,7 +40,7 @@ class MatchController extends Controller
             'away_score' => ['required', 'integer', 'min:0'],
         ]) + ['status' => 'live']);
 
-        broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam'])));
+        broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.substitutes', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.substitutes', 'sets'])));
 
         return back();
     }
@@ -49,8 +49,8 @@ class MatchController extends Controller
     {
         Gate::authorize('admin');
         $match->update(['status' => 'completed']);
-        SendPushNotification::dispatch('Match result', "{$match->homeTeam->name} {$match->home_score} - {$match->away_score} {$match->awayTeam->name}");
-        broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam'])));
+        SendPushNotification::dispatch('Match result', "{$match->home_label} {$match->home_score} - {$match->away_score} {$match->away_label}");
+        broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.substitutes', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.substitutes', 'sets'])));
 
         return back();
     }

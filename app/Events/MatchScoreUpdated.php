@@ -12,9 +12,7 @@ class MatchScoreUpdated implements ShouldBroadcast
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public GameMatch $match)
-    {
-    }
+    public function __construct(public GameMatch $match) {}
 
     public function broadcastOn(): Channel
     {
@@ -31,10 +29,19 @@ class MatchScoreUpdated implements ShouldBroadcast
         return [
             'id' => $this->match->id,
             'status' => $this->match->status,
+            'stage' => $this->match->stage,
             'home_score' => $this->match->home_score,
             'away_score' => $this->match->away_score,
-            'home_team' => $this->match->homeTeam?->name,
-            'away_team' => $this->match->awayTeam?->name,
+            'home_team' => $this->match->home_label,
+            'away_team' => $this->match->away_label,
+            'sets' => $this->match->sets->map(fn ($set) => [
+                'set_number' => $set->set_number,
+                'home_points' => $set->home_points,
+                'away_points' => $set->away_points,
+            ])->all(),
+            'current_set' => $this->match->sets->last()?->set_number,
+            'winner_entry_id' => $this->match->winner_entry_id,
+            'next_match_id' => $this->match->next_match_id,
         ];
     }
 }

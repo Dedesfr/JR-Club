@@ -1,9 +1,11 @@
+import SelectInput from '@/Components/SelectInput';
 import JRClubLayout from '@/Layouts/JRClubLayout';
 import { Sport, Team } from '@/types/jrclub';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Index({ teams, sports, myTeams, canManage }: { teams: Team[]; sports: Sport[]; myTeams: Team[]; canManage: boolean }) {
     const form = useForm({ name: '', sport_id: sports[0]?.id ?? '' });
+    const sportOptions = sports.map((sport) => ({ value: String(sport.id), label: sport.name }));
 
     return (
         <JRClubLayout active="Leagues">
@@ -28,9 +30,7 @@ export default function Index({ teams, sports, myTeams, canManage }: { teams: Te
             {canManage ? (
                 <form onSubmit={(e) => { e.preventDefault(); form.post(route('teams.store'), { preserveScroll: true, onSuccess: () => form.reset('name') }); }} className="my-6 grid gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
                     <input className="rounded-md border-0 bg-surface-container-low" placeholder="Team name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
-                    <select className="rounded-md border-0 bg-surface-container-low" value={form.data.sport_id} onChange={(e) => form.setData('sport_id', Number(e.target.value))}>
-                        {sports.map((sport) => <option key={sport.id} value={sport.id}>{sport.name}</option>)}
-                    </select>
+                    <SelectInput options={sportOptions} value={form.data.sport_id} onChange={(value) => form.setData('sport_id', Number(value || sports[0]?.id || 0))} placeholder="Select sport" />
                     <button className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-3 text-sm font-bold uppercase tracking-widest text-on-primary">Create Team</button>
                 </form>
             ) : null}

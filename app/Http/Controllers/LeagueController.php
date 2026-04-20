@@ -17,7 +17,21 @@ class LeagueController extends Controller
 {
     public function index(Request $request): Response
     {
-        $leagues = League::with(['sport', 'teams', 'matches.homeTeam', 'matches.awayTeam'])->latest()->get();
+        $leagues = League::with([
+            'sport',
+            'teams',
+            'entries.player1',
+            'entries.player2',
+            'entries.substitutes',
+            'matches.homeTeam',
+            'matches.awayTeam',
+            'matches.homeEntry.player1',
+            'matches.homeEntry.player2',
+            'matches.homeEntry.substitutes',
+            'matches.awayEntry.player1',
+            'matches.awayEntry.player2',
+            'matches.awayEntry.substitutes',
+        ])->latest()->get();
         $activeLeague = $leagues->first();
 
         return Inertia::render('Leagues/Index', [
@@ -32,11 +46,37 @@ class LeagueController extends Controller
 
     public function show(League $league): Response
     {
-        $league->load(['sport', 'teams', 'matches.homeTeam', 'matches.awayTeam']);
+        $league->load([
+            'sport',
+            'teams',
+            'entries.player1',
+            'entries.player2',
+            'entries.substitutes',
+            'groups.groupEntries.entry.player1',
+            'groups.groupEntries.entry.player2',
+            'groups.groupEntries.entry.substitutes',
+            'matches.homeTeam',
+            'matches.awayTeam',
+            'matches.homeEntry.player1',
+            'matches.homeEntry.player2',
+            'matches.homeEntry.substitutes',
+            'matches.awayEntry.player1',
+            'matches.awayEntry.player2',
+            'matches.awayEntry.substitutes',
+            'matches.sets',
+            'upperChampion.player1',
+            'upperChampion.player2',
+            'upperChampion.substitutes',
+            'lowerChampion.player1',
+            'lowerChampion.player2',
+            'lowerChampion.substitutes',
+        ]);
 
         return Inertia::render('Leagues/Show', [
             'league' => $league,
             'standings' => $league->standings(),
+            'upperBracket' => $league->matches->where('stage', 'upper')->groupBy('round')->sortKeys()->values(),
+            'lowerBracket' => $league->matches->where('stage', 'lower')->groupBy('round')->sortKeys()->values(),
         ]);
     }
 

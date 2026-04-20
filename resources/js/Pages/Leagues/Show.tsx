@@ -1,7 +1,8 @@
-import { League, Standing, GameMatch } from '@/types/jrclub';
+import BracketTree from '@/Components/BracketTree';
+import { GameMatch, League, LeagueStandingGroup, Standing } from '@/types/jrclub';
 import { Head, Link } from '@inertiajs/react';
 
-export default function Show({ league, standings }: { league: League; standings: Standing[] }) {
+export default function Show({ league, standings, upperBracket, lowerBracket }: { league: League; standings: Standing[] | LeagueStandingGroup[]; upperBracket: GameMatch[][]; lowerBracket: GameMatch[][] }) {
     const startDate = new Date(league.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const endDate = league.end_date ? new Date(league.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD';
 
@@ -57,7 +58,7 @@ export default function Show({ league, standings }: { league: League; standings:
                         </Link>
                     </div>
                     <div className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] flex flex-col space-y-2">
-                        {standings.length > 0 ? standings.slice(0, 3).map((standing, index) => (
+                        {!league.category && standings.length > 0 ? (standings as Standing[]).slice(0, 3).map((standing, index) => (
                             <div key={standing.team.id} className={`flex items-center justify-between p-3 rounded-lg transition-colors ${index === 0 ? 'bg-surface' : 'hover:bg-surface cursor-pointer active:scale-[0.98]'}`}>
                                 <div className="flex items-center space-x-4">
                                     <span className={`font-black text-lg w-4 text-center ${index === 0 ? 'text-primary' : 'text-on-surface-variant'}`}>{index + 1}</span>
@@ -69,10 +70,32 @@ export default function Show({ league, standings }: { league: League; standings:
                                 <span className="font-black text-xl text-on-surface">{standing.points}<span className="text-xs text-on-surface-variant ml-1 font-bold">PTS</span></span>
                             </div>
                         )) : (
-                            <p className="text-sm text-on-surface-variant p-2 text-center">No standings available yet.</p>
+                            league.category && (standings as LeagueStandingGroup[]).length > 0 ? (
+                                (standings as LeagueStandingGroup[]).map((group) => (
+                                    <div key={group.group} className="rounded-xl bg-surface-container-low p-3">
+                                        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">{group.group}</p>
+                                        <div className="mt-2 space-y-2">
+                                            {group.entries.map((entry, index) => (
+                                                <div key={entry.id} className="flex items-center justify-between rounded-lg bg-surface-container-lowest px-3 py-2">
+                                                    <span className="font-bold text-on-surface">{index + 1}. {entry.entry.label}</span>
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{entry.points} pts</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : <p className="text-sm text-on-surface-variant p-2 text-center">No standings available yet.</p>
                         )}
                     </div>
                 </section>
+
+                {(upperBracket.length > 0 || lowerBracket.length > 0) && (
+                    <section className="space-y-4">
+                        <h3 className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-surface-variant">TOURNAMENT BRACKETS</h3>
+                        {upperBracket.length > 0 ? <BracketTree title="Upper Bracket" rounds={upperBracket} champion={league.upper_champion} readOnly /> : null}
+                        {lowerBracket.length > 0 ? <BracketTree title="Lower Bracket" rounds={lowerBracket} champion={league.lower_champion} readOnly /> : null}
+                    </section>
+                )}
 
                 {/* Upcoming Matches */}
                 {upcomingMatches.length > 0 && (
@@ -89,9 +112,9 @@ export default function Show({ league, standings }: { league: League; standings:
                                     <div className="flex items-center justify-between relative">
                                         <div className="flex flex-col items-center flex-1">
                                             <div className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 text-xl">
-                                                {match.home_team?.name.substring(0, 2).toUpperCase()}
+                                                {(match.home_label ?? 'TBD').substring(0, 2).toUpperCase()}
                                             </div>
-                                            <span className="font-bold text-sm text-center">{match.home_team?.name}</span>
+                                            <span className="font-bold text-sm text-center">{match.home_label}</span>
                                         </div>
                                         <div className="px-4 z-10 bg-surface-container-lowest">
                                             <span className="text-[0.6875rem] font-bold tracking-[0.05em] text-on-surface-variant bg-surface rounded-full px-3 py-1">VS</span>
@@ -100,9 +123,9 @@ export default function Show({ league, standings }: { league: League; standings:
                                         <div className="absolute left-1/4 right-1/4 top-1/2 h-px bg-surface-container-high -z-0"></div>
                                         <div className="flex flex-col items-center flex-1">
                                             <div className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 text-xl">
-                                                {match.away_team?.name.substring(0, 2).toUpperCase()}
+                                                {(match.away_label ?? 'TBD').substring(0, 2).toUpperCase()}
                                             </div>
-                                            <span className="font-bold text-sm text-center">{match.away_team?.name}</span>
+                                            <span className="font-bold text-sm text-center">{match.away_label}</span>
                                         </div>
                                     </div>
                                 </Link>
@@ -122,6 +145,19 @@ export default function Show({ league, standings }: { league: League; standings:
                                         {team.name.substring(0, 2).toUpperCase()}
                                     </div>
                                     <span className="text-xs font-bold text-center truncate w-full px-1" title={team.name}>{team.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {league.entries && league.entries.length > 0 && (
+                    <section className="pb-8">
+                        <h3 className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-surface-variant mb-4">PARTICIPATING ENTRIES ({league.entries.length})</h3>
+                        <div className="grid gap-3">
+                            {league.entries.map((entry) => (
+                                <div key={entry.id} className="rounded-xl bg-surface-container-lowest px-4 py-3 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
+                                    <span className="font-bold text-on-surface">{entry.label}</span>
                                 </div>
                             ))}
                         </div>
