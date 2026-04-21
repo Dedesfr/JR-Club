@@ -119,5 +119,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(MensDoublesLeagueSeeder::class);
         $this->call(CompletedMensDoublesLeagueSeeder::class);
+        $this->call(GroupStageMensDoublesLeagueSeeder::class);
     }
 }

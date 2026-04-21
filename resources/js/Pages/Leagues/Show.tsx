@@ -214,10 +214,10 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                                                         <div className="flex items-center justify-between relative">
                                                             <div className="flex flex-col items-center flex-1">
                                                                 {match.home_entry?.group_picture_path ? (
-                                                                    <img src={`/storage/${match.home_entry.group_picture_path}`} alt={match.home_label ?? 'TBD'} className="w-14 h-14 rounded-full object-cover shadow-sm mb-2 ring-2 ring-surface-container-lowest" />
+                                                                    <img src={`/storage/${match.home_entry.group_picture_path}`} alt={match.home_label ?? 'TBC'} className="w-14 h-14 rounded-full object-cover shadow-sm mb-2 ring-2 ring-surface-container-lowest" />
                                                                 ) : (
-                                                                    <div className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 text-xl">
-                                                                        {(match.home_label ?? 'TBD').substring(0, 2).toUpperCase()}
+                                                                    <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 ring-2 ring-surface-container-lowest mx-auto">
+                                                                        {(match.home_label ?? 'TBC').substring(0, 2).toUpperCase()}
                                                                     </div>
                                                                 )}
                                                                 <span className="font-bold text-sm text-center">{match.home_label}</span>
@@ -229,10 +229,10 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                                                             <div className="absolute left-1/4 right-1/4 top-1/2 h-px bg-surface-container-high -z-0"></div>
                                                             <div className="flex flex-col items-center flex-1">
                                                                 {match.away_entry?.group_picture_path ? (
-                                                                    <img src={`/storage/${match.away_entry.group_picture_path}`} alt={match.away_label ?? 'TBD'} className="w-14 h-14 rounded-full object-cover shadow-sm mb-2 ring-2 ring-surface-container-lowest" />
+                                                                    <img src={`/storage/${match.away_entry.group_picture_path}`} alt={match.away_label ?? 'TBC'} className="w-14 h-14 rounded-full object-cover shadow-sm mb-2 ring-2 ring-surface-container-lowest" />
                                                                 ) : (
-                                                                    <div className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 text-xl">
-                                                                        {(match.away_label ?? 'TBD').substring(0, 2).toUpperCase()}
+                                                                    <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 ring-2 ring-surface-container-lowest mx-auto">
+                                                                        {(match.away_label ?? 'TBC').substring(0, 2).toUpperCase()}
                                                                     </div>
                                                                 )}
                                                                 <span className="font-bold text-sm text-center">{match.away_label}</span>

@@ -71,6 +71,7 @@ class LeagueEntryController extends Controller
             'player2_id' => ['nullable', 'exists:users,id', 'different:player1_id'],
             'substitute_ids' => ['nullable', 'array'],
             'substitute_ids.*' => ['integer', 'exists:users,id', 'distinct'],
+            'seed' => ['nullable', 'integer', 'min:1'],
         ]);
 
         if ($request->hasFile('group_picture') && $league->entry_type !== 'double') {
@@ -108,6 +109,7 @@ class LeagueEntryController extends Controller
             'player1_id' => $validated['player1_id'],
             'player2_id' => $validated['player2_id'] ?? null,
             'substitute_id' => $substitutes->first()?->id,
+            'seed' => $validated['seed'] ?? null,
         ]);
 
         $entry->substitutes()->sync($substitutes->pluck('id')->all());

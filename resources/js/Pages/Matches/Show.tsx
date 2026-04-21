@@ -6,8 +6,8 @@ import JRClubLayout from '@/Layouts/JRClubLayout';
 
 export default function Show({ match, canManage }: { match: GameMatch; canManage: boolean }) {
     const [score, setScore] = useState({ home: match.home_score, away: match.away_score, status: match.status });
-    const homeLabel = match.home_label ?? match.home_team?.name ?? 'TBD';
-    const awayLabel = match.away_label ?? match.away_team?.name ?? 'TBD';
+    const homeLabel = match.home_label ?? match.home_team?.name ?? 'TBC';
+    const awayLabel = match.away_label ?? match.away_team?.name ?? 'TBC';
 
     useEffect(() => {
         const echo = (window as any).Echo;

@@ -49,6 +49,8 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
                 'status' => 'upcoming',
                 'stage' => 'setup',
                 'participant_total' => 16,
+                'group_count' => 2,
+                'group_size' => 8,
                 'sets_to_win' => 2,
                 'points_per_set' => 15,
                 'advance_upper_count' => 4,
@@ -56,6 +58,8 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
                 'created_by' => $admin->id,
                 'upper_champion_entry_id' => null,
                 'lower_champion_entry_id' => null,
+                'third_place_match_id' => null,
+                'lower_third_place_match_id' => null,
             ],
         );
 
@@ -65,17 +69,24 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
         $league->update([
             'status' => 'upcoming',
             'stage' => 'setup',
+            'group_count' => 2,
+            'group_size' => 8,
             'upper_champion_entry_id' => null,
             'lower_champion_entry_id' => null,
+            'third_place_match_id' => null,
+            'lower_third_place_match_id' => null,
         ]);
 
-        $players = collect(range(1, 32))->map(function (int $number) {
+        $playerNames = $this->playerNames();
+        $groupNames = $this->entryGroupNames();
+
+        $players = collect(range(1, 32))->map(function (int $number) use ($playerNames) {
             $paddedNumber = str_pad((string) $number, 2, '0', STR_PAD_LEFT);
 
             return User::query()->updateOrCreate(
-                ['email' => "completed-md-player-{$paddedNumber}@jasaraharja.co.id"],
+                ['email' => "md-player-{$paddedNumber}@jasaraharja.co.id"],
                 [
-                    'name' => "Completed MD Player {$paddedNumber}",
+                    'name' => $playerNames[$number - 1],
                     'password' => 'password',
                     'role' => 'member',
                     'gender' => 'male',
@@ -83,11 +94,11 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
             );
         });
 
-        $players->chunk(2)->values()->each(function (Collection $pair, int $index) use ($league) {
+        $players->chunk(2)->values()->each(function (Collection $pair, int $index) use ($groupNames, $league) {
             $seed = $index + 1;
 
             $league->entries()->create([
-                'group_name' => 'Final Putra '.str_pad((string) $seed, 2, '0', STR_PAD_LEFT),
+                'group_name' => $groupNames[$index],
                 'player1_id' => $pair->values()[0]->id,
                 'player2_id' => $pair->values()[1]->id,
                 'seed' => $seed,
@@ -99,6 +110,7 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
 
         $league = $league->fresh();
         $formatService->createGroups($league, $league->entries()->orderBy('seed')->get(), 2);
+        $this->renameGroups($league->fresh());
         $formatService->generateGroupMatches($league->fresh());
 
         $this->completeMatches($league->fresh()->matches()->where('stage', 'group')->get());
@@ -133,6 +145,77 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
 
         $this->completeBracket($league->fresh(), 'upper', $bracketService);
         $this->completeBracket($league->fresh(), 'lower', $bracketService);
+    }
+
+    private function playerNames(): array
+    {
+        return [
+            'Adi Saputra',
+            'Bima Pratama',
+            'Cahyo Nugroho',
+            'Dimas Setiawan',
+            'Eko Prabowo',
+            'Fajar Ramadhan',
+            'Gilang Maulana',
+            'Hendra Wijaya',
+            'Ilham Hidayat',
+            'Joko Susanto',
+            'Kurniawan Putra',
+            'Lukman Hakim',
+            'Muhammad Rizki',
+            'Nanda Prakoso',
+            'Oki Permana',
+            'Pandu Mahesa',
+            'Raka Saputro',
+            'Rizal Firmansyah',
+            'Surya Darmawan',
+            'Teguh Prasetyo',
+            'Umar Farhan',
+            'Vino Aditya',
+            'Wahyu Kurnia',
+            'Yoga Pranata',
+            'Yusuf Maulana',
+            'Zaki Ramadhan',
+            'Bagas Pamungkas',
+            'Daffa Alfarizi',
+            'Fikri Ramadhan',
+            'Haikal Akbar',
+            'Iqbal Maulana',
+            'Rangga Saputra',
+        ];
+    }
+
+    private function entryGroupNames(): array
+    {
+        return [
+            'Garuda Perkasa',
+            'Rajawali Selatan',
+            'Komodo Jaya',
+            'Cendrawasih Prima',
+            'Elang Nusantara',
+            'Merapi Smash',
+            'Rinjani Putra',
+            'Bromo Kilat',
+            'Mandalika Rally',
+            'Papandayan Force',
+            'Andalas Power',
+            'Mataram United',
+            'Sriwijaya Drive',
+            'Mahameru Fighters',
+            'Sagara Juara',
+            'Jayawijaya Squad',
+        ];
+    }
+
+    private function renameGroups(League $league): void
+    {
+        $groupNames = ['Grup Garuda', 'Grup Rajawali'];
+
+        $league->groups()
+            ->orderBy('position')
+            ->get()
+            ->values()
+            ->each(fn ($group, int $index) => $group->update(['name' => $groupNames[$index] ?? 'Grup '.($index + 1)]));
     }
 
     private function completeBracket(League $league, string $stage, BracketService $bracketService): void

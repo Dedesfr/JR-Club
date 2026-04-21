@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview Hub — League Matches Redesign</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 p-4 md:p-8">
+
+  <div class="max-w-6xl mx-auto">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">Design Proposal: League Matches</h1>
+      <p class="text-gray-600">This hub displays the different preview passes for the Matches tab redesign.</p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- High-fi -->
+      <div class="flex flex-col h-[800px]">
+        <div class="mb-4">
+          <h3 class="font-bold text-lg flex items-center gap-2">V1 — "Active Scoreboard" Row ⭐ Recommended</h3>
+          <p class="text-sm text-gray-600 mt-1">Replaces the dense table with a fixture-list style layout. Clearer hierarchy, centered scores, and better use of brand tokens. Easier to scan than the standard table format.</p>
+        </div>
+        <div class="flex-1 bg-white border border-gray-300 rounded-xl overflow-hidden shadow-sm">
+          <iframe src="./admin-league-matches-v1.html" class="w-full h-full"></iframe>
+        </div>
+        <div class="mt-2 text-right">
+          <a href="./admin-league-matches-v1.html" target="_blank" class="text-sm text-blue-600 hover:underline">Open in new tab &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Low-fi -->
+      <div class="flex flex-col h-[800px]">
+        <div class="mb-4">
+          <h3 class="font-bold text-lg">Low-fi Structure</h3>
+          <p class="text-sm text-gray-600 mt-1">Grayscale pass to focus purely on layout, spacing, and the flex-grid structure.</p>
+        </div>
+        <div class="flex-1 bg-white border border-gray-300 rounded-xl overflow-hidden shadow-sm">
+          <iframe src="./admin-league-matches-lowfi.html" class="w-full h-full"></iframe>
+        </div>
+        <div class="mt-2 text-right">
+          <a href="./admin-league-matches-lowfi.html" target="_blank" class="text-sm text-blue-600 hover:underline">Open in new tab &rarr;</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

@@ -45,17 +45,11 @@ export default function BracketTree({
     });
 
     const entriesOptions = useMemo(() => {
-        if (!rounds || rounds.length === 0) return [];
-        const entriesMap = new Map<number, string>();
-        rounds[0].forEach(match => {
-            if (match.home_entry) entriesMap.set(match.home_entry.id, match.home_label || 'Unknown');
-            if (match.away_entry) entriesMap.set(match.away_entry.id, match.away_label || 'Unknown');
-        });
-        
-        return Array.from(entriesMap.entries())
-            .map(([id, label]) => ({ value: String(id), label }))
+        if (!league.entries || league.entries.length === 0) return [];
+        return league.entries
+            .map(entry => ({ value: String(entry.id), label: entry.label }))
             .sort((a, b) => a.label.localeCompare(b.label));
-    }, [rounds]);
+    }, [league.entries]);
 
     const handleMatchClick = (match: GameMatch) => {
         if (!adjustMode || readOnly) return;
@@ -135,7 +129,7 @@ export default function BracketTree({
                 <div className="mt-8 flex flex-col md:flex-row gap-6 justify-center max-w-2xl mx-auto">
                     <div className="flex-1 grid gap-2 rounded-lg border border-outline bg-surface-container-lowest p-3 shadow-[0px_8px_20px_rgba(15,23,42,0.06)]">
                         <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">Champion</p>
-                        <p className="min-h-7 text-center text-base font-black text-on-surface">{champion?.label ?? 'TBD'}</p>
+                        <p className="min-h-7 text-center text-base font-black text-on-surface">{champion?.label ?? 'TBC'}</p>
                     </div>
 
                     {thirdPlaceMatch && (
@@ -143,11 +137,11 @@ export default function BracketTree({
                             <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">Third Place Match</p>
                             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mt-2">
                                 <span className={['text-sm font-bold truncate text-right', isWinner(thirdPlaceMatch, 'home') ? 'text-primary' : 'text-on-surface'].join(' ')}>
-                                    {thirdPlaceMatch.home_label ?? 'TBD'}
+                                    {thirdPlaceMatch.home_label ?? 'TBC'}
                                 </span>
                                 <span className="text-xs font-black text-on-surface-variant px-2 py-1 bg-surface-variant rounded">VS</span>
                                 <span className={['text-sm font-bold truncate', isWinner(thirdPlaceMatch, 'away') ? 'text-primary' : 'text-on-surface'].join(' ')}>
-                                    {thirdPlaceMatch.away_label ?? 'TBD'}
+                                    {thirdPlaceMatch.away_label ?? 'TBC'}
                                 </span>
                             </div>
                             {(thirdPlaceMatch.home_score > 0 || thirdPlaceMatch.away_score > 0) && (
@@ -168,7 +162,7 @@ export default function BracketTree({
                         <div>
                             <label className="block text-sm font-medium text-on-surface-variant mb-1">Home Team</label>
                             <SelectInput
-                                options={[{ value: '', label: 'TBD (Bye)' }, ...entriesOptions]}
+                                options={[{ value: '', label: 'TBC (Bye)' }, ...entriesOptions]}
                                 value={String(adjustForm.data.home_entry_id)}
                                 onChange={(value) => adjustForm.setData('home_entry_id', value)}
                             />
@@ -177,7 +171,7 @@ export default function BracketTree({
                         <div>
                             <label className="block text-sm font-medium text-on-surface-variant mb-1">Away Team</label>
                             <SelectInput
-                                options={[{ value: '', label: 'TBD (Bye)' }, ...entriesOptions]}
+                                options={[{ value: '', label: 'TBC (Bye)' }, ...entriesOptions]}
                                 value={String(adjustForm.data.away_entry_id)}
                                 onChange={(value) => adjustForm.setData('away_entry_id', value)}
                             />
@@ -265,8 +259,8 @@ function toBracketRounds(
                         statusLabel: 'waiting',
                         match: {} as GameMatch,
                         teams: [
-                            { name: 'TBD', score: 0, won: false },
-                            { name: 'TBD', score: 0, won: false },
+                            { name: 'TBC', score: 0, won: false },
+                            { name: 'TBC', score: 0, won: false },
                         ],
                     } as BracketSeed,
                 ],
@@ -295,12 +289,12 @@ function toBracketSeed(match: GameMatch): BracketSeed {
         match: match,
         teams: [
             {
-                name: match.home_label ?? 'TBD',
+                name: match.home_label ?? 'TBC',
                 score: match.home_score,
                 won: isWinner(match, 'home'),
             },
             {
-                name: match.away_label ?? 'TBD',
+                name: match.away_label ?? 'TBC',
                 score: match.away_score,
                 won: isWinner(match, 'away'),
             },

@@ -208,6 +208,8 @@ class BracketService
             }
         }
 
+        // Do not auto-assign entries to slots. Users will manually assign them.
+        /*
         $slotValues = $this->seedSlots($entries, $slotCount)->values();
         foreach ($rounds[1] as $index => $match) {
             $match->update([
@@ -215,6 +217,7 @@ class BracketService
                 'away_entry_id' => $slotValues[$index * 2 + 1]?->id,
             ]);
         }
+        */
 
         $this->resolveByes(collect($rounds[1]));
 

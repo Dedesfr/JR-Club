@@ -78,7 +78,7 @@ class League extends Model
 
     public function entries()
     {
-        return $this->hasMany(LeagueEntry::class);
+        return $this->hasMany(LeagueEntry::class)->orderBy('id');
     }
 
     public function groups()
