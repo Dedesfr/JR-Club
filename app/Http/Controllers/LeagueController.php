@@ -69,6 +69,20 @@ class LeagueController extends Controller
             'lowerChampion.player1',
             'lowerChampion.player2',
             'lowerChampion.substitutes',
+            'thirdPlaceMatch.homeEntry.player1',
+            'thirdPlaceMatch.homeEntry.player2',
+            'thirdPlaceMatch.homeEntry.substitutes',
+            'thirdPlaceMatch.awayEntry.player1',
+            'thirdPlaceMatch.awayEntry.player2',
+            'thirdPlaceMatch.awayEntry.substitutes',
+            'thirdPlaceMatch.sets',
+            'lowerThirdPlaceMatch.homeEntry.player1',
+            'lowerThirdPlaceMatch.homeEntry.player2',
+            'lowerThirdPlaceMatch.homeEntry.substitutes',
+            'lowerThirdPlaceMatch.awayEntry.player1',
+            'lowerThirdPlaceMatch.awayEntry.player2',
+            'lowerThirdPlaceMatch.awayEntry.substitutes',
+            'lowerThirdPlaceMatch.sets',
         ]);
 
         return Inertia::render('Leagues/Show', [

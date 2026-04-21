@@ -31,6 +31,7 @@ A project-level design system is generated and maintained at `prompter/design-sy
 - Domain models: sports, activities, activity participants, teams, team members, leagues, league teams, league entries, league groups, league group entries, matches, and match sets.
 - Roles: `users.role` is `member` or `admin`; admin-only write actions are guarded by the `admin` Gate.
 - Seed credentials for local development: `admin@jasaraharja.co.id` / `password`.
-- Main authenticated routes: `/activities`, `/teams`, `/leagues`, `/matches/{match}`, `/leaderboards`, `/profile/show`, and the admin area under `/admin`.
+- Main authenticated routes: `/activities`, `/teams`, `/leagues`, `/matches/{match}`, `/leaderboards`, `/profile/show`, and the admin area under `/admin`. Admin ops include league schedule generation, bracket shuffling, substitutions, photo uploads, and Excel participant import/export.
+- UI Layouts: The app uses responsive layouts where mobile renders a bottom navigation (member) or drawer sidebar (admin) and single-column layout, and desktop (`md:` or `lg:`) expands with a permanent sidebar and multi-column grid lists for data-dense pages.
 - Badminton leagues use `category` (`MS`, `WS`, `MD`, `WD`, `XD`), derived `entry_type`, `participant_total`, group/bracket advancement counts, and set-based scoring with `sets_to_win` / `points_per_set`.
 - UI screens should continue translating the approved templates under `template/*/code.html` and tokens from `prompter/design-system.md`.

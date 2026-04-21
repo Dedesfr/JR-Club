@@ -20,6 +20,8 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Admin\ParticipantImportExportController as AdminParticipantImportExportController;
+
 Route::redirect('/', '/activities');
 
 Route::get('/dashboard', function () {
@@ -63,12 +65,23 @@ Route::middleware('auth')->group(function () {
         Route::get('/leagues/{league}', [AdminLeagueController::class, 'show'])->name('leagues.show');
         Route::patch('/leagues/{league}', [AdminLeagueController::class, 'update'])->name('leagues.update');
         Route::delete('/leagues/{league}', [AdminLeagueController::class, 'destroy'])->name('leagues.destroy');
+        
+        Route::get('/leagues/participants/template', [AdminParticipantImportExportController::class, 'template'])->name('leagues.participants.template');
+        Route::post('/leagues/{league}/participants/import', [AdminParticipantImportExportController::class, 'import'])->name('leagues.participants.import');
+        Route::get('/leagues/{league}/participants/export', [AdminParticipantImportExportController::class, 'export'])->name('leagues.participants.export');
+        
         Route::post('/leagues/{league}/entries', [AdminLeagueEntryController::class, 'store'])->name('leagues.entries.store');
         Route::delete('/leagues/{league}/entries/{entry}', [AdminLeagueEntryController::class, 'destroy'])->name('leagues.entries.destroy');
         Route::post('/leagues/{league}/groups', [AdminLeagueGroupController::class, 'store'])->name('leagues.groups.store');
         Route::patch('/leagues/{league}/groups/{groupEntry}', [AdminLeagueGroupController::class, 'update'])->name('leagues.groups.update');
         Route::post('/leagues/{league}/brackets', [AdminLeagueBracketController::class, 'store'])->name('leagues.brackets.store');
+        Route::post('/leagues/{league}/bracket/adjust', [AdminLeagueBracketController::class, 'adjust'])->name('leagues.brackets.adjust');
 
+        Route::patch('/matches/{match}/schedule', [AdminLeagueMatchController::class, 'updateSchedule'])->name('matches.schedule.update');
+        Route::post('/matches/{match}/substitutions', [AdminLeagueMatchController::class, 'substitute'])->name('matches.substitutions.store');
+        Route::post('/matches/{match}/documents', [AdminLeagueMatchController::class, 'uploadDocuments'])->name('matches.documents.store');
+        Route::delete('/matches/{match}/documents/{document}', [AdminLeagueMatchController::class, 'destroyDocument'])->name('matches.documents.destroy');
+        
         Route::post('/matches/{match}/sets', [AdminLeagueMatchController::class, 'store'])->name('matches.sets.store');
         Route::post('/matches/{match}/complete', [AdminLeagueMatchController::class, 'complete'])->name('matches.complete');
 

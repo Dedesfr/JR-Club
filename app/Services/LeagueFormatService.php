@@ -82,27 +82,74 @@ class LeagueFormatService
         });
     }
 
-    public function generateGroupMatches(League $league): void
+    public function generateGroupMatches(League $league, \Illuminate\Support\Collection $scheduleMap = null, int $intervalMinutes = 0): void
     {
-        DB::transaction(function () use ($league) {
+        DB::transaction(function () use ($league, $scheduleMap, $intervalMinutes) {
             $league->matches()->where('stage', 'group')->delete();
 
-            $league->groups()->with('entries')->get()->each(function (LeagueGroup $group) use ($league) {
-                $entries = $group->entries->values();
+            $roundOffsets = [];
 
-                for ($i = 0; $i < $entries->count(); $i++) {
-                    for ($j = $i + 1; $j < $entries->count(); $j++) {
-                        GameMatch::create([
-                            'league_id' => $league->id,
-                            'league_group_id' => $group->id,
-                            'home_entry_id' => $entries[$i]->id,
-                            'away_entry_id' => $entries[$j]->id,
-                            'scheduled_at' => now(),
-                            'status' => 'scheduled',
-                            'stage' => 'group',
-                            'round' => 1,
-                        ]);
+            $league->groups()->with('entries')->get()->each(function (LeagueGroup $group) use ($league, $scheduleMap, $intervalMinutes, &$roundOffsets) {
+                $entries = $group->entries->values();
+                $round = 1;
+
+                // Implement a round-robin scheduling algorithm to properly assign rounds
+                $numEntries = $entries->count();
+                $isOdd = $numEntries % 2 !== 0;
+                
+                // If odd number of teams, add a dummy "bye" team
+                $teams = $entries->toArray();
+                if ($isOdd) {
+                    $teams[] = null;
+                    $numEntries++;
+                }
+
+                $totalRounds = $numEntries - 1;
+                $matchesPerRound = $numEntries / 2;
+
+                for ($r = 0; $r < $totalRounds; $r++) {
+                    for ($i = 0; $i < $matchesPerRound; $i++) {
+                        $home = $teams[$i];
+                        $away = $teams[$numEntries - 1 - $i];
+
+                        // Skip matches involving the dummy "bye" team
+                        if ($home !== null && $away !== null) {
+                            $scheduledAt = now();
+                            if ($scheduleMap && $scheduleMap->has($round)) {
+                                $scheduledAt = \Carbon\Carbon::parse($scheduleMap->get($round));
+                            } elseif ($league->start_date) {
+                                $scheduledAt = $league->start_date->copy()->addDays($round - 1);
+                            } else {
+                                $scheduledAt = now()->addDays($round - 1);
+                            }
+
+                            if (!isset($roundOffsets[$round])) {
+                                $roundOffsets[$round] = 0;
+                            }
+                            
+                            $time = $scheduledAt->copy()->addMinutes($roundOffsets[$round]);
+                            $roundOffsets[$round] += $intervalMinutes;
+
+                            GameMatch::create([
+                                'league_id' => $league->id,
+                                'league_group_id' => $group->id,
+                                'home_entry_id' => $home['id'],
+                                'away_entry_id' => $away['id'],
+                                'scheduled_at' => $time,
+                                'status' => 'scheduled',
+                                'stage' => 'group',
+                                'round' => $round,
+                            ]);
+                        }
                     }
+
+                    // Rotate teams for next round, keeping the first team fixed
+                    $teams = array_merge(
+                        [$teams[0]],
+                        [array_pop($teams)],
+                        array_slice($teams, 1, $numEntries - 2)
+                    );
+                    $round++;
                 }
             });
         });

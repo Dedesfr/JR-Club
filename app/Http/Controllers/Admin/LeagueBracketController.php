@@ -11,15 +11,34 @@ use Illuminate\Http\Request;
 
 class LeagueBracketController extends Controller
 {
+    public function adjust(Request $request, League $league, BracketService $bracketService)
+    {
+        $validated = $request->validate([
+            'match_id' => ['required', 'exists:matches,id'],
+            'home_entry_id' => ['nullable', 'exists:league_entries,id'],
+            'away_entry_id' => ['nullable', 'exists:league_entries,id'],
+        ]);
+
+        $match = $league->matches()->findOrFail($validated['match_id']);
+
+        try {
+            $bracketService->adjustSlots($match, $validated['home_entry_id'] ?? null, $validated['away_entry_id'] ?? null);
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Bracket slots adjusted successfully.');
+    }
+
     public function store(Request $request, League $league, BracketService $bracketService, LeagueFormatService $leagueFormatService): RedirectResponse
     {
         $validated = $request->validate([
             'advance_upper_count' => ['required', 'integer', 'min:0'],
             'advance_lower_count' => ['required', 'integer', 'min:0'],
-            'upper_entry_ids' => ['nullable', 'array'],
-            'upper_entry_ids.*' => ['integer', 'exists:league_entries,id'],
-            'lower_entry_ids' => ['nullable', 'array'],
-            'lower_entry_ids.*' => ['integer', 'exists:league_entries,id'],
+            'interval' => ['required', 'integer', 'min:0'],
+            'schedule' => ['nullable', 'array'],
+            'schedule.*.round' => ['required_with:schedule', 'integer', 'min:1'],
+            'schedule.*.scheduled_at' => ['required_with:schedule', 'date'],
         ]);
 
         $league->update([
@@ -32,15 +51,12 @@ class LeagueBracketController extends Controller
             ->map(fn ($row) => $row['entry']);
 
         $perGroup = $league->groups()->count();
-        $upperEntries = collect($validated['upper_entry_ids'] ?? [])->isNotEmpty()
-            ? $league->entries()->whereIn('id', $validated['upper_entry_ids'])->orderBy('seed')->get()
-            : $this->slicePerGroup($rankedEntries, $perGroup, 0, (int) $validated['advance_upper_count']);
+        $upperEntries = $this->slicePerGroup($rankedEntries, $perGroup, 0, (int) $validated['advance_upper_count']);
+        $lowerEntries = $this->slicePerGroup($rankedEntries, $perGroup, (int) $validated['advance_upper_count'], (int) $validated['advance_lower_count']);
 
-        $lowerEntries = collect($validated['lower_entry_ids'] ?? [])->isNotEmpty()
-            ? $league->entries()->whereIn('id', $validated['lower_entry_ids'])->orderBy('seed')->get()
-            : $this->slicePerGroup($rankedEntries, $perGroup, (int) $validated['advance_upper_count'], (int) $validated['advance_lower_count']);
+        $scheduleMap = collect($validated['schedule'] ?? [])->keyBy('round')->map->scheduled_at;
 
-        $bracketService->seedBrackets($league->fresh(), $upperEntries, $lowerEntries);
+        $bracketService->seedBrackets($league->fresh(), $upperEntries, $lowerEntries, $scheduleMap, (int) $validated['interval']);
 
         return back()->with('success', 'Brackets seeded.');
     }

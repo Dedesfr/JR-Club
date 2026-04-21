@@ -16,7 +16,7 @@ class MatchController extends Controller
     public function show(GameMatch $match): Response
     {
         return Inertia::render('Matches/Show', [
-            'match' => $match->load(['league.sport', 'homeTeam', 'awayTeam', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.substitutes', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.substitutes', 'sets']),
+            'match' => $match->load(['league.sport', 'homeTeam', 'awayTeam', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.substitutes', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.substitutes', 'sets', 'documents', 'substitutions']),
             'canManage' => request()->user()->can('admin'),
         ]);
     }

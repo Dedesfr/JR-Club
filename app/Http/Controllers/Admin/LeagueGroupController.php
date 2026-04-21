@@ -16,6 +16,10 @@ class LeagueGroupController extends Controller
     {
         $validated = $request->validate([
             'group_count' => ['required', 'integer', 'min:2'],
+            'interval' => ['required', 'integer', 'min:0'],
+            'schedule' => ['nullable', 'array'],
+            'schedule.*.round' => ['required_with:schedule', 'integer', 'min:1'],
+            'schedule.*.scheduled_at' => ['required_with:schedule', 'date'],
         ]);
 
         $entries = $league->entries()->orderBy('seed')->get();
@@ -32,7 +36,9 @@ class LeagueGroupController extends Controller
         }
 
         $leagueFormatService->createGroups($league, $entries, (int) $validated['group_count']);
-        $leagueFormatService->generateGroupMatches($league->fresh());
+        
+        $scheduleMap = collect($validated['schedule'] ?? [])->keyBy('round')->map->scheduled_at;
+        $leagueFormatService->generateGroupMatches($league->fresh(), $scheduleMap, (int) $validated['interval']);
 
         return back()->with('success', 'Groups and round-robin matches generated.');
     }

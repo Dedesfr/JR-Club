@@ -23,15 +23,17 @@ export default function Index({ players }: { players: Player[] }) {
 
             <section className="space-y-3">
                 <h2 className="text-sm font-bold uppercase tracking-[0.05em] text-on-surface-variant">Players</h2>
-                {players.slice(3).map((player, index) => (
-                    <Link key={player.id} href={route('profile.public', player.id)} className="flex items-center justify-between rounded-xl bg-surface-container-lowest p-4 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
-                        <div>
-                            <p className="font-bold">{index + 4}. {player.name}</p>
-                            <p className="text-xs text-on-surface-variant">{player.activities_joined} activities - {player.matches_played} matches - {player.win_rate}% win rate</p>
-                        </div>
-                        <span className="text-xl font-black text-primary">{player.score}</span>
-                    </Link>
-                ))}
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {players.slice(3).map((player, index) => (
+                        <Link key={player.id} href={route('profile.public', player.id)} className="flex items-center justify-between rounded-xl bg-surface-container-lowest p-4 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
+                            <div>
+                                <p className="font-bold">{index + 4}. {player.name}</p>
+                                <p className="text-xs text-on-surface-variant">{player.activities_joined} activities - {player.matches_played} matches - {player.win_rate}% win rate</p>
+                            </div>
+                            <span className="text-xl font-black text-primary">{player.score}</span>
+                        </Link>
+                    ))}
+                </div>
             </section>
         </JRClubLayout>
     );

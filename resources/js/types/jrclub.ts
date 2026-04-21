@@ -87,6 +87,27 @@ export type League = {
     matches?: GameMatch[];
     upper_champion?: LeagueEntry | null;
     lower_champion?: LeagueEntry | null;
+    third_place_match?: GameMatch | null;
+    lower_third_place_match?: GameMatch | null;
+};
+
+export type MatchSubstitution = {
+    id: number;
+    match_id: number;
+    entry_id: number;
+    original_player_id: number;
+    substitute_id: number;
+    reason?: string | null;
+    activated_at: string;
+};
+
+export type MatchDocument = {
+    id: number;
+    match_id: number;
+    path: string;
+    original_name: string;
+    uploaded_by: number;
+    created_at: string;
 };
 
 export type GameMatch = {
@@ -95,6 +116,7 @@ export type GameMatch = {
     stage?: string | null;
     round?: number | null;
     scheduled_at: string;
+    location?: string | null;
     home_score: number;
     away_score: number;
     home_team?: Team | null;
@@ -104,6 +126,8 @@ export type GameMatch = {
     home_label?: string | null;
     away_label?: string | null;
     sets?: MatchSet[];
+    substitutions?: MatchSubstitution[];
+    documents?: MatchDocument[];
     next_match_id?: number | null;
     league?: League;
 };

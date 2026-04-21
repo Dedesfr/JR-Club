@@ -52,6 +52,70 @@ class LeagueMatchController extends Controller
         return back()->with('success', 'Set recorded.');
     }
 
+    public function updateSchedule(Request $request, GameMatch $match): RedirectResponse
+    {
+        $validated = $request->validate([
+            'scheduled_at' => ['required', 'date'],
+            'location' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $match->update($validated);
+
+        return back()->with('success', 'Match schedule updated.');
+    }
+
+    public function substitute(Request $request, GameMatch $match): RedirectResponse
+    {
+        $validated = $request->validate([
+            'entry_id' => ['required', 'exists:league_entries,id'],
+            'original_player_id' => ['required', 'exists:users,id'],
+            'substitute_id' => ['required', 'exists:users,id'],
+            'reason' => ['nullable', 'string'],
+        ]);
+
+        $entry = $match->league->entries()->findOrFail($validated['entry_id']);
+
+        if (!$entry->substitutes()->where('users.id', $validated['substitute_id'])->exists()) {
+            return back()->withErrors(['substitute_id' => 'The selected user is not a declared substitute for this entry.']);
+        }
+
+        $match->substitutions()->create($validated);
+
+        return back()->with('success', 'Substitution recorded successfully.');
+    }
+
+    public function uploadDocuments(Request $request, GameMatch $match): RedirectResponse
+    {
+        $request->validate([
+            'documents' => ['required', 'array', 'max:10'],
+            'documents.*' => ['required', 'file', 'mimes:jpeg,png,webp', 'max:5120'], // 5MB
+        ]);
+
+        foreach ($request->file('documents') as $file) {
+            $path = $file->store('matches', 'public');
+            $match->documents()->create([
+                'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'uploaded_by' => auth()->id(),
+            ]);
+        }
+
+        return back()->with('success', 'Documents uploaded successfully.');
+    }
+
+    public function destroyDocument(GameMatch $match, $documentId): RedirectResponse
+    {
+        $document = $match->documents()->findOrFail($documentId);
+        
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($document->path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($document->path);
+        }
+
+        $document->delete();
+
+        return back()->with('success', 'Document deleted successfully.');
+    }
+
     public function complete(GameMatch $match): RedirectResponse
     {
         $match->update(['status' => 'completed']);

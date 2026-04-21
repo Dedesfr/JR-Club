@@ -71,19 +71,21 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                             </div>
                         )) : (
                             league.category && (standings as LeagueStandingGroup[]).length > 0 ? (
-                                (standings as LeagueStandingGroup[]).map((group) => (
-                                    <div key={group.group} className="rounded-xl bg-surface-container-low p-3">
-                                        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">{group.group}</p>
-                                        <div className="mt-2 space-y-2">
-                                            {group.entries.map((entry, index) => (
-                                                <div key={entry.id} className="flex items-center justify-between rounded-lg bg-surface-container-lowest px-3 py-2">
-                                                    <span className="font-bold text-on-surface">{index + 1}. {entry.entry.label}</span>
-                                                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{entry.points} pts</span>
-                                                </div>
-                                            ))}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {(standings as LeagueStandingGroup[]).map((group) => (
+                                        <div key={group.group} className="rounded-xl bg-surface-container-low p-3">
+                                            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">{group.group}</p>
+                                            <div className="mt-2 space-y-2">
+                                                {group.entries.map((entry, index) => (
+                                                    <div key={entry.id} className="flex items-center justify-between rounded-lg bg-surface-container-lowest px-3 py-2">
+                                                        <span className="font-bold text-on-surface">{index + 1}. {entry.entry.label}</span>
+                                                        <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{entry.points} pts</span>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    ))}
+                                </div>
                             ) : <p className="text-sm text-on-surface-variant p-2 text-center">No standings available yet.</p>
                         )}
                     </div>
@@ -92,8 +94,8 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                 {(upperBracket.length > 0 || lowerBracket.length > 0) && (
                     <section className="space-y-4">
                         <h3 className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-surface-variant">TOURNAMENT BRACKETS</h3>
-                        {upperBracket.length > 0 ? <BracketTree title="Upper Bracket" rounds={upperBracket} champion={league.upper_champion} readOnly /> : null}
-                        {lowerBracket.length > 0 ? <BracketTree title="Lower Bracket" rounds={lowerBracket} champion={league.lower_champion} readOnly /> : null}
+                        {upperBracket.length > 0 ? <BracketTree league={league} title="Upper Bracket" rounds={upperBracket} thirdPlaceMatch={league.third_place_match} champion={league.upper_champion} readOnly /> : null}
+                        {lowerBracket.length > 0 ? <BracketTree league={league} title="Lower Bracket" rounds={lowerBracket} thirdPlaceMatch={league.lower_third_place_match} champion={league.lower_champion} readOnly /> : null}
                     </section>
                 )}
 
@@ -101,7 +103,7 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                 {upcomingMatches.length > 0 && (
                     <section>
                         <h3 className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-surface-variant mb-4">UPCOMING MATCHES</h3>
-                        <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {upcomingMatches.map(match => (
                                 <Link href={route('matches.show', match.id)} key={match.id} className="block bg-surface-container-lowest rounded-xl p-5 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] cursor-pointer active:scale-[0.98] transition-transform">
                                     <div className="flex justify-between items-center mb-4">
@@ -154,7 +156,7 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                 {league.entries && league.entries.length > 0 && (
                     <section className="pb-8">
                         <h3 className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-surface-variant mb-4">PARTICIPATING ENTRIES ({league.entries.length})</h3>
-                        <div className="grid gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {league.entries.map((entry) => (
                                 <div key={entry.id} className="rounded-xl bg-surface-container-lowest px-4 py-3 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
                                     <span className="font-bold text-on-surface">{entry.label}</span>

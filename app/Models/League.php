@@ -29,6 +29,8 @@ class League extends Model
         'advance_lower_count',
         'upper_champion_entry_id',
         'lower_champion_entry_id',
+        'third_place_match_id',
+        'lower_third_place_match_id',
         'created_by',
     ];
 
@@ -61,7 +63,17 @@ class League extends Model
 
     public function matches()
     {
-        return $this->hasMany(GameMatch::class, 'league_id');
+        return $this->hasMany(GameMatch::class, 'league_id')->orderBy('id', 'asc');
+    }
+
+    public function thirdPlaceMatch()
+    {
+        return $this->belongsTo(GameMatch::class, 'third_place_match_id');
+    }
+
+    public function lowerThirdPlaceMatch()
+    {
+        return $this->belongsTo(GameMatch::class, 'lower_third_place_match_id');
     }
 
     public function entries()

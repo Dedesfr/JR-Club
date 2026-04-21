@@ -43,7 +43,7 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
                 </div>
             </section>
 
-            <main className="flex flex-col gap-6">
+            <main className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {activities.map((activity) => {
                     const participants = activity.participants_count ?? activity.participants?.length ?? 0;
                     const spotsLeft = Math.max(0, activity.max_participants - participants);

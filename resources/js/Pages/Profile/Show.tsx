@@ -69,12 +69,14 @@ export default function Show({ profile, isPublic }: { profile: Profile; isPublic
 
             <section className="space-y-4">
                 <h2 className="text-sm font-bold uppercase tracking-[0.05em] text-on-surface-variant">Activity History</h2>
-                {profile.activities.map((activity) => (
-                    <Link key={activity.id} href={route('activities.show', activity.id)} className="block rounded-xl bg-surface-container-lowest p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
-                        <p className="font-bold">{activity.title}</p>
-                        <p className="text-sm text-on-surface-variant">{activity.sport.name} - {new Date(activity.scheduled_at).toLocaleDateString()}</p>
-                    </Link>
-                ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {profile.activities.map((activity) => (
+                        <Link key={activity.id} href={route('activities.show', activity.id)} className="block rounded-xl bg-surface-container-lowest p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
+                            <p className="font-bold">{activity.title}</p>
+                            <p className="text-sm text-on-surface-variant">{activity.sport.name} - {new Date(activity.scheduled_at).toLocaleDateString()}</p>
+                        </Link>
+                    ))}
+                </div>
             </section>
         </JRClubLayout>
     );

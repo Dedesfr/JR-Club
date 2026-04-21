@@ -155,27 +155,39 @@ export default function Leagues({
                 </section>
             )}
 
-            <section className="mb-8 mt-6 overflow-hidden rounded-xl bg-surface-container-high">
+            <section className="mb-8 mt-6">
                 {leagues.length === 0 ? (
-                    <p className="p-4 text-sm text-on-surface-variant">No leagues found for this sport.</p>
+                    <div className="overflow-hidden rounded-xl bg-surface-container-high">
+                        <p className="p-4 text-sm text-on-surface-variant">No leagues found for this sport.</p>
+                    </div>
                 ) : standings.length === 0 ? (
-                    <p className="p-4 text-sm text-on-surface-variant">No standings available for this league yet.</p>
+                    <div className="overflow-hidden rounded-xl bg-surface-container-high">
+                        <p className="p-4 text-sm text-on-surface-variant">No standings available for this league yet.</p>
+                    </div>
                 ) : isGroupStandings ? (
-                    (standings as LeagueStandingGroup[]).map((group) => <GroupStanding key={group.group} group={group} />)
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        {(standings as LeagueStandingGroup[]).map((group) => (
+                            <div key={group.group} className="overflow-hidden rounded-xl bg-surface-container-high">
+                                <GroupStanding group={group} />
+                            </div>
+                        ))}
+                    </div>
                 ) : (
-                    <TeamStandings standings={standings as Standing[]} />
+                    <div className="overflow-hidden rounded-xl bg-surface-container-high">
+                        <TeamStandings standings={standings as Standing[]} />
+                    </div>
                 )}
             </section>
 
             {league && upperBracket && upperBracket.length > 0 && (
                 <section className="mb-8">
-                    <BracketTree title="Upper Bracket" rounds={upperBracket} champion={league.upper_champion} readOnly />
+                    <BracketTree league={league} title="Upper Bracket" rounds={upperBracket} thirdPlaceMatch={league.third_place_match} champion={league.upper_champion} readOnly />
                 </section>
             )}
 
             {league && lowerBracket && lowerBracket.length > 0 && (
                 <section className="mb-8">
-                    <BracketTree title="Lower Bracket" rounds={lowerBracket} champion={league.lower_champion} readOnly />
+                    <BracketTree league={league} title="Lower Bracket" rounds={lowerBracket} champion={league.lower_champion} readOnly />
                 </section>
             )}
         </JRClubLayout>

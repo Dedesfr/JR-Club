@@ -75,7 +75,17 @@ class GameMatch extends Model
 
     public function sets()
     {
-        return $this->hasMany(MatchSet::class, 'match_id')->orderBy('set_number');
+        return $this->hasMany(MatchSet::class, 'match_id');
+    }
+
+    public function substitutions()
+    {
+        return $this->hasMany(\App\Models\MatchSubstitution::class, 'match_id');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(\App\Models\MatchDocument::class, 'match_id');
     }
 
     public function isEntryMatch(): bool

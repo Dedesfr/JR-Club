@@ -49,6 +49,7 @@ class AdminTournamentFlowTest extends TestCase
 
         $this->actingAs($admin)->post(route('admin.leagues.groups.store', $league), [
             'group_count' => 2,
+            'interval' => 15,
         ])->assertRedirect();
 
         $league->refresh()->load('groups.groupEntries');
@@ -64,6 +65,7 @@ class AdminTournamentFlowTest extends TestCase
         $this->actingAs($admin)->post(route('admin.leagues.brackets.store', $league), [
             'advance_upper_count' => 1,
             'advance_lower_count' => 1,
+            'interval' => 15,
         ])->assertRedirect();
 
         $upperFinal = GameMatch::where('league_id', $league->id)->where('stage', 'upper')->whereNull('next_match_id')->firstOrFail();
