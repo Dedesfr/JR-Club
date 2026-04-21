@@ -8,6 +8,7 @@ use App\Models\LeagueEntry;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -21,11 +22,16 @@ class LeagueEntryController extends Controller
 
         $validated = $request->validate([
             'group_name' => [Rule::requiredIf(fn () => $league->entry_type === 'double'), 'nullable', 'string', 'max:255'],
+            'group_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'player1_id' => ['required', 'exists:users,id'],
             'player2_id' => ['nullable', 'exists:users,id', 'different:player1_id'],
             'substitute_ids' => ['nullable', 'array'],
             'substitute_ids.*' => ['integer', 'exists:users,id', 'distinct'],
         ]);
+
+        if ($request->hasFile('group_picture') && $league->entry_type !== 'double') {
+            throw ValidationException::withMessages(['group_picture' => 'Group picture is only available for doubles entries.']);
+        }
 
         $player1 = User::findOrFail($validated['player1_id']);
         $player2 = isset($validated['player2_id']) ? User::findOrFail($validated['player2_id']) : null;
@@ -37,6 +43,7 @@ class LeagueEntryController extends Controller
 
         $entry = $league->entries()->create([
             'group_name' => $league->entry_type === 'double' ? ($validated['group_name'] ?? null) : null,
+            'group_picture_path' => $request->file('group_picture')?->store('league-entries', 'public'),
             'player1_id' => $validated['player1_id'],
             'player2_id' => $validated['player2_id'] ?? null,
             'substitute_id' => $substitutes->first()?->id,
@@ -48,9 +55,73 @@ class LeagueEntryController extends Controller
         return back()->with('success', 'Entry added.');
     }
 
+    public function update(Request $request, League $league, LeagueEntry $entry): RedirectResponse
+    {
+        abort_unless($entry->league_id === $league->id, 404);
+
+        if (! $league->isBadminton()) {
+            throw ValidationException::withMessages(['league' => 'Entries are only available for badminton leagues.']);
+        }
+
+        $validated = $request->validate([
+            'group_name' => [Rule::requiredIf(fn () => $league->entry_type === 'double'), 'nullable', 'string', 'max:255'],
+            'group_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_group_picture' => ['nullable', 'boolean'],
+            'player1_id' => ['required', 'exists:users,id'],
+            'player2_id' => ['nullable', 'exists:users,id', 'different:player1_id'],
+            'substitute_ids' => ['nullable', 'array'],
+            'substitute_ids.*' => ['integer', 'exists:users,id', 'distinct'],
+        ]);
+
+        if ($request->hasFile('group_picture') && $league->entry_type !== 'double') {
+            throw ValidationException::withMessages(['group_picture' => 'Group picture is only available for doubles entries.']);
+        }
+
+        $player1 = User::findOrFail($validated['player1_id']);
+        $player2 = isset($validated['player2_id']) ? User::findOrFail($validated['player2_id']) : null;
+        $substitutes = User::query()
+            ->whereIn('id', $validated['substitute_ids'] ?? [])
+            ->get();
+
+        $this->assertCategoryRules($league, $player1, $player2, $substitutes);
+
+        $groupPicturePath = $entry->group_picture_path;
+        $shouldRemoveGroupPicture = (bool) ($validated['remove_group_picture'] ?? false);
+
+        if ($request->hasFile('group_picture')) {
+            if ($groupPicturePath && Storage::disk('public')->exists($groupPicturePath)) {
+                Storage::disk('public')->delete($groupPicturePath);
+            }
+
+            $groupPicturePath = $request->file('group_picture')->store('league-entries', 'public');
+        } elseif ($shouldRemoveGroupPicture && $groupPicturePath) {
+            if (Storage::disk('public')->exists($groupPicturePath)) {
+                Storage::disk('public')->delete($groupPicturePath);
+            }
+
+            $groupPicturePath = null;
+        }
+
+        $entry->update([
+            'group_name' => $league->entry_type === 'double' ? ($validated['group_name'] ?? null) : null,
+            'group_picture_path' => $groupPicturePath,
+            'player1_id' => $validated['player1_id'],
+            'player2_id' => $validated['player2_id'] ?? null,
+            'substitute_id' => $substitutes->first()?->id,
+        ]);
+
+        $entry->substitutes()->sync($substitutes->pluck('id')->all());
+
+        return back()->with('success', 'Entry updated.');
+    }
+
     public function destroy(League $league, LeagueEntry $entry): RedirectResponse
     {
         abort_unless($entry->league_id === $league->id, 404);
+
+        if ($entry->group_picture_path && Storage::disk('public')->exists($entry->group_picture_path)) {
+            Storage::disk('public')->delete($entry->group_picture_path);
+        }
 
         $entry->delete();
 

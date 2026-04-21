@@ -72,7 +72,8 @@ export default function EntryPicker({
     category: NonNullable<League['category']>;
     entryType?: 'single' | 'double' | null;
 }) {
-    const form = useForm({ group_name: '', player1_id: '', player2_id: '', substitute_ids: [] as string[] });
+    const allowsGroupPicture = ['MD', 'WD', 'XD'].includes(category);
+    const form = useForm({ group_name: '', player1_id: '', player2_id: '', substitute_ids: [] as string[], group_picture: null as File | null });
     const selectedPlayer1 = users.find((user) => String(user.id) === form.data.player1_id);
     const player1Users = useMemo(() => filterUsersByCategory(users, category, 'player1'), [users, category]);
     const player2Users = useMemo(() => filterUsersByCategory(users, category, 'player2', selectedPlayer1), [users, category, selectedPlayer1]);
@@ -87,7 +88,7 @@ export default function EntryPicker({
         event.preventDefault();
         form.post(route('admin.leagues.entries.store', leagueId), {
             preserveScroll: true,
-            onSuccess: () => form.reset(),
+            onSuccess: () => form.reset('group_name', 'player1_id', 'player2_id', 'substitute_ids', 'group_picture'),
         });
     };
 
@@ -99,6 +100,19 @@ export default function EntryPicker({
                         <span className="block mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Group name</span>
                         <input value={form.data.group_name} onChange={(event) => form.setData('group_name', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface text-sm" placeholder="Optional team name" />
                         {form.errors.group_name ? <span className="text-xs font-medium text-error mt-1 block">{form.errors.group_name}</span> : null}
+                    </label>
+                ) : null}
+                {allowsGroupPicture ? (
+                    <label className="block md:col-span-4">
+                        <span className="block mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Group picture</span>
+                        <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={(event) => form.setData('group_picture', event.target.files?.[0] ?? null)}
+                            className="block w-full rounded-lg border border-outline-variant/20 bg-surface-container-low px-3 py-2.5 text-sm text-on-surface file:mr-3 file:rounded-full file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-primary"
+                        />
+                        <p className="mt-1 text-xs text-on-surface-variant">Optional. JPEG, PNG, or WEBP up to 5MB.</p>
+                        {form.errors.group_picture ? <span className="text-xs font-medium text-error mt-1 block">{form.errors.group_picture}</span> : null}
                     </label>
                 ) : null}
                 <UserSelect label="Player 1" value={form.data.player1_id} onChange={(value) => form.setData('player1_id', value)} users={player1Users} error={form.errors.player1_id} />

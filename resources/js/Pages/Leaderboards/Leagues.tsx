@@ -208,7 +208,7 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
                     <div className="w-8 text-center text-on-surface-variant">{row.won}</div>
                     <div className="w-8 text-center text-on-surface-variant">{row.drawn}</div>
                     <div className="w-8 text-center text-on-surface-variant">{row.lost}</div>
-                    <div className="w-10 text-right font-black">{row.points}</div>
+                    <div className="w-10 text-right font-black">{(row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
                 </div>
             ))}
         </>
@@ -217,16 +217,37 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
 
 function GroupStanding({ group }: { group: LeagueStandingGroup }) {
     return (
-        <div className="border-b border-outline-variant/20 last:border-b-0">
-            <div className="bg-surface-container-low px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary">{group.group}</div>
+        <div className="flex flex-col">
+            <div className="bg-surface-container-low px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary">
+                {group.group}
+            </div>
+            <div className="flex items-center border-b border-outline-variant/30 px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                <div className="w-8 shrink-0 text-center">#</div>
+                <div className="flex-grow min-w-0">Club</div>
+                <div className="w-8 shrink-0 text-center" title="Match Played">MP</div>
+                <div className="w-8 shrink-0 text-center" title="Win">W</div>
+                <div className="w-8 shrink-0 text-center" title="Loss">L</div>
+                <div className="w-10 shrink-0 text-center" title="Accumulated Score">Scr</div>
+                <div className="w-10 shrink-0 text-right font-black text-on-surface" title="Points">Pts</div>
+            </div>
             {group.entries.map((row: LeagueGroupStanding, index) => (
-                <div key={row.id} className={`${index === 0 ? 'mx-1 my-1 rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0_12px_32px_-4px_rgba(25,28,30,0.12)]' : index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'} flex items-center px-4 py-3 text-sm`}>
-                    <div className="w-8 font-bold">{index + 1}</div>
-                    <div className="flex flex-grow items-center gap-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-container-high text-[10px] font-bold text-on-surface">{row.entry.label.charAt(0)}</div>
-                        <span className="font-bold">{row.entry.label}</span>
+                <div key={row.id} className="flex items-center border-b border-outline-variant/10 px-4 py-3 text-sm last:border-b-0 hover:bg-surface-container-lowest transition-colors">
+                    <div className="w-8 shrink-0 font-medium text-on-surface-variant">{index + 1}</div>
+                    <div className="flex flex-grow min-w-0 items-center gap-2">
+                        {row.entry.group_picture_path ? (
+                            <img src={`/storage/${row.entry.group_picture_path}`} alt={row.entry.label} className="h-6 w-6 shrink-0 rounded-full object-cover shadow-sm bg-surface-container-high" />
+                        ) : (
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-[10px] font-bold text-on-surface">
+                                {row.entry.label.charAt(0)}
+                            </div>
+                        )}
+                        <span className="truncate font-medium text-on-surface">{row.entry.label}</span>
                     </div>
-                    <div className="w-10 text-right font-black">{row.points}</div>
+                    <div className="w-8 shrink-0 text-center text-on-surface-variant">{row.played ?? 0}</div>
+                    <div className="w-8 shrink-0 text-center text-on-surface-variant">{row.won ?? 0}</div>
+                    <div className="w-8 shrink-0 text-center text-on-surface-variant">{row.lost ?? 0}</div>
+                    <div className="w-10 shrink-0 text-center text-on-surface-variant">{row.score ?? 0}</div>
+                    <div className="w-10 shrink-0 text-right font-bold text-on-surface">{(row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
                 </div>
             ))}
         </div>

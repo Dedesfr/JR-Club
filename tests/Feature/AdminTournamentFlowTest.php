@@ -6,7 +6,9 @@ use App\Models\GameMatch;
 use App\Models\League;
 use App\Models\Sport;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminTournamentFlowTest extends TestCase
@@ -81,5 +83,98 @@ class AdminTournamentFlowTest extends TestCase
         $this->assertSame('completed', $league->stage);
         $this->assertNotNull($league->upper_champion_entry_id);
         $this->assertNotNull($league->lower_champion_entry_id);
+    }
+
+    public function test_admin_can_add_a_group_picture_for_doubles_entry(): void
+    {
+        Storage::fake('public');
+
+        /** @var User $admin */
+        $admin = User::factory()->create(['role' => 'admin']);
+        $sport = Sport::create(['name' => 'Badminton', 'icon' => 'sports_tennis', 'max_players_per_team' => 2]);
+
+        $this->actingAs($admin)->post(route('admin.leagues.store'), [
+            'name' => 'JR Doubles Cup',
+            'sport_id' => $sport->id,
+            'category' => 'MD',
+            'start_date' => now()->toDateString(),
+            'sets_to_win' => 2,
+            'points_per_set' => 21,
+            'advance_upper_count' => 0,
+            'advance_lower_count' => 0,
+        ])->assertRedirect();
+
+        $league = League::firstOrFail();
+
+        $player1 = User::factory()->create(['gender' => 'male']);
+        $player2 = User::factory()->create(['gender' => 'male']);
+
+        $this->actingAs($admin)->post(route('admin.leagues.entries.store', $league), [
+            'group_name' => 'Garuda Pair',
+            'player1_id' => $player1->id,
+            'player2_id' => $player2->id,
+            'group_picture' => UploadedFile::fake()->image('garuda-pair.jpg'),
+        ])->assertRedirect();
+
+        $entry = $league->entries()->firstOrFail();
+
+        $this->assertSame('Garuda Pair', $entry->group_name);
+        $this->assertNotNull($entry->group_picture_path);
+        Storage::disk('public')->assertExists($entry->group_picture_path);
+    }
+
+    public function test_admin_can_update_a_doubles_entry_and_replace_group_picture(): void
+    {
+        Storage::fake('public');
+
+        /** @var User $admin */
+        $admin = User::factory()->create(['role' => 'admin']);
+        $sport = Sport::create(['name' => 'Badminton', 'icon' => 'sports_tennis', 'max_players_per_team' => 2]);
+
+        $this->actingAs($admin)->post(route('admin.leagues.store'), [
+            'name' => 'JR Doubles Cup',
+            'sport_id' => $sport->id,
+            'category' => 'MD',
+            'start_date' => now()->toDateString(),
+            'sets_to_win' => 2,
+            'points_per_set' => 21,
+            'advance_upper_count' => 0,
+            'advance_lower_count' => 0,
+        ])->assertRedirect();
+
+        $league = League::firstOrFail();
+        $player1 = User::factory()->create(['gender' => 'male']);
+        $player2 = User::factory()->create(['gender' => 'male']);
+        $replacement1 = User::factory()->create(['gender' => 'male']);
+        $replacement2 = User::factory()->create(['gender' => 'male']);
+        $substitute = User::factory()->create(['gender' => 'male']);
+
+        $this->actingAs($admin)->post(route('admin.leagues.entries.store', $league), [
+            'group_name' => 'Garuda Pair',
+            'player1_id' => $player1->id,
+            'player2_id' => $player2->id,
+            'group_picture' => UploadedFile::fake()->image('garuda-pair.jpg'),
+        ])->assertRedirect();
+
+        $entry = $league->entries()->firstOrFail();
+        $oldPath = $entry->group_picture_path;
+
+        $this->actingAs($admin)->patch(route('admin.leagues.entries.update', [$league, $entry]), [
+            'group_name' => 'Rajawali Pair',
+            'player1_id' => $replacement1->id,
+            'player2_id' => $replacement2->id,
+            'substitute_ids' => [$substitute->id],
+            'group_picture' => UploadedFile::fake()->image('rajawali-pair.jpg'),
+        ])->assertRedirect();
+
+        $entry->refresh()->load('substitutes');
+
+        $this->assertSame('Rajawali Pair', $entry->group_name);
+        $this->assertSame($replacement1->id, $entry->player1_id);
+        $this->assertSame($replacement2->id, $entry->player2_id);
+        $this->assertSame([$substitute->id], $entry->substitutes->pluck('id')->all());
+        $this->assertNotSame($oldPath, $entry->group_picture_path);
+        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('public')->assertExists($entry->group_picture_path);
     }
 }

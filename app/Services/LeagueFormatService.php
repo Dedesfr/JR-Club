@@ -183,10 +183,47 @@ class LeagueFormatService
         $this->recomputeGroupPoints($league);
 
         return $league->groups()
-            ->with(['groupEntries.entry.player1', 'groupEntries.entry.player2', 'groupEntries.entry.substitutes'])
+            ->with(['groupEntries.entry.player1', 'groupEntries.entry.player2', 'groupEntries.entry.substitutes', 'matches.sets'])
             ->orderBy('position')
             ->get()
             ->map(function (LeagueGroup $group) {
+                $stats = [];
+                foreach ($group->groupEntries as $ge) {
+                    $stats[$ge->entry->id] = ['played' => 0, 'won' => 0, 'lost' => 0, 'score' => 0];
+                }
+
+                foreach ($group->matches->where('status', 'completed') as $match) {
+                    if (isset($stats[$match->home_entry_id])) {
+                        $stats[$match->home_entry_id]['played']++;
+                        if ($match->winner_entry_id === $match->home_entry_id) {
+                            $stats[$match->home_entry_id]['won']++;
+                        } elseif ($match->home_score !== $match->away_score) {
+                            $stats[$match->home_entry_id]['lost']++;
+                        }
+
+                        if ($match->sets) {
+                            foreach ($match->sets as $set) {
+                                $stats[$match->home_entry_id]['score'] += $set->home_points;
+                            }
+                        }
+                    }
+
+                    if (isset($stats[$match->away_entry_id])) {
+                        $stats[$match->away_entry_id]['played']++;
+                        if ($match->winner_entry_id === $match->away_entry_id) {
+                            $stats[$match->away_entry_id]['won']++;
+                        } elseif ($match->home_score !== $match->away_score) {
+                            $stats[$match->away_entry_id]['lost']++;
+                        }
+
+                        if ($match->sets) {
+                            foreach ($match->sets as $set) {
+                                $stats[$match->away_entry_id]['score'] += $set->away_points;
+                            }
+                        }
+                    }
+                }
+
                 return [
                     'group' => $group->name,
                     'entries' => $group->groupEntries
@@ -201,6 +238,10 @@ class LeagueFormatService
                             'points' => $groupEntry->points,
                             'manual_advance_rank' => $groupEntry->manual_advance_rank,
                             'entry' => $groupEntry->entry,
+                            'played' => $stats[$groupEntry->entry->id]['played'] ?? 0,
+                            'won' => $stats[$groupEntry->entry->id]['won'] ?? 0,
+                            'lost' => $stats[$groupEntry->entry->id]['lost'] ?? 0,
+                            'score' => $stats[$groupEntry->entry->id]['score'] ?? 0,
                         ])
                         ->all(),
                 ];

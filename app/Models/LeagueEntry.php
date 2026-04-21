@@ -12,6 +12,7 @@ class LeagueEntry extends Model
     protected $fillable = [
         'league_id',
         'group_name',
+        'group_picture_path',
         'player1_id',
         'player2_id',
         'substitute_id',

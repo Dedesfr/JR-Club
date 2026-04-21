@@ -23,6 +23,7 @@ export type LeagueEntry = {
     id: number;
     label: string;
     group_name?: string | null;
+    group_picture_path?: string | null;
     seed?: number | null;
     player1: { id: number; name: string; gender?: string | null };
     player2?: { id: number; name: string; gender?: string | null } | null;
@@ -42,6 +43,10 @@ export type LeagueGroupStanding = {
     points: number;
     manual_advance_rank?: number | null;
     entry: LeagueEntry;
+    played?: number;
+    won?: number;
+    lost?: number;
+    score?: number;
 };
 
 export type LeagueStandingGroup = {

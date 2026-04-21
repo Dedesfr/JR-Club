@@ -21,6 +21,13 @@ use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\ParticipantImportExportController as AdminParticipantImportExportController;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\URL;
+
+if (App::environment('local')) {
+    URL::forceScheme('https');
+}
+
 
 Route::redirect('/', '/activities');
 
@@ -71,6 +78,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/leagues/{league}/participants/export', [AdminParticipantImportExportController::class, 'export'])->name('leagues.participants.export');
         
         Route::post('/leagues/{league}/entries', [AdminLeagueEntryController::class, 'store'])->name('leagues.entries.store');
+        Route::patch('/leagues/{league}/entries/{entry}', [AdminLeagueEntryController::class, 'update'])->name('leagues.entries.update');
         Route::delete('/leagues/{league}/entries/{entry}', [AdminLeagueEntryController::class, 'destroy'])->name('leagues.entries.destroy');
         Route::post('/leagues/{league}/groups', [AdminLeagueGroupController::class, 'store'])->name('leagues.groups.store');
         Route::patch('/leagues/{league}/groups/{groupEntry}', [AdminLeagueGroupController::class, 'update'])->name('leagues.groups.update');
