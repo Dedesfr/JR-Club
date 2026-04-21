@@ -3,15 +3,41 @@ import { GameMatch, League, LeagueStandingGroup, Standing } from '@/types/jrclub
 import { Head, Link } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import Select from 'react-select';
+import JRClubLayout from '@/Layouts/JRClubLayout';
 
 export default function Show({ league, standings, upperBracket, lowerBracket }: { league: League; standings: Standing[] | LeagueStandingGroup[]; upperBracket: GameMatch[][]; lowerBracket: GameMatch[][] }) {
     const startDate = new Date(league.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const endDate = league.end_date ? new Date(league.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD';
 
-    const [selectedSchedule, setSelectedSchedule] = useState<string>('all');
-
     // Get all matches
     const allMatches = league.matches || [];
+
+    const [selectedSchedule, setSelectedSchedule] = useState<string>(() => {
+        const now = new Date();
+        const upcomingDates = allMatches
+            .filter(m => m.scheduled_at && new Date(m.scheduled_at) > now && m.status !== 'completed')
+            .map(m => new Date(m.scheduled_at));
+        
+        if (upcomingDates.length > 0) {
+            upcomingDates.sort((a, b) => a.getTime() - b.getTime());
+            const d = upcomingDates[0];
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+        
+        if (allMatches.length > 0) {
+            const sortedMatches = [...allMatches].sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+            const d = new Date(sortedMatches[0].scheduled_at);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+        
+        return '';
+    });
 
     // Extract unique schedule dates for filter options
     const scheduleOptions = useMemo(() => {
@@ -43,11 +69,11 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
         return sortedOptions;
     }, [allMatches]);
 
-    // Filter upcoming matches based on selection or just get upcoming if 'all' is selected
+    // Filter upcoming matches based on selection
     const upcomingMatches = useMemo(() => {
         let matches = allMatches;
         
-        if (selectedSchedule !== 'all') {
+        if (selectedSchedule) {
             matches = matches.filter(m => {
                 if (!m.scheduled_at) return false;
                 const d = new Date(m.scheduled_at);
@@ -56,12 +82,34 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                 const dd = String(d.getDate()).padStart(2, '0');
                 return `${yyyy}-${mm}-${dd}` === selectedSchedule;
             });
-        } else {
-            matches = matches.filter(m => new Date(m.scheduled_at) > new Date() && m.status !== 'completed');
         }
         
         return matches.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
     }, [allMatches, selectedSchedule]);
+
+    // Group upcoming matches by stage for better display when a date is selected
+    const groupedUpcomingMatches = useMemo(() => {
+        const groups: Record<string, GameMatch[]> = {};
+        const matchesToGroup = upcomingMatches;
+        
+        matchesToGroup.forEach(match => {
+            const stage = match.stage || 'unassigned';
+            if (!groups[stage]) {
+                groups[stage] = [];
+            }
+            groups[stage].push(match);
+        });
+        
+        return groups;
+    }, [upcomingMatches]);
+
+    const getStageName = (stage: string) => {
+        if (stage.toLowerCase() === 'group') return 'Group Stage';
+        if (stage.toLowerCase() === 'upper') return 'Upper Bracket';
+        if (stage.toLowerCase() === 'lower') return 'Lower Bracket';
+        if (stage.toLowerCase() === 'unassigned') return 'Other Matches';
+        return stage.charAt(0).toUpperCase() + stage.slice(1);
+    };
 
     const formatMatchDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -69,11 +117,11 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
     };
 
     return (
-        <div className="bg-surface text-on-surface pb-24 md:pb-0 pt-16 min-h-screen">
+        <JRClubLayout active="Leagues">
             <Head title={`${league.name} - ${league.sport?.name || 'League'} Details`} />
 
-            {/* TopAppBar */}
-            <header className="fixed top-0 w-full z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md shadow-[0_4px_20px_-2px_rgba(25,28,30,0.04)] flex items-center justify-between px-6 h-16">
+            {/* TopAppBar for Mobile Only */}
+            <header className="md:hidden fixed top-0 w-full z-50 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md shadow-[0_4px_20px_-2px_rgba(25,28,30,0.04)] flex items-center justify-between px-6 h-16">
                 <Link href={route('leagues.index')} className="active:scale-95 duration-150 p-2 -ml-2 rounded-full hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors">
                     <span className="material-symbols-outlined text-blue-900 dark:text-blue-200">arrow_back</span>
                 </Link>
@@ -81,7 +129,7 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                 <div className="w-8"></div> {/* Spacer for centering */}
             </header>
 
-            <main className="max-w-3xl mx-auto p-4 md:p-8 space-y-8">
+            <main className="max-w-3xl mx-auto p-4 md:p-0 space-y-8 pt-20 md:pt-4">
                 {/* League Hero Section */}
                 <section className="bg-surface-container-lowest rounded-xl p-6 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary to-primary-container opacity-10 rounded-bl-full -mr-8 -mt-8 pointer-events-none"></div>
@@ -101,101 +149,101 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                 </section>
 
                 {/* Upcoming Matches */}
-                {(upcomingMatches.length > 0 || selectedSchedule !== 'all') && (
+                {scheduleOptions.length > 0 && (
                     <section>
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-2">
                             <h3 className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-surface-variant">UPCOMING MATCHES</h3>
                             
                             {/* Filter Dropdown */}
-                            {scheduleOptions.length > 0 && (
-                                <div className="relative w-full sm:w-64 z-20">
-                                    <Select
-                                        options={[{ value: 'all', label: 'All Upcoming Matches' }, ...scheduleOptions]}
-                                        value={[{ value: 'all', label: 'All Upcoming Matches' }, ...scheduleOptions].find(opt => opt.value === selectedSchedule)}
-                                        onChange={(option) => setSelectedSchedule(option?.value || 'all')}
-                                        className="text-sm font-bold"
-                                        styles={{
-                                            control: (base) => ({
-                                                ...base,
-                                                backgroundColor: 'var(--surface-container-low, #f3f4f6)',
-                                                borderColor: 'rgba(var(--outline-variant, 15, 23, 42), 0.2)',
-                                                borderRadius: '0.5rem',
-                                                padding: '2px',
-                                                boxShadow: 'none',
-                                                '&:hover': {
-                                                    borderColor: 'var(--primary, #3b82f6)',
-                                                }
-                                            }),
-                                            option: (base, state) => ({
-                                                ...base,
-                                                backgroundColor: state.isSelected ? 'var(--primary, #3b82f6)' : state.isFocused ? 'var(--surface-container-highest, #e5e7eb)' : 'transparent',
-                                                color: state.isSelected ? 'white' : 'var(--on-surface, #0f172a)',
-                                            }),
-                                            singleValue: (base) => ({
-                                                ...base,
-                                                color: 'var(--on-surface, #0f172a)',
-                                            }),
-                                            menu: (base) => ({
-                                                ...base,
-                                                backgroundColor: 'var(--surface-container-lowest, #ffffff)',
-                                                borderRadius: '0.5rem',
-                                                overflow: 'hidden',
-                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                                            })
-                                        }}
-                                        isSearchable={false}
-                                    />
-                                </div>
-                            )}
+                            <div className="relative w-full sm:w-64 z-20">
+                                <Select
+                                    options={scheduleOptions}
+                                    value={scheduleOptions.find(opt => opt.value === selectedSchedule) || null}
+                                    onChange={(option) => setSelectedSchedule(option?.value || '')}
+                                    className="text-sm font-bold"
+                                    styles={{
+                                        control: (base) => ({
+                                            ...base,
+                                            backgroundColor: 'var(--surface-container-low, #f3f4f6)',
+                                            borderColor: 'rgba(var(--outline-variant, 15, 23, 42), 0.2)',
+                                            borderRadius: '0.5rem',
+                                            padding: '2px',
+                                            boxShadow: 'none',
+                                            '&:hover': {
+                                                borderColor: 'var(--primary, #3b82f6)',
+                                            }
+                                        }),
+                                        option: (base, state) => ({
+                                            ...base,
+                                            backgroundColor: state.isSelected ? 'var(--primary, #3b82f6)' : state.isFocused ? 'var(--surface-container-highest, #e5e7eb)' : 'transparent',
+                                            color: state.isSelected ? 'white' : 'var(--on-surface, #0f172a)',
+                                        }),
+                                        singleValue: (base) => ({
+                                            ...base,
+                                            color: 'var(--on-surface, #0f172a)',
+                                        }),
+                                        menu: (base) => ({
+                                            ...base,
+                                            backgroundColor: 'var(--surface-container-lowest, #ffffff)',
+                                            borderRadius: '0.5rem',
+                                            overflow: 'hidden',
+                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                        })
+                                    }}
+                                    isSearchable={false}
+                                />
+                            </div>
                         </div>
 
                         {upcomingMatches.length > 0 ? (
                             <>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {upcomingMatches.slice(0, selectedSchedule === 'all' ? 4 : undefined).map(match => (
-                                        <Link href={route('matches.show', match.id)} key={match.id} className="block bg-surface-container-lowest rounded-xl p-5 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] cursor-pointer active:scale-[0.98] transition-transform">
-                                            <div className="flex justify-between items-center mb-4">
-                                                <span className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-surface-variant bg-surface px-2 py-1 rounded">
-                                                    {formatMatchDate(match.scheduled_at)}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between relative">
-                                                <div className="flex flex-col items-center flex-1">
-                                                    {match.home_entry?.group_picture_path ? (
-                                                        <img src={`/storage/${match.home_entry.group_picture_path}`} alt={match.home_label ?? 'TBD'} className="w-14 h-14 rounded-full object-cover shadow-sm mb-2 ring-2 ring-surface-container-lowest" />
-                                                    ) : (
-                                                        <div className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 text-xl">
-                                                            {(match.home_label ?? 'TBD').substring(0, 2).toUpperCase()}
+                                <div className="space-y-6">
+                                    {Object.entries(groupedUpcomingMatches).map(([stage, matches]) => (
+                                        <div key={stage} className="space-y-3">
+                                            <h4 className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-primary border-b border-surface-container-high pb-1">
+                                                {getStageName(stage)}
+                                            </h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {matches.map(match => (
+                                                    <Link href={route('matches.show', match.id)} key={match.id} className="block bg-surface-container-lowest rounded-xl p-5 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] cursor-pointer active:scale-[0.98] transition-transform">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <span className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-on-surface-variant bg-surface px-2 py-1 rounded">
+                                                                {formatMatchDate(match.scheduled_at)}
+                                                            </span>
                                                         </div>
-                                                    )}
-                                                    <span className="font-bold text-sm text-center">{match.home_label}</span>
-                                                </div>
-                                                <div className="px-4 z-10 bg-surface-container-lowest">
-                                                    <span className="text-[0.6875rem] font-bold tracking-[0.05em] text-on-surface-variant bg-surface rounded-full px-3 py-1">VS</span>
-                                                </div>
-                                                {/* Connecting line */}
-                                                <div className="absolute left-1/4 right-1/4 top-1/2 h-px bg-surface-container-high -z-0"></div>
-                                                <div className="flex flex-col items-center flex-1">
-                                                    {match.away_entry?.group_picture_path ? (
-                                                        <img src={`/storage/${match.away_entry.group_picture_path}`} alt={match.away_label ?? 'TBD'} className="w-14 h-14 rounded-full object-cover shadow-sm mb-2 ring-2 ring-surface-container-lowest" />
-                                                    ) : (
-                                                        <div className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 text-xl">
-                                                            {(match.away_label ?? 'TBD').substring(0, 2).toUpperCase()}
+                                                        <div className="flex items-center justify-between relative">
+                                                            <div className="flex flex-col items-center flex-1">
+                                                                {match.home_entry?.group_picture_path ? (
+                                                                    <img src={`/storage/${match.home_entry.group_picture_path}`} alt={match.home_label ?? 'TBD'} className="w-14 h-14 rounded-full object-cover shadow-sm mb-2 ring-2 ring-surface-container-lowest" />
+                                                                ) : (
+                                                                    <div className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 text-xl">
+                                                                        {(match.home_label ?? 'TBD').substring(0, 2).toUpperCase()}
+                                                                    </div>
+                                                                )}
+                                                                <span className="font-bold text-sm text-center">{match.home_label}</span>
+                                                            </div>
+                                                            <div className="px-4 z-10 bg-surface-container-lowest">
+                                                                <span className="text-[0.6875rem] font-bold tracking-[0.05em] text-on-surface-variant bg-surface rounded-full px-3 py-1">VS</span>
+                                                            </div>
+                                                            {/* Connecting line */}
+                                                            <div className="absolute left-1/4 right-1/4 top-1/2 h-px bg-surface-container-high -z-0"></div>
+                                                            <div className="flex flex-col items-center flex-1">
+                                                                {match.away_entry?.group_picture_path ? (
+                                                                    <img src={`/storage/${match.away_entry.group_picture_path}`} alt={match.away_label ?? 'TBD'} className="w-14 h-14 rounded-full object-cover shadow-sm mb-2 ring-2 ring-surface-container-lowest" />
+                                                                ) : (
+                                                                    <div className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold shadow-sm mb-2 text-xl">
+                                                                        {(match.away_label ?? 'TBD').substring(0, 2).toUpperCase()}
+                                                                    </div>
+                                                                )}
+                                                                <span className="font-bold text-sm text-center">{match.away_label}</span>
+                                                            </div>
                                                         </div>
-                                                    )}
-                                                    <span className="font-bold text-sm text-center">{match.away_label}</span>
-                                                </div>
+                                                    </Link>
+                                                ))}
                                             </div>
-                                        </Link>
+                                        </div>
                                     ))}
                                 </div>
-                                {upcomingMatches.length > 4 && selectedSchedule === 'all' && (
-                                    <div className="mt-4 text-center">
-                                        <Link href={route('leagues.matches.index', league.id)} className="text-[0.6875rem] font-bold tracking-[0.05em] uppercase text-primary hover:text-primary-container transition-colors">
-                                            View All Upcoming Matches
-                                        </Link>
-                                    </div>
-                                )}
                             </>
                         ) : (
                             <div className="bg-surface-container-lowest rounded-xl p-8 text-center shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
@@ -285,26 +333,6 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                     </section>
                 )}
             </main>
-            
-            {/* Nav to emulate layout on mobile */}
-            <nav className="md:hidden fixed bottom-0 w-full z-50 pb-safe bg-white/85 dark:bg-slate-900/85 backdrop-blur-md shadow-[0_-8px_32px_-4px_rgba(25,28,30,0.06)] flex justify-around items-center px-4 py-3 border-t border-transparent bg-gradient-to-t from-white to-transparent">
-                <Link href={route('activities.index')} className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-700 dark:hover:text-blue-300 transition-all active:scale-90 duration-200">
-                    <span className="material-symbols-outlined mb-1 text-[24px]">explore</span>
-                    <span className="text-[10px] font-bold tracking-[0.05em] uppercase">ACTIVITIES</span>
-                </Link>
-                <Link href={route('leagues.index')} className="flex flex-col items-center justify-center bg-gradient-to-br from-[#003f7b] to-[#0056a4] text-white rounded-lg px-4 py-1.5 active:scale-90 duration-200 shadow-sm">
-                    <span className="material-symbols-outlined mb-1 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
-                    <span className="text-[10px] font-bold tracking-[0.05em] uppercase">LEAGUES</span>
-                </Link>
-                <Link href={route('leaderboards.index')} className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-700 dark:hover:text-blue-300 transition-all active:scale-90 duration-200">
-                    <span className="material-symbols-outlined mb-1 text-[24px]">leaderboard</span>
-                    <span className="text-[10px] font-bold tracking-[0.05em] uppercase">RANKINGS</span>
-                </Link>
-                <Link href={route('profile.show')} className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-700 dark:hover:text-blue-300 transition-all active:scale-90 duration-200">
-                    <span className="material-symbols-outlined mb-1 text-[24px]">person</span>
-                    <span className="text-[10px] font-bold tracking-[0.05em] uppercase">PROFILE</span>
-                </Link>
-            </nav>
-        </div>
+        </JRClubLayout>
     );
 }

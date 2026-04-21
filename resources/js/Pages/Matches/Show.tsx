@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { GameMatch } from '@/types/jrclub';
 import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import JRClubLayout from '@/Layouts/JRClubLayout';
 
 export default function Show({ match, canManage }: { match: GameMatch; canManage: boolean }) {
     const [score, setScore] = useState({ home: match.home_score, away: match.away_score, status: match.status });
@@ -25,9 +26,9 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
     };
 
     return (
-        <div className="min-h-screen bg-surface pb-28 pt-20 text-on-surface">
+        <JRClubLayout active="Leagues">
             <Head title="Live Match" />
-            <header className="fixed top-0 z-50 w-full bg-white/85 shadow-sm backdrop-blur-md">
+            <header className="md:hidden fixed top-0 z-50 w-full bg-white/85 shadow-sm backdrop-blur-md">
                 <div className="flex w-full items-center justify-between px-6 py-4">
                     <Link href={route('leagues.index')} className="scale-95 text-on-surface"><span className="material-symbols-outlined">arrow_back</span></Link>
                     <h1 className="text-lg font-bold uppercase tracking-tight text-on-surface">Match Details</h1>
@@ -35,7 +36,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                 </div>
             </header>
 
-            <main className="mx-auto flex max-w-md flex-col gap-6 px-4 md:max-w-3xl lg:max-w-5xl lg:grid lg:grid-cols-12 lg:items-start lg:gap-8">
+            <main className="mx-auto flex max-w-md flex-col gap-6 px-4 pt-20 md:pt-4 md:max-w-3xl lg:max-w-5xl lg:grid lg:grid-cols-12 lg:items-start lg:gap-8">
                 <div className="flex flex-col gap-6 lg:col-span-8">
                     <section className="flex flex-col overflow-hidden rounded-xl bg-inverse-surface text-inverse-on-surface shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
                         <div className="flex items-center justify-between bg-surface-container-highest/10 px-6 py-3">
@@ -156,7 +157,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                     </section>
                 </div>
             </main>
-        </div>
+        </JRClubLayout>
     );
 }
 
