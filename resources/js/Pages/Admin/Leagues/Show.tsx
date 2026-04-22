@@ -12,7 +12,7 @@ import EntryEditModal from '@/Components/EntryEditModal';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { GameMatch, League, LeagueEntry, LeagueStandingGroup } from '@/types/jrclub';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import SecondaryButton from '@/Components/SecondaryButton';
 
 const tabs = ['Overview', 'Participants', 'Groups', 'Bracket', 'Matches'] as const;
@@ -44,6 +44,7 @@ export default function Show({ league, users, divisionOptions, standings, upperB
     const [editEntry, setEditEntry] = useState<LeagueEntry | null>(null);
     const [subModalMatch, setSubModalMatch] = useState<GameMatch | null>(null);
     const [photoModalMatch, setPhotoModalMatch] = useState<GameMatch | null>(null);
+
 
     const bracketForm = useForm({
         advance_upper_count: league.advance_upper_count?.toString() ?? '0',
@@ -104,7 +105,7 @@ export default function Show({ league, users, divisionOptions, standings, upperB
         }
     };
 
-    const groupedMatches = (league.matches ?? []).reduce((acc, match) => {
+    const groupedByStage = (league.matches ?? []).reduce((acc, match) => {
         const stage = match.stage ?? 'League Match';
 
         let key: string;
@@ -116,8 +117,8 @@ export default function Show({ league, users, divisionOptions, standings, upperB
             } else if (stage === 'lower_third_place') {
                 key = `${bracketLabel} Bracket > Third Place`;
             } else {
-                const upperMatches = (league.matches ?? []).filter(m => m.stage === stage && m.round != null);
-                const maxRound = upperMatches.length > 0 ? Math.max(...upperMatches.map(m => m.round as number)) : 0;
+                const bracketMatches = (league.matches ?? []).filter(m => m.stage === stage && m.round != null);
+                const maxRound = bracketMatches.length > 0 ? Math.max(...bracketMatches.map(m => m.round as number)) : 0;
                 if (match.round === maxRound) {
                     key = `${bracketLabel} Bracket > Final`;
                 } else if (match.round === maxRound - 1) {
@@ -138,7 +139,7 @@ export default function Show({ league, users, divisionOptions, standings, upperB
     }, {} as Record<string, GameMatch[]>);
 
     const stageOrder = ['Group', 'League Match', 'Upper Bracket > Group', 'Upper Bracket > Semifinal', 'Upper Bracket > Final', 'Upper Bracket > Third Place', 'Lower Bracket > Group', 'Lower Bracket > Semifinal', 'Lower Bracket > Final', 'Lower Bracket > Third Place'];
-    const sortedEntries = Object.entries(groupedMatches).sort(([a], [b]) => {
+    const sortedByStage = Object.entries(groupedByStage).sort(([a], [b]) => {
         const idxA = stageOrder.indexOf(a);
         const idxB = stageOrder.indexOf(b);
         if (idxA === -1 && idxB === -1) return a.localeCompare(b);
@@ -146,6 +147,46 @@ export default function Show({ league, users, divisionOptions, standings, upperB
         if (idxB === -1) return -1;
         return idxA - idxB;
     });
+
+    const stageFilters = useMemo(() => {
+        const filters = new Set<string>();
+        for (const [stage] of sortedByStage) {
+            if (stage.includes('Upper Bracket')) filters.add('Upper Bracket');
+            else if (stage.includes('Lower Bracket')) filters.add('Lower Bracket');
+            else filters.add(stage);
+        }
+        return ['all', ...Array.from(filters)];
+    }, [sortedByStage]);
+
+    const [matchFilter, setMatchFilter] = useState<string>('all');
+
+    const filteredByStage = useMemo(() => {
+        if (matchFilter === 'all') return sortedByStage;
+        return sortedByStage.filter(([stage]) => {
+            if (matchFilter === 'Upper Bracket') return stage.includes('Upper Bracket');
+            if (matchFilter === 'Lower Bracket') return stage.includes('Lower Bracket');
+            return stage === matchFilter;
+        });
+    }, [sortedByStage, matchFilter]);
+
+    const groupMatchesByDate = (matches: GameMatch[]) => {
+        return matches.reduce((acc, match) => {
+            const date = match.scheduled_at ? new Date(match.scheduled_at).toDateString() : 'TBA';
+            if (!acc[date]) {
+                acc[date] = [];
+            }
+            acc[date].push(match);
+            return acc;
+        }, {} as Record<string, GameMatch[]>);
+    };
+
+    const sortByDate = (entries: [string, GameMatch[]][]) => {
+        return entries.sort(([dateA], [dateB]) => {
+            if (dateA === 'TBA') return 1;
+            if (dateB === 'TBA') return -1;
+            return new Date(dateA).getTime() - new Date(dateB).getTime();
+        });
+    };
 
     return (
         <AdminLayout title={league.name}>
@@ -306,154 +347,210 @@ export default function Show({ league, users, divisionOptions, standings, upperB
                     ) : null}
 
                     {activeTab === 'Matches' ? (
-                        <div className="grid gap-8">
-                            {sortedEntries.map(([stage, matches]) => (
-                                <div key={stage} className="grid gap-4">
-                                    <h3 className="text-lg font-bold text-on-surface border-b-2 border-outline-variant/20 pb-2">{stage}</h3>
-
-                                    {/* Desktop Fixture List View */}
-                                    <div className="hidden lg:flex flex-col gap-3">
-                                        {matches.map((match) => (
-                                            <div key={match.id} className="group flex items-center justify-between bg-surface-container-lowest rounded-xl p-4 shadow-[0px_4px_12px_rgba(15,23,42,0.02)] hover:shadow-[0px_12px_32px_rgba(15,23,42,0.06)] active:scale-[0.99] transition-all border border-outline-variant/20 relative overflow-hidden">
-                                                {/* Status Accent */}
-                                                {match.status === 'active' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>}
-
-                                                {/* Time & Status (15%) */}
-                                                <div className="w-[18%] flex flex-col gap-1.5 pl-2">
-                                                    <div className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">
-                                                        {match.scheduled_at ? new Date(match.scheduled_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'TBA'}
-                                                    </div>
-                                                    <div className="inline-flex">
-                                                        {match.status === 'active' ? (
-                                                            <span className="rounded bg-error-container text-on-error-container px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] animate-pulse">Live</span>
-                                                        ) : (
-                                                            <span className="rounded bg-surface-container border border-outline-variant/20 text-on-surface-variant px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em]">{match.status}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Matchup (45%) */}
-                                                <div className="w-[45%] flex items-center justify-center gap-6">
-                                                    <div className="flex-1 text-right font-bold text-on-surface text-base truncate">{match.home_label ?? 'TBC'}</div>
-
-                                                    <div className="flex flex-col items-center justify-center shrink-0 w-28">
-                                                        <div className="bg-surface-container-low border border-outline-variant/20 rounded-lg px-4 py-2 flex items-center justify-center gap-2 shadow-[inset_0px_2px_4px_rgba(15,23,42,0.02)]">
-                                                            <span className={`text-xl font-black tracking-[-0.02em] ${match.status === 'upcoming' ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.home_score}</span>
-                                                            <span className="text-outline-variant font-bold text-sm">-</span>
-                                                            <span className={`text-xl font-black tracking-[-0.02em] ${match.status === 'upcoming' ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.away_score}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex-1 text-left font-bold text-on-surface text-base truncate">{match.away_label ?? 'TBC'}</div>
-                                                </div>
-
-                                                {/* Sets (22%) */}
-                                                <div className="w-[22%] flex flex-wrap justify-center gap-1.5 px-4">
-                                                    {(match.sets ?? []).length > 0 ? (
-                                                        match.sets?.map((set) => (
-                                                            <span key={set.id} className="rounded bg-surface-container border border-outline-variant/20 px-2 py-1 text-[0.6875rem] font-bold text-on-surface-variant shadow-sm whitespace-nowrap">
-                                                                {set.home_points}-{set.away_points}
-                                                            </span>
-                                                        ))
-                                                    ) : (
-                                                        <span className="text-[0.75rem] text-outline-variant italic font-medium">-</span>
-                                                    )}
-                                                </div>
-
-                                                {/* Actions (15%) */}
-                                                <div className="w-[15%] flex flex-col items-end justify-center gap-3">
-                                                    <div className="flex gap-4">
-                                                        <button type="button" onClick={() => setSubModalMatch(match)} className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary hover:text-primary transition-colors flex items-center gap-1">
-                                                            <span className="material-symbols-outlined text-[16px]">swap_horiz</span> Sub
-                                                        </button>
-                                                        <button type="button" onClick={() => setPhotoModalMatch(match)} className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary hover:text-primary transition-colors flex items-center gap-1">
-                                                            <span className="material-symbols-outlined text-[16px]">photo_camera</span> Pics
-                                                        </button>
-                                                    </div>
-                                                    <div>
-                                                        {league.category ? (
-                                                            <SetScoreEntry matchId={match.id} label="Add Set" homeLabel={match.home_label} awayLabel={match.away_label} />
-                                                        ) : (
-                                                            <Link href={route('matches.show', match.id)} className="rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary px-4 py-1.5 text-[0.6875rem] font-bold uppercase tracking-widest shadow-[0px_4px_8px_rgba(0,86,164,0.15)] hover:shadow-[0px_8px_16px_rgba(0,86,164,0.25)] hover:scale-[0.98] transition-all inline-block">
-                                                                Open
-                                                            </Link>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Mobile Fixture Card View */}
-                                    <div className="grid gap-4 lg:hidden">
-                                        {matches.map((match) => (
-                                            <div key={match.id} className="bg-surface-container-lowest rounded-xl p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)] border border-outline-variant/20 relative overflow-hidden">
-                                                {/* Status Accent */}
-                                                {match.status === 'active' && <div className="absolute top-0 left-0 right-0 h-1 bg-error"></div>}
-
-                                                {/* Top Row */}
-                                                <div className="flex justify-between items-center border-b border-outline-variant/10 pb-3 mb-3">
-                                                    <span className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">
-                                                        {match.scheduled_at ? new Date(match.scheduled_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'TBA'}
-                                                    </span>
-                                                    {match.status === 'active' ? (
-                                                        <span className="rounded bg-error-container text-on-error-container px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] animate-pulse">Live</span>
-                                                    ) : (
-                                                        <span className="rounded bg-surface-container border border-outline-variant/20 text-on-surface-variant px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em]">{match.status}</span>
-                                                    )}
-                                                </div>
-
-                                                {/* Middle Row: Matchup */}
-                                                <div className="flex justify-between items-center mb-4 px-1">
-                                                    <div className="flex flex-col gap-2 flex-1 mr-4">
-                                                        <span className="font-bold text-on-surface text-base leading-tight">{match.home_label ?? 'TBC'}</span>
-                                                        <span className="font-bold text-on-surface text-base leading-tight">{match.away_label ?? 'TBC'}</span>
-                                                    </div>
-                                                    <div className="flex flex-col gap-2 text-right bg-surface-container-low border border-outline-variant/10 px-3 py-2 rounded-lg shadow-[inset_0px_2px_4px_rgba(15,23,42,0.02)] min-w-[3rem]">
-                                                        <span className={`text-xl font-black tracking-[-0.02em] leading-none ${match.status === 'upcoming' ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.home_score}</span>
-                                                        <span className={`text-xl font-black tracking-[-0.02em] leading-none ${match.status === 'upcoming' ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.away_score}</span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Sets Pill Badges */}
-                                                {(match.sets ?? []).length > 0 && (
-                                                    <div className="flex flex-wrap gap-1.5 border-t border-outline-variant/10 pt-3 mb-4">
-                                                        {match.sets?.map((set) => (
-                                                            <span key={set.id} className="rounded bg-surface-container border border-outline-variant/20 px-2 py-1 text-[0.6875rem] font-bold text-on-surface-variant">
-                                                                Set {set.set_number}: {set.home_points}-{set.away_points}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-
-                                                {/* Bottom Actions */}
-                                                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-outline-variant/10 mt-2">
-                                                    <div className="flex gap-4">
-                                                        <button type="button" onClick={() => setSubModalMatch(match)} className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary flex items-center gap-1">
-                                                            <span className="material-symbols-outlined text-[16px]">swap_horiz</span> Sub
-                                                        </button>
-                                                        <button type="button" onClick={() => setPhotoModalMatch(match)} className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary flex items-center gap-1">
-                                                            <span className="material-symbols-outlined text-[16px]">photo_camera</span> Pics
-                                                        </button>
-                                                    </div>
-                                                    <div>
-                                                        {league.category ? (
-                                                            <SetScoreEntry matchId={match.id} label="Add Set" homeLabel={match.home_label} awayLabel={match.away_label} />
-                                                        ) : (
-                                                            <Link href={route('matches.show', match.id)} className="rounded-full bg-surface-container-low border border-outline-variant/20 px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface active:bg-surface-container">
-                                                                Open
-                                                            </Link>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                        <div className="grid gap-6">
+                            {/* Stage Filter Chips */}
+                            {stageFilters.length > 1 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {stageFilters.map((filter) => (
+                                        <button key={filter} onClick={() => setMatchFilter(filter)} className={`whitespace-nowrap px-5 py-2 rounded-full text-[0.875rem] font-semibold transition-colors ${matchFilter === filter ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/20 shadow-[0px_4px_12px_rgba(15,23,42,0.03)] hover:bg-surface-container-high'}`}>
+                                            {filter === 'all' ? 'All Stages' : filter.replace(/\b\w/g, (m: string) => m.toUpperCase())}
+                                        </button>
+                                    ))}
                                 </div>
-                            ))}
-                            {Object.keys(groupedMatches).length === 0 && (
-                                <div className="rounded-xl bg-surface-container-lowest p-8 text-center text-sm text-on-surface-variant shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
-                                    No matches found.
+                            )}
+
+                            {filteredByStage.map(([stage, matches]) => {
+                                const activeCount = matches.filter(m => m.status === 'active').length;
+                                const completedCount = matches.filter(m => m.status === 'completed').length;
+                                const matchCount = matches.length;
+
+                                const groupedByDate = groupMatchesByDate(matches);
+                                const sortedDates = sortByDate(Object.entries(groupedByDate));
+
+                                return (
+                                    <div key={stage} className="grid gap-4">
+                                        {/* Stage Header */}
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h3 className="text-[1.5rem] font-bold tracking-tight text-on-surface">
+                                                    {stage.includes('>') ? (
+                                                        <>
+                                                            {stage.split(' > ')[0]} <span className="text-outline-variant">›</span> {stage.split(' > ')[1]}
+                                                        </>
+                                                    ) : stage}
+                                                </h3>
+                                                <p className="text-xs text-on-surface-variant font-medium mt-0.5">{matchCount} match{matchCount !== 1 ? 'es' : ''} • {completedCount} completed</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {activeCount > 0 && <span className="px-2.5 py-1 rounded-full bg-error-container text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-error-container">{activeCount} live</span>}
+                                            </div>
+                                        </div>
+
+                                        {/* Date Groups within Stage */}
+                                        {sortedDates.map(([dateKey, dateMatches]) => {
+                                            const dateActiveCount = dateMatches.filter(m => m.status === 'active').length;
+
+                                            const formatDateHeader = (date: string) => {
+                                                if (date === 'TBA') return { label: 'TBA', isPrimary: false };
+                                                const d = new Date(date);
+                                                const today = new Date();
+                                                const tomorrow = new Date(today);
+                                                tomorrow.setDate(tomorrow.getDate() + 1);
+                                                
+                                                if (d.toDateString() === today.toDateString()) {
+                                                    return { label: `Today, ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`, isPrimary: true };
+                                                } else if (d.toDateString() === tomorrow.toDateString()) {
+                                                    return { label: `Tomorrow, ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`, isPrimary: false };
+                                                }
+                                                return { label: d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }), isPrimary: false };
+                                            };
+
+                                            const dateInfo = formatDateHeader(dateKey);
+
+                                            return (
+                                                <div key={dateKey} className="grid gap-2">
+                                                    {/* Date Header */}
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`text-[0.6875rem] font-bold uppercase tracking-[0.05em] px-2 py-0.5 rounded ${dateInfo.isPrimary ? 'bg-primary text-on-primary' : 'bg-surface-container border border-outline-variant/20 text-on-surface-variant'}`}>
+                                                            {dateInfo.label}
+                                                        </span>
+                                                        {dateActiveCount > 0 && <span className="px-2 py-0.5 rounded bg-error-container text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-error-container">{dateActiveCount} live</span>}
+                                                    </div>
+
+                                                    {/* Section: Desktop Match Rows - Compact */}
+                                                    <div className="hidden lg:flex flex-col gap-2">
+                                                        {dateMatches.map((match) => {
+                                                            const isLive = match.status === 'active';
+                                                            const isUpcoming = match.status === 'upcoming';
+
+                                                            return (
+                                                                <div key={match.id} className={`flex items-center bg-surface-container-lowest rounded-xl py-2.5 px-3 shadow-[0px_4px_12px_rgba(15,23,42,0.02)] hover:shadow-[0px_8px_24px_rgba(15,23,42,0.06)] transition-all border border-outline-variant/20 ${isLive ? 'border-l-4 border-l-error' : ''} ${isUpcoming ? 'opacity-70' : ''}`}>
+                                                                    {/* Time & Status */}
+                                                                    <div className="w-28 shrink-0 flex flex-col gap-1">
+                                                                        <span className="text-[0.6875rem] font-medium text-on-surface-variant leading-tight">
+                                                                            {match.scheduled_at ? new Date(match.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBA'}
+                                                                        </span>
+                                                                        <span className={`inline-block w-fit px-1.5 py-0.5 rounded text-[0.6875rem] font-bold uppercase tracking-[0.05em] ${isLive ? 'bg-error-container text-on-error-container animate-pulse' : 'bg-surface-container border border-outline-variant/20 text-on-surface-variant'}`}>
+                                                                            {isLive ? 'Live' : match.status}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    {/* Home Player */}
+                                                                    <div className="flex-1 text-right pr-3">
+                                                                        <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.home_label ?? 'TBC'}</span>
+                                                                    </div>
+
+                                                                    {/* Score - Compact inline */}
+                                                                    <div className={`flex items-center gap-1.5 px-2 py-1 rounded shrink-0 ${isLive ? 'bg-primary text-on-primary' : isUpcoming ? 'bg-surface-container-low border border-outline-variant/20 text-on-surface-variant' : 'bg-surface-container text-on-surface'}`}>
+                                                                        <span className="text-lg font-black tracking-[-0.02em] leading-none">{isUpcoming ? '-' : match.home_score}</span>
+                                                                        <span className={`font-bold text-sm leading-none ${isLive ? 'text-on-primary/60' : 'text-outline-variant'}`}>-</span>
+                                                                        <span className="text-lg font-black tracking-[-0.02em] leading-none">{isUpcoming ? '-' : match.away_score}</span>
+                                                                    </div>
+
+                                                                    {/* Away Player */}
+                                                                    <div className="flex-1 text-left pl-3">
+                                                                        <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.away_label ?? 'TBC'}</span>
+                                                                    </div>
+
+                                                                    {/* Sets - inline */}
+                                                                    <div className="flex gap-1 px-2 shrink-0">
+                                                                        {(match.sets ?? []).length > 0 ? (
+                                                                            match.sets?.map((set) => (
+                                                                                <span key={set.id} className="rounded bg-surface-container border border-outline-variant/20 px-1.5 py-0.5 text-[0.6875rem] font-bold text-on-surface-variant">{set.home_points}-{set.away_points}</span>
+                                                                            ))
+                                                                        ) : (
+                                                                            <span className="text-[0.6875rem] text-outline-variant italic">No sets</span>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* Actions */}
+                                                                    <div className="flex items-center gap-1 shrink-0">
+                                                                        <button type="button" onClick={() => setSubModalMatch(match)} className="rounded border border-outline-variant/20 px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary hover:bg-surface-container hover:text-primary transition-colors">Sub</button>
+                                                                        <button type="button" onClick={() => setPhotoModalMatch(match)} className="rounded border border-outline-variant/20 px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary hover:bg-surface-container hover:text-primary transition-colors">Pics</button>
+                                                                        {league.category ? (
+                                                                            <SetScoreEntry matchId={match.id} label="+ Set" homeLabel={match.home_label} awayLabel={match.away_label} />
+                                                                        ) : (
+                                                                            <Link href={route('matches.show', match.id)} className="rounded-full bg-primary text-on-primary px-3 py-1 text-[0.6875rem] font-bold shadow-[0px_4px_8px_rgba(0,86,164,0.15)] hover:scale-[0.98] transition-all">Open</Link>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    {/* Section: Mobile Match Cards - Compact */}
+                                                    <div className="grid gap-2 lg:hidden">
+                                                        {dateMatches.map((match) => {
+                                                            const isLive = match.status === 'active';
+                                                            const isUpcoming = match.status === 'upcoming';
+
+                                                            return (
+                                                                <div key={match.id} className={`bg-surface-container-lowest rounded-xl p-3 shadow-[0px_4px_12px_rgba(15,23,42,0.02)] border border-outline-variant/20 ${isLive ? 'border-l-4 border-l-error' : ''} ${isUpcoming ? 'opacity-70' : ''}`}>
+                                                                    {/* Top: Time + Status + Actions */}
+                                                                    <div className="flex justify-between items-start mb-3">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <span className="text-[0.6875rem] font-medium text-on-surface-variant">
+                                                                                {match.scheduled_at ? new Date(match.scheduled_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'TBA'}
+                                                                            </span>
+                                                                            <span className={`inline-block w-fit px-1.5 py-0.5 rounded text-[0.6875rem] font-bold uppercase tracking-[0.05em] ${isLive ? 'bg-error-container text-on-error-container animate-pulse' : 'bg-surface-container border border-outline-variant/20 text-on-surface-variant'}`}>
+                                                                                {isLive ? 'Live' : match.status}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex gap-1">
+                                                                            <button type="button" onClick={() => setSubModalMatch(match)} className="rounded border border-outline-variant/20 px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary hover:bg-surface-container transition-colors">Sub</button>
+                                                                            <button type="button" onClick={() => setPhotoModalMatch(match)} className="rounded border border-outline-variant/20 px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary hover:bg-surface-container transition-colors">Pics</button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Middle: Matchup + Score */}
+                                                                    <div className="flex items-center justify-between gap-2 mb-3">
+                                                                        <div className="flex-1 text-right">
+                                                                            <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.home_label ?? 'TBC'}</span>
+                                                                            <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.away_label ?? 'TBC'}</span>
+                                                                        </div>
+                                                                        <div className={`flex items-center gap-1.5 px-2 py-1 rounded ${isLive ? 'bg-primary text-on-primary' : isUpcoming ? 'bg-surface-container-low border border-outline-variant/20 text-on-surface-variant' : 'bg-surface-container text-on-surface'}`}>
+                                                                            <span className="text-xl font-black tracking-[-0.02em] leading-none">{isUpcoming ? '-' : match.home_score}</span>
+                                                                            <span className={`font-bold text-sm leading-none ${isLive ? 'text-on-primary/60' : 'text-outline-variant'}`}>-</span>
+                                                                            <span className="text-xl font-black tracking-[-0.02em] leading-none">{isUpcoming ? '-' : match.away_score}</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Sets */}
+                                                                    {(match.sets ?? []).length > 0 && (
+                                                                        <div className="flex flex-wrap gap-1 border-t border-outline-variant/10 pt-2 mb-3">
+                                                                            {match.sets?.map((set) => (
+                                                                                <span key={set.id} className="rounded bg-surface-container border border-outline-variant/20 px-2 py-0.5 text-[0.6875rem] font-bold text-on-surface-variant">
+                                                                                    {set.home_points}-{set.away_points}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Bottom: Action */}
+                                                                    <div className="flex items-center justify-center pt-2 border-t border-outline-variant/10">
+                                                                        {league.category ? (
+                                                                            <SetScoreEntry matchId={match.id} label="Record Set" homeLabel={match.home_label} awayLabel={match.away_label} />
+                                                                        ) : (
+                                                                            <Link href={route('matches.show', match.id)} className="rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2 text-[0.875rem] font-bold uppercase tracking-widest shadow-[0px_4px_8px_rgba(0,86,164,0.15)] hover:scale-[0.98] transition-all">Open</Link>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+
+                                        {/* End of Stage */}
+                                        </div>
+                                    );
+                                })}
+                            {filteredByStage.length === 0 && (
+                                <div className="bg-surface-container-lowest rounded-xl p-10 text-center shadow-[0px_12px_32px_rgba(15,23,42,0.04)] border border-outline-variant/20">
+                                    <span className="material-symbols-outlined text-4xl text-outline-variant/50 mb-3 block">sport_tennis</span>
+                                    <p className="text-sm font-bold text-on-surface-variant">No matches generated yet.</p>
+                                    <p className="text-xs text-on-surface-variant/70 mt-1">Seed groups or brackets to create fixtures.</p>
                                 </div>
                             )}
                         </div>

@@ -17,7 +17,13 @@ class LeagueController extends Controller
 {
     public function index(Request $request): Response
     {
-        $leagues = League::with([
+        $statusFilter = $request->string('status')->toString();
+
+        if (! in_array($statusFilter, ['upcoming', 'active', 'completed'], true)) {
+            $statusFilter = 'active';
+        }
+
+        $leagueQuery = League::with([
             'sport',
             'teams',
             'entries.player1',
@@ -31,15 +37,20 @@ class LeagueController extends Controller
             'matches.awayEntry.player1',
             'matches.awayEntry.player2',
             'matches.awayEntry.substitutes',
-        ])->latest()->get();
+        ])->latest();
+
+        $allLeagues = (clone $leagueQuery)->get();
+        $leagues = (clone $leagueQuery)->where('status', $statusFilter)->get();
         $activeLeague = $leagues->first();
 
         return Inertia::render('Leagues/Index', [
             'leagues' => $leagues,
+            'allLeagues' => $allLeagues,
             'activeLeague' => $activeLeague,
             'sports' => Sport::orderBy('name')->get(),
             'teams' => Team::with('sport')->orderBy('name')->get(),
             'canManage' => $request->user()->can('admin'),
+            'statusFilter' => $statusFilter,
         ]);
     }
 

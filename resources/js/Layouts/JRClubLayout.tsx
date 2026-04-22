@@ -27,21 +27,28 @@ export default function JRClubLayout({ children, active, actionHref }: PropsWith
         <div className="min-h-screen bg-surface text-on-surface md:flex">
             {/* Mobile Header */}
             <header className="fixed top-0 z-50 w-full bg-white/85 shadow-sm backdrop-blur-md dark:bg-slate-900/85 md:hidden">
-                <div className="flex w-full items-center justify-between px-6 py-4">
+                <div className="relative flex h-16 w-full items-center justify-between px-4 sm:px-6">
                     <Link href={route('profile.show')} className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-black text-on-primary shadow-sm">
                             {user.name.charAt(0)}
                         </div>
                         <span className="hidden text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant sm:block">{user.role}</span>
                     </Link>
-                    <Link href={route('activities.index')} className="text-xl font-black uppercase tracking-tighter text-primary">JR CLUB</Link>
-                    <div className="flex items-center gap-2">
+                    <Link
+                        href={route('activities.index')}
+                        className="absolute left-1/2 -translate-x-1/2 text-center text-xl font-black uppercase tracking-tighter text-white"
+                    >
+                        JR CLUB
+                    </Link>
+                    <div className="flex items-center gap-1">
                         {user.role === 'admin' && actionHref ? (
                             <Link href={actionHref} className="flex h-9 w-9 items-center justify-center rounded-full text-primary hover:bg-surface-container-low">
                                 <span className="material-symbols-outlined">add</span>
                             </Link>
                         ) : null}
-                        <span className="material-symbols-outlined text-primary">notifications</span>
+                        <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full text-white hover:bg-surface-container-low">
+                            <span className="material-symbols-outlined">notifications</span>
+                        </button>
                     </div>
                 </div>
             </header>
