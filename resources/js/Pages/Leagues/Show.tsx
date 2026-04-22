@@ -1,5 +1,5 @@
 import BracketTree from '@/Components/BracketTree';
-import { GameMatch, League, LeagueStandingGroup, Standing } from '@/types/jrclub';
+import { GameMatch, League, LeagueGroupStanding, LeagueStandingGroup, Standing } from '@/types/jrclub';
 import { Head, Link } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import Select from 'react-select';
@@ -261,38 +261,23 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                             View Full Leaderboard
                         </Link>
                     </div>
-                    <div className="bg-surface-container-lowest rounded-xl p-4 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)] flex flex-col space-y-2">
-                        {!league.category && standings.length > 0 ? (standings as Standing[]).slice(0, 3).map((standing, index) => (
-                            <div key={standing.team.id} className={`flex items-center justify-between p-3 rounded-lg transition-colors ${index === 0 ? 'bg-surface' : 'hover:bg-surface cursor-pointer active:scale-[0.98]'}`}>
-                                <div className="flex items-center space-x-4">
-                                    <span className={`font-black text-lg w-4 text-center ${index === 0 ? 'text-primary' : 'text-on-surface-variant'}`}>{index + 1}</span>
-                                    <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold shadow-sm">
-                                        {standing.team.name.substring(0, 2).toUpperCase()}
-                                    </div>
-                                    <span className="font-bold text-on-surface">{standing.team.name}</span>
+                    {standings.length === 0 ? (
+                        <div className="bg-surface-container-lowest rounded-xl p-8 text-center shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
+                            <p className="text-sm font-bold text-on-surface-variant">No standings available yet.</p>
+                        </div>
+                    ) : league.category ? (
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            {(standings as LeagueStandingGroup[]).map((group) => (
+                                <div key={group.group} className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
+                                    <GroupStanding group={group} />
                                 </div>
-                                <span className="font-black text-xl text-on-surface">{standing.points}<span className="text-xs text-on-surface-variant ml-1 font-bold">PTS</span></span>
-                            </div>
-                        )) : (
-                            league.category && (standings as LeagueStandingGroup[]).length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {(standings as LeagueStandingGroup[]).map((group) => (
-                                        <div key={group.group} className="rounded-xl bg-surface-container-low p-3">
-                                            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">{group.group}</p>
-                                            <div className="mt-2 space-y-2">
-                                                {group.entries.map((entry, index) => (
-                                                    <div key={entry.id} className="flex items-center justify-between rounded-lg bg-surface-container-lowest px-3 py-2">
-                                                        <span className="font-bold text-on-surface">{index + 1}. {entry.entry.label}</span>
-                                                        <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{entry.points} pts</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : <p className="text-sm text-on-surface-variant p-2 text-center">No standings available yet.</p>
-                        )}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
+                            <TeamStandings standings={standings as Standing[]} />
+                        </div>
+                    )}
                 </section>
 
                 {(upperBracket.length > 0 || lowerBracket.length > 0) && (
@@ -334,5 +319,65 @@ export default function Show({ league, standings, upperBracket, lowerBracket }: 
                 )}
             </main>
         </JRClubLayout>
+    );
+}
+
+function TeamStandings({ standings }: { standings: Standing[] }) {
+    return (
+        <>
+            <div className="flex items-center bg-surface-container-low px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                <div className="w-8">#</div><div className="flex-grow">Team</div><div className="w-8 text-center">P</div><div className="w-8 text-center">W</div><div className="w-8 text-center">D</div><div className="w-8 text-center">L</div><div className="w-10 text-right font-black text-on-surface">Pts</div>
+            </div>
+            {standings.map((row, index) => (
+                <div key={row.team.id} className={`${index === 0 ? 'mx-1 my-1 scale-[1.02] rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0_12px_32px_-4px_rgba(25,28,30,0.12)] z-10 relative' : index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'} flex items-center px-4 py-3 text-sm`}>
+                    <div className="w-8 font-bold">{index + 1}</div>
+                    <div className="flex flex-grow items-center gap-2"><div className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-container-high text-[10px] font-bold text-on-surface">{row.team.name.charAt(0)}</div><span className="font-bold">{row.team.name}</span></div>
+                    <div className="w-8 text-center text-on-surface-variant">{row.played}</div>
+                    <div className="w-8 text-center text-on-surface-variant">{row.won}</div>
+                    <div className="w-8 text-center text-on-surface-variant">{row.drawn}</div>
+                    <div className="w-8 text-center text-on-surface-variant">{row.lost}</div>
+                    <div className="w-10 text-right font-black">{(row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
+                </div>
+            ))}
+        </>
+    );
+}
+
+function GroupStanding({ group }: { group: LeagueStandingGroup }) {
+    return (
+        <div className="flex flex-col h-full bg-surface-container-lowest">
+            <div className="bg-surface-container-low px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary">
+                {group.group}
+            </div>
+            <div className="flex items-center border-b border-outline-variant/30 px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                <div className="w-8 shrink-0 text-center">#</div>
+                <div className="flex-grow min-w-0">Club</div>
+                <div className="w-8 shrink-0 text-center" title="Match Played">MP</div>
+                <div className="w-8 shrink-0 text-center" title="Win">W</div>
+                <div className="w-8 shrink-0 text-center" title="Loss">L</div>
+                <div className="w-10 shrink-0 text-center" title="Accumulated Score">Scr</div>
+                <div className="w-10 shrink-0 text-right font-black text-on-surface" title="Points">Pts</div>
+            </div>
+            {group.entries.map((row: LeagueGroupStanding, index) => (
+                <div key={row.id} className="flex items-center border-b border-outline-variant/10 px-4 py-3 text-sm last:border-b-0 hover:bg-surface-container-low transition-colors">
+                    <div className="w-8 shrink-0 font-medium text-on-surface-variant text-center">{index + 1}</div>
+                    <div className="flex flex-grow min-w-0 items-center gap-2">
+                        {row.entry.group_picture_path ? (
+                            <img src={`/storage/${row.entry.group_picture_path}`} alt={row.entry.label} className="h-6 w-6 shrink-0 rounded-full object-cover shadow-sm bg-surface-container-high" />
+                        ) : (
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-[10px] font-bold text-on-surface">
+                                {row.entry.label.charAt(0)}
+                            </div>
+                        )}
+                        <span className="truncate font-medium text-on-surface">{row.entry.label}</span>
+                    </div>
+                    <div className="w-8 shrink-0 text-center text-on-surface-variant">{row.played ?? 0}</div>
+                    <div className="w-8 shrink-0 text-center text-on-surface-variant">{row.won ?? 0}</div>
+                    <div className="w-8 shrink-0 text-center text-on-surface-variant">{row.lost ?? 0}</div>
+                    <div className="w-10 shrink-0 text-center text-on-surface-variant">{row.score ?? 0}</div>
+                    <div className="w-10 shrink-0 text-right font-bold text-on-surface">{(row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
+                </div>
+            ))}
+        </div>
     );
 }

@@ -24,9 +24,9 @@ use App\Http\Controllers\Admin\ParticipantImportExportController as AdminPartici
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\URL;
 
-if (App::environment('local')) {
-    URL::forceScheme('https');
-}
+// if (App::environment('local')) {
+//     URL::forceScheme('https');
+// }
 
 
 Route::redirect('/', '/activities');

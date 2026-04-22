@@ -6,20 +6,20 @@ import { Head, Link, router } from '@inertiajs/react';
 
 type LeagueBrief = { id: number; name: string };
 
-export default function Leagues({ 
-    sports, 
-    selectedSportId, 
-    leagues, 
-    selectedLeagueId, 
+export default function Leagues({
+    sports,
+    selectedSportId,
+    leagues,
+    selectedLeagueId,
     league,
     standings,
     upperBracket,
     lowerBracket
-}: { 
-    sports: Sport[]; 
-    selectedSportId?: number; 
-    leagues: LeagueBrief[]; 
-    selectedLeagueId?: number; 
+}: {
+    sports: Sport[];
+    selectedSportId?: number;
+    leagues: LeagueBrief[];
+    selectedLeagueId?: number;
     league?: League | null;
     standings: Standing[] | LeagueStandingGroup[];
     upperBracket?: GameMatch[][];
@@ -36,7 +36,7 @@ export default function Leagues({
         if (isGroupStandings) {
             if (league.upper_champion) {
                 upperWinner = league.upper_champion.label;
-                
+
                 if (upperBracket && upperBracket.length > 0) {
                     const finalRound = upperBracket[upperBracket.length - 1];
                     if (finalRound && finalRound.length > 0) {
@@ -51,7 +51,7 @@ export default function Leagues({
             }
             if (league.lower_champion) {
                 lowerWinner = league.lower_champion.label;
-                
+
                 if (lowerBracket && lowerBracket.length > 0) {
                     const finalRound = lowerBracket[lowerBracket.length - 1];
                     if (finalRound && finalRound.length > 0) {
@@ -84,7 +84,7 @@ export default function Leagues({
                     <Link href={route('leaderboards.index')} className="shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest bg-surface-container-high text-on-surface">Global Players</Link>
                     <Link href={route('leaderboards.leagues')} className="shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest bg-gradient-to-br from-primary to-primary-container text-on-primary">League Standings</Link>
                 </div>
-                
+
                 <div className="-mx-1 flex gap-2 overflow-x-auto pb-2">
                     <Link href={route('leaderboards.leagues')} className={`flex shrink-0 items-center gap-1 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest ${!selectedSportId ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface'}`}>All Sports</Link>
                     {sports.map((sport) => <Link key={sport.id} href={route('leaderboards.leagues', { sport_id: sport.id })} className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest ${selectedSportId === sport.id ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface'}`}>{sport.name}</Link>)}
@@ -96,9 +96,9 @@ export default function Leagues({
                             value={selectedLeagueId}
                             options={leagues.map((l) => ({ value: String(l.id), label: l.name }))}
                             onChange={(value) => {
-                                router.get(route('leaderboards.leagues'), { 
-                                    sport_id: selectedSportId, 
-                                    league_id: value 
+                                router.get(route('leaderboards.leagues'), {
+                                    sport_id: selectedSportId,
+                                    league_id: value
                                 }, { preserveState: true });
                             }}
                             placeholder="Select a league"
@@ -157,23 +157,23 @@ export default function Leagues({
 
             <section className="mb-8 mt-6">
                 {leagues.length === 0 ? (
-                    <div className="overflow-hidden rounded-xl bg-surface-container-high">
+                    <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
                         <p className="p-4 text-sm text-on-surface-variant">No leagues found for this sport.</p>
                     </div>
                 ) : standings.length === 0 ? (
-                    <div className="overflow-hidden rounded-xl bg-surface-container-high">
+                    <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
                         <p className="p-4 text-sm text-on-surface-variant">No standings available for this league yet.</p>
                     </div>
                 ) : isGroupStandings ? (
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         {(standings as LeagueStandingGroup[]).map((group) => (
-                            <div key={group.group} className="overflow-hidden rounded-xl bg-surface-container-high">
+                            <div key={group.group} className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
                                 <GroupStanding group={group} />
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="overflow-hidden rounded-xl bg-surface-container-high">
+                    <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
                         <TeamStandings standings={standings as Standing[]} />
                     </div>
                 )}
@@ -217,7 +217,7 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
 
 function GroupStanding({ group }: { group: LeagueStandingGroup }) {
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col h-full bg-surface-container-lowest">
             <div className="bg-surface-container-low px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary">
                 {group.group}
             </div>
@@ -231,8 +231,8 @@ function GroupStanding({ group }: { group: LeagueStandingGroup }) {
                 <div className="w-10 shrink-0 text-right font-black text-on-surface" title="Points">Pts</div>
             </div>
             {group.entries.map((row: LeagueGroupStanding, index) => (
-                <div key={row.id} className="flex items-center border-b border-outline-variant/10 px-4 py-3 text-sm last:border-b-0 hover:bg-surface-container-lowest transition-colors">
-                    <div className="w-8 shrink-0 font-medium text-on-surface-variant">{index + 1}</div>
+                <div key={row.id} className="flex items-center border-b border-outline-variant/10 px-4 py-3 text-sm last:border-b-0 hover:bg-surface-container-low transition-colors">
+                    <div className="w-8 shrink-0 font-medium text-on-surface-variant text-center">{index + 1}</div>
                     <div className="flex flex-grow min-w-0 items-center gap-2">
                         {row.entry.group_picture_path ? (
                             <img src={`/storage/${row.entry.group_picture_path}`} alt={row.entry.label} className="h-6 w-6 shrink-0 rounded-full object-cover shadow-sm bg-surface-container-high" />
