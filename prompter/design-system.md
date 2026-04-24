@@ -88,14 +88,14 @@ borderRadius: {
 - **Font**: Inter (all weights 400–900) — `font-family: 'Inter', sans-serif`
 - **Icons**: Material Symbols Outlined (`wght,FILL` variable font)
 
-| Role | Size | Weight | Class pattern | Notes |
-|------|------|--------|---------------|-------|
-| Display | varies | 800–900 | `font-black tracking-tight` | Scoreboards only. `tracking-[-0.02em]` |
-| Headline | `1.5rem` | 700 | `text-[1.5rem] font-bold tracking-tight` | Section titles |
-| Sub-header | `1rem` | 400 | `text-[1rem] text-on-surface-variant` | Paired with headline |
-| Body | `0.875rem` | 400–500 | `text-[0.875rem]` | Workhorse |
-| Label | `0.6875rem` | 700 | `text-[0.6875rem] uppercase tracking-[0.05em] font-bold` | ALL CAPS metadata ("MATCH TIME") |
-| Caption | `0.75rem` | 400 | `text-[0.75rem] text-on-surface-variant` | Secondary info |
+| Role       | Size        | Weight  | Class pattern                                            | Notes                                  |
+| ---------- | ----------- | ------- | -------------------------------------------------------- | -------------------------------------- |
+| Display    | varies      | 800–900 | `font-black tracking-tight`                              | Scoreboards only. `tracking-[-0.02em]` |
+| Headline   | `1.5rem`    | 700     | `text-[1.5rem] font-bold tracking-tight`                 | Section titles                         |
+| Sub-header | `1rem`      | 400     | `text-[1rem] text-on-surface-variant`                    | Paired with headline                   |
+| Body       | `0.875rem`  | 400–500 | `text-[0.875rem]`                                        | Workhorse                              |
+| Label      | `0.6875rem` | 700     | `text-[0.6875rem] uppercase tracking-[0.05em] font-bold` | ALL CAPS metadata ("MATCH TIME")       |
+| Caption    | `0.75rem`   | 400     | `text-[0.75rem] text-on-surface-variant`                 | Secondary info                         |
 
 ---
 
@@ -213,25 +213,25 @@ Tabs: **Activities** · **Leagues** · **Rankings** · **Profile**
 
 ## Rules
 
-| Do | Don't |
-|----|-------|
-| `text-[#191c1e]` / `text-on-surface` for body text | Use `#000000` pure black |
-| Background shifts to separate sections | 1px `border` dividers between list items |
-| `active:scale-[0.98]` on tappable cards/buttons | Skip tap feedback |
-| `text-[0.6875rem] uppercase tracking-[0.05em]` for metadata labels | Plain lowercase labels for metadata |
-| Monochromatic icons; color only for status (success/error) | Decorative colored icons |
-| Only BUMN Blue tokens (`primary`, `primary-container`) | Standard Tailwind `blue-*` colors |
+| Do                                                                 | Don't                                    |
+| ------------------------------------------------------------------ | ---------------------------------------- |
+| `text-[#191c1e]` / `text-on-surface` for body text                 | Use `#000000` pure black                 |
+| Background shifts to separate sections                             | 1px `border` dividers between list items |
+| `active:scale-[0.98]` on tappable cards/buttons                    | Skip tap feedback                        |
+| `text-[0.6875rem] uppercase tracking-[0.05em]` for metadata labels | Plain lowercase labels for metadata      |
+| Monochromatic icons; color only for status (success/error)         | Decorative colored icons                 |
+| Only BUMN Blue tokens (`primary`, `primary-container`)             | Standard Tailwind `blue-*` colors        |
 
 ---
 
 ## Template Map
 
-| Screen | HTML Source | Preview |
-|--------|-------------|---------|
-| Login | `template/authentication_login/code.html` | `template/authentication_login/screen.png` |
-| Activity Feed | `template/sport_activities_feed/code.html` | `template/sport_activities_feed/screen.png` |
-| Leagues & Competitions | `template/leagues_competitions/code.html` | `template/leagues_competitions/screen.png` |
-| Live Match Detail | `template/live_match_detail/code.html` | `template/live_match_detail/screen.png` |
-| Team Management | `template/team_management/code.html` | `template/team_management/screen.png` |
-| Leaderboards | `template/leaderboards/code.html` | `template/leaderboards/screen.png` |
-| User Profile | `template/user_profile/code.html` | `template/user_profile/screen.png` |
+| Screen                 | HTML Source                                | Preview                                     |
+| ---------------------- | ------------------------------------------ | ------------------------------------------- |
+| Login                  | `template/authentication_login/code.html`  | `template/authentication_login/screen.png`  |
+| Activity Feed          | `template/sport_activities_feed/code.html` | `template/sport_activities_feed/screen.png` |
+| Leagues & Competitions | `template/leagues_competitions/code.html`  | `template/leagues_competitions/screen.png`  |
+| Live Match Detail      | `template/live_match_detail/code.html`     | `template/live_match_detail/screen.png`     |
+| Team Management        | `template/team_management/code.html`       | `template/team_management/screen.png`       |
+| Leaderboards           | `template/leaderboards/code.html`          | `template/leaderboards/screen.png`          |
+| User Profile           | `template/user_profile/code.html`          | `template/user_profile/screen.png`          |

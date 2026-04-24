@@ -298,7 +298,7 @@ export default function Show({ league, users, divisionOptions, standings, upperB
 
                     {activeTab === 'Groups' ? (
                         <div className="grid gap-4">
-                            {divisionOptions.length > 0 ? <DivisionPicker leagueId={league.id} options={divisionOptions} /> : null}
+                            {divisionOptions.length > 0 ? <DivisionPicker leagueId={league.id} options={divisionOptions} startDate={league.start_date} /> : null}
                             {standings.length > 0 ? <GroupTable leagueId={league.id} standings={standings} /> : <EmptyState text="Generate groups after the entry list reaches the participant total." />}
                         </div>
                     ) : null}

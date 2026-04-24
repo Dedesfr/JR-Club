@@ -73,6 +73,7 @@ class LeagueController extends Controller
             'matches.awayEntry.player1',
             'matches.awayEntry.player2',
             'matches.awayEntry.substitutes',
+            'matches.group',
             'matches.sets',
             'upperChampion.player1',
             'upperChampion.player2',

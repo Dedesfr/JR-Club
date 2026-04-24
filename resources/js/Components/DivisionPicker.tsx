@@ -1,21 +1,18 @@
 import SelectInput from '@/Components/SelectInput';
 import DatePicker from '@/Components/DatePicker';
 import { useForm } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-export default function DivisionPicker({ leagueId, options }: { leagueId: number; options: { group_count: number; group_size: number }[] }) {
+export default function DivisionPicker({ leagueId, options, startDate }: { leagueId: number; options: { group_count: number; group_size: number }[]; startDate?: string }) {
     const defaultOption = options[0];
-    const initialRounds = defaultOption ? Math.max(1, defaultOption.group_size - 1) : 1;
+    const initialRounds = defaultOption ? Math.max(1, defaultOption.group_size) : 1;
     
     const [rounds, setRounds] = useState(initialRounds);
 
     const { data, setData, post } = useForm({
         group_count: defaultOption?.group_count ?? 2,
         interval: 15,
-        schedule: Array.from({ length: initialRounds }).map((_, i) => ({
-            round: i + 1,
-            scheduled_at: new Date().toISOString().split('T')[0],
-        })),
+        schedule: buildWeeklySchedule(initialRounds, startDate),
     });
 
     const divisionOptions = options.map((option) => ({
@@ -37,23 +34,10 @@ export default function DivisionPicker({ leagueId, options }: { leagueId: number
         
         const opt = options.find(o => o.group_count === numValue);
         if (opt) {
-            const newRounds = Math.max(1, opt.group_size - 1);
+            const newRounds = Math.max(1, opt.group_size);
             setRounds(newRounds);
-            
-            const currentSchedule = [...data.schedule];
-            
-            if (currentSchedule.length < newRounds) {
-                while (currentSchedule.length < newRounds) {
-                    currentSchedule.push({ 
-                        round: currentSchedule.length + 1, 
-                        scheduled_at: new Date().toISOString().split('T')[0] 
-                    });
-                }
-            } else if (currentSchedule.length > newRounds) {
-                currentSchedule.length = newRounds;
-            }
-            
-            setData('schedule', currentSchedule);
+
+            setData('schedule', buildWeeklySchedule(newRounds, data.schedule[0]?.scheduled_at ?? startDate));
         }
     };
 
@@ -106,4 +90,30 @@ export default function DivisionPicker({ leagueId, options }: { leagueId: number
             </div>
         </form>
     );
+}
+
+function buildWeeklySchedule(rounds: number, baseDate?: string) {
+    const start = baseDate ? new Date(baseDate) : new Date();
+
+    if (Number.isNaN(start.getTime())) {
+        start.setTime(Date.now());
+    }
+
+    return Array.from({ length: rounds }).map((_, i) => {
+        const scheduledAt = new Date(start);
+        scheduledAt.setDate(start.getDate() + i * 7);
+
+        return {
+            round: i + 1,
+            scheduled_at: toDateInputValue(scheduledAt),
+        };
+    });
+}
+
+function toDateInputValue(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
 }

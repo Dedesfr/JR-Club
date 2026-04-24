@@ -89,70 +89,211 @@ class LeagueFormatService
 
             $roundOffsets = [];
 
-            $league->groups()->with('entries')->get()->each(function (LeagueGroup $group) use ($league, $scheduleMap, $intervalMinutes, &$roundOffsets) {
-                $entries = $group->entries->values();
-                $round = 1;
+            $groupRounds = $league->groups()
+                ->with('entries')
+                ->orderBy('position')
+                ->get()
+                ->map(fn (LeagueGroup $group) => [
+                    'group' => $group,
+                    'rounds' => $this->groupStageRounds($group->entries->values()),
+                ]);
 
-                // Implement a round-robin scheduling algorithm to properly assign rounds
-                $numEntries = $entries->count();
-                $isOdd = $numEntries % 2 !== 0;
-                
-                // If odd number of teams, add a dummy "bye" team
-                $teams = $entries->toArray();
-                if ($isOdd) {
-                    $teams[] = null;
-                    $numEntries++;
-                }
+            $balancedGroupRounds = $this->balanceGroupRoundWeeks($groupRounds);
 
-                $totalRounds = $numEntries - 1;
-                $matchesPerRound = $numEntries / 2;
+            $balancedGroupRounds->each(function (array $groupSchedule) use ($league, $scheduleMap, $intervalMinutes, &$roundOffsets) {
+                $group = $groupSchedule['group'];
 
-                for ($r = 0; $r < $totalRounds; $r++) {
-                    for ($i = 0; $i < $matchesPerRound; $i++) {
-                        $home = $teams[$i];
-                        $away = $teams[$numEntries - 1 - $i];
+                foreach ($groupSchedule['rounds'] as $roundIndex => $matches) {
+                    $round = $roundIndex + 1;
 
-                        // Skip matches involving the dummy "bye" team
-                        if ($home !== null && $away !== null) {
-                            $scheduledAt = now();
-                            if ($scheduleMap && $scheduleMap->has($round)) {
-                                $scheduledAt = \Carbon\Carbon::parse($scheduleMap->get($round));
-                            } elseif ($league->start_date) {
-                                $scheduledAt = $league->start_date->copy()->addDays($round - 1);
-                            } else {
-                                $scheduledAt = now()->addDays($round - 1);
-                            }
-
-                            if (!isset($roundOffsets[$round])) {
-                                $roundOffsets[$round] = 0;
-                            }
-                            
-                            $time = $scheduledAt->copy()->addMinutes($roundOffsets[$round]);
-                            $roundOffsets[$round] += $intervalMinutes;
-
-                            GameMatch::create([
-                                'league_id' => $league->id,
-                                'league_group_id' => $group->id,
-                                'home_entry_id' => $home['id'],
-                                'away_entry_id' => $away['id'],
-                                'scheduled_at' => $time,
-                                'status' => 'scheduled',
-                                'stage' => 'group',
-                                'round' => $round,
-                            ]);
+                    foreach ($matches as [$home, $away]) {
+                        $scheduledAt = now();
+                        if ($scheduleMap && $scheduleMap->has($round)) {
+                            $scheduledAt = \Carbon\Carbon::parse($scheduleMap->get($round));
+                        } elseif ($league->start_date) {
+                            $scheduledAt = $league->start_date->copy()->addDays($round - 1);
+                        } else {
+                            $scheduledAt = now()->addDays($round - 1);
                         }
-                    }
 
-                    // Rotate teams for next round, keeping the first team fixed
-                    $teams = array_merge(
-                        [$teams[0]],
-                        [array_pop($teams)],
-                        array_slice($teams, 1, $numEntries - 2)
-                    );
-                    $round++;
+                        if (!isset($roundOffsets[$round])) {
+                            $roundOffsets[$round] = 0;
+                        }
+
+                        $time = $scheduledAt->copy()->addMinutes($roundOffsets[$round]);
+                        $roundOffsets[$round] += $intervalMinutes;
+
+                        GameMatch::create([
+                            'league_id' => $league->id,
+                            'league_group_id' => $group->id,
+                            'home_entry_id' => $home->id,
+                            'away_entry_id' => $away->id,
+                            'scheduled_at' => $time,
+                            'status' => 'scheduled',
+                            'stage' => 'group',
+                            'round' => $round,
+                        ]);
+                    }
                 }
             });
         });
+    }
+
+    private function balanceGroupRoundWeeks(Collection $groupRounds): Collection
+    {
+        $weeklyTotals = [];
+
+        return $groupRounds->map(function (array $groupSchedule) use (&$weeklyTotals) {
+            $rounds = $this->orderRoundsForWeeklyBalance($groupSchedule['rounds'], $weeklyTotals);
+
+            foreach ($rounds as $index => $matches) {
+                $weeklyTotals[$index] = ($weeklyTotals[$index] ?? 0) + count($matches);
+            }
+
+            return [
+                'group' => $groupSchedule['group'],
+                'rounds' => $rounds,
+            ];
+        });
+    }
+
+    private function orderRoundsForWeeklyBalance(array $rounds, array $weeklyTotals): array
+    {
+        if ($weeklyTotals === []) {
+            return $rounds;
+        }
+
+        $roundCount = count($rounds);
+        $totalMatches = array_sum($weeklyTotals) + array_sum(array_map('count', $rounds));
+        $targetPerWeek = intdiv($totalMatches, $roundCount);
+        $remainingRounds = array_values($rounds);
+        $orderedRounds = [];
+
+        for ($week = 0; $week < $roundCount; $week++) {
+            $currentTotal = $weeklyTotals[$week] ?? 0;
+            $targetMatches = $targetPerWeek - $currentTotal;
+            $bestIndex = 0;
+            $bestScore = null;
+
+            foreach ($remainingRounds as $index => $matches) {
+                $score = abs(count($matches) - $targetMatches);
+
+                if ($bestScore === null || $score < $bestScore) {
+                    $bestIndex = $index;
+                    $bestScore = $score;
+                }
+            }
+
+            $orderedRounds[] = $remainingRounds[$bestIndex];
+            array_splice($remainingRounds, $bestIndex, 1);
+        }
+
+        return $orderedRounds;
+    }
+
+    private function groupStageRounds(Collection $entries): array
+    {
+        $originalCount = $entries->count();
+
+        if ($originalCount < 2) {
+            return [];
+        }
+
+        $teams = $entries->values()->all();
+
+        if ($originalCount % 2 === 1) {
+            $teams[] = null;
+        }
+
+        $slotCount = count($teams);
+        $rounds = [];
+
+        for ($round = 0; $round < $slotCount - 1; $round++) {
+            $matches = [];
+
+            for ($index = 0; $index < intdiv($slotCount, 2); $index++) {
+                $home = $teams[$index];
+                $away = $teams[$slotCount - 1 - $index];
+
+                if ($home !== null && $away !== null) {
+                    $matches[] = [$home, $away];
+                }
+            }
+
+            $rounds[] = $matches;
+            $last = array_pop($teams);
+            $teams = array_merge([$teams[0]], [$last], array_slice($teams, 1));
+        }
+
+        if ($originalCount % 2 === 0) {
+            return $this->appendBalancedByeRound($rounds, $originalCount);
+        }
+
+        return $rounds;
+    }
+
+    private function appendBalancedByeRound(array $rounds, int $entryCount): array
+    {
+        $totalMatches = intdiv($entryCount * ($entryCount - 1), 2);
+        $extraRoundTarget = intdiv($totalMatches, $entryCount);
+
+        if ($extraRoundTarget < 1) {
+            $rounds[] = [];
+
+            return $rounds;
+        }
+
+        $moves = $this->findDisjointMatchesForExtraRound($rounds, $extraRoundTarget);
+
+        if ($moves === null) {
+            $rounds[] = [];
+
+            return $rounds;
+        }
+
+        $extraRound = [];
+        foreach ($moves as $move) {
+            $extraRound[] = $rounds[$move['round']][$move['match']];
+        }
+
+        usort($moves, fn (array $a, array $b) => [$b['round'], $b['match']] <=> [$a['round'], $a['match']]);
+        foreach ($moves as $move) {
+            array_splice($rounds[$move['round']], $move['match'], 1);
+        }
+
+        $rounds[] = $extraRound;
+
+        return $rounds;
+    }
+
+    private function findDisjointMatchesForExtraRound(array $rounds, int $needed, int $startRound = 0, array $usedEntryIds = []): ?array
+    {
+        if ($needed === 0) {
+            return [];
+        }
+
+        for ($roundIndex = $startRound; $roundIndex < count($rounds); $roundIndex++) {
+            foreach ($rounds[$roundIndex] as $matchIndex => [$home, $away]) {
+                if (isset($usedEntryIds[$home->id], $usedEntryIds[$away->id])) {
+                    continue;
+                }
+
+                if (isset($usedEntryIds[$home->id]) || isset($usedEntryIds[$away->id])) {
+                    continue;
+                }
+
+                $nextUsedEntryIds = $usedEntryIds + [$home->id => true, $away->id => true];
+                $nextMoves = $this->findDisjointMatchesForExtraRound($rounds, $needed - 1, $roundIndex + 1, $nextUsedEntryIds);
+
+                if ($nextMoves !== null) {
+                    array_unshift($nextMoves, ['round' => $roundIndex, 'match' => $matchIndex]);
+
+                    return $nextMoves;
+                }
+            }
+        }
+
+        return null;
     }
 
     public function recomputeGroupPoints(League $league): void

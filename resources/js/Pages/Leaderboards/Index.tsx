@@ -1,7 +1,12 @@
 import JRClubLayout from '@/Layouts/JRClubLayout';
 import { Head, Link } from '@inertiajs/react';
 
-type Player = { id: number; name: string; activities_joined: number; matches_played: number; win_rate: number; score: number };
+type Player = { id: number; name: string; picture?: string | null; activities_joined: number; matches_played: number; win_rate: number; score: number };
+
+function playerAvatar(player: Player): string | null {
+    if (player.picture) return `/storage/${player.picture}`;
+    return `/images/icon-${((player.id - 1) % 7) + 1}.jpeg`;
+}
 
 export default function Index({ players }: { players: Player[] }) {
     return (
@@ -92,8 +97,11 @@ function PodiumPlayer({ player, place, size }: { player: Player; place: string; 
 
             {/* Avatar with rank badge */}
             <div className="relative mb-2">
-                <div className={`flex items-center justify-center rounded-full font-black ${avatarSize} ${avatarBg}`}>
-                    {player.name.charAt(0)}
+                <div className={`flex items-center justify-center overflow-hidden rounded-full font-black ${avatarSize} ${avatarBg}`}>
+                    {playerAvatar(player)
+                        ? <img src={playerAvatar(player)!} alt={player.name} className="h-full w-full object-cover" />
+                        : player.name.charAt(0)
+                    }
                 </div>
                 {!isPrimary && (
                     <div className={`absolute -bottom-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-black shadow-sm ${badgeBg}`}>
@@ -129,8 +137,11 @@ function PlayerRow({ player, rank }: { player: Player; rank: number }) {
                 {rank}
             </span>
 
-            <div className={`flex shrink-0 items-center justify-center rounded-full font-black ${isTop5 ? 'h-9 w-9 bg-primary-fixed text-sm text-on-primary-fixed' : 'h-8 w-8 bg-surface-container-high text-xs text-on-surface-variant'}`}>
-                {player.name.charAt(0)}
+            <div className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full font-black ${isTop5 ? 'h-9 w-9 bg-primary-fixed text-sm text-on-primary-fixed' : 'h-8 w-8 bg-surface-container-high text-xs text-on-surface-variant'}`}>
+                {playerAvatar(player)
+                    ? <img src={playerAvatar(player)!} alt={player.name} className="h-full w-full object-cover" />
+                    : player.name.charAt(0)
+                }
             </div>
 
             <div className="min-w-0 flex-grow">

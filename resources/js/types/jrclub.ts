@@ -120,6 +120,11 @@ export type GameMatch = {
     status: string;
     stage?: string | null;
     round?: number | null;
+    group?: {
+        id: number;
+        name: string;
+        position: number;
+    } | null;
     scheduled_at: string;
     location?: string | null;
     home_score: number;

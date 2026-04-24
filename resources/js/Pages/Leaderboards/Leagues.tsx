@@ -6,6 +6,10 @@ import { Head, Link, router } from '@inertiajs/react';
 
 type LeagueBrief = { id: number; name: string };
 
+function fallbackIcon(id: number): string {
+    return `/images/icon-${((id - 1) % 7) + 1}.jpeg`;
+}
+
 export default function Leagues({
     sports,
     selectedSportId,
@@ -203,7 +207,7 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
             {standings.map((row, index) => (
                 <div key={row.team.id} className={`${index === 0 ? 'mx-1 my-1 scale-[1.02] rounded-lg bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0_12px_32px_-4px_rgba(25,28,30,0.12)]' : index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'} flex items-center px-4 py-3 text-sm`}>
                     <div className="w-8 font-bold">{index + 1}</div>
-                    <div className="flex flex-grow items-center gap-2"><div className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-container-high text-[10px] font-bold text-on-surface">{row.team.name.charAt(0)}</div><span className="font-bold">{row.team.name}</span></div>
+                    <div className="flex flex-grow items-center gap-2"><img src={fallbackIcon(row.team.id)} alt={row.team.name} className="h-6 w-6 shrink-0 rounded-full object-cover bg-surface-container-high" /><span className="font-bold">{row.team.name}</span></div>
                     <div className="w-8 text-center text-on-surface-variant">{row.played}</div>
                     <div className="w-8 text-center text-on-surface-variant">{row.won}</div>
                     <div className="w-8 text-center text-on-surface-variant">{row.drawn}</div>
@@ -234,13 +238,11 @@ function GroupStanding({ group }: { group: LeagueStandingGroup }) {
                 <div key={row.id} className="flex items-center border-b border-outline-variant/10 px-4 py-3 text-sm last:border-b-0 hover:bg-surface-container-low transition-colors">
                     <div className="w-8 shrink-0 font-medium text-on-surface-variant text-center">{index + 1}</div>
                     <div className="flex flex-grow min-w-0 items-center gap-2">
-                        {row.entry.group_picture_path ? (
-                            <img src={`/storage/${row.entry.group_picture_path}`} alt={row.entry.label} className="h-6 w-6 shrink-0 rounded-full object-cover shadow-sm bg-surface-container-high" />
-                        ) : (
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-[10px] font-bold text-on-surface">
-                                {row.entry.label.charAt(0)}
-                            </div>
-                        )}
+                        <img
+                            src={row.entry.group_picture_path ? `/storage/${row.entry.group_picture_path}` : fallbackIcon(row.id)}
+                            alt={row.entry.label}
+                            className="h-6 w-6 shrink-0 rounded-full object-cover bg-surface-container-high shadow-sm"
+                        />
                         <span className="truncate font-medium text-on-surface">{row.entry.label}</span>
                     </div>
                     <div className="w-8 shrink-0 text-center text-on-surface-variant">{row.played ?? 0}</div>

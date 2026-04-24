@@ -40,6 +40,42 @@ class LeagueFormatServiceTest extends TestCase
         $this->assertSame(12, $league->matches()->where('stage', 'group')->count());
     }
 
+    public function test_even_eight_entry_groups_use_extra_round_without_self_matches(): void
+    {
+        $league = $this->makeBadmintonLeague('Sixteen Entry League');
+        $league->update(['participant_total' => 16]);
+        $entries = $this->makeEntries($league, 16);
+        $service = app(LeagueFormatService::class);
+
+        $service->createGroups($league, $entries, 2);
+        $service->generateGroupMatches($league->fresh());
+
+        $groups = $league->fresh()->groups()->with('matches')->get();
+        $weeklyCounts = $league->matches()
+            ->where('stage', 'group')
+            ->get()
+            ->groupBy('round')
+            ->map->count()
+            ->values()
+            ->all();
+
+        $this->assertSame(56, $league->matches()->where('stage', 'group')->count());
+        $this->assertSame([7, 7, 7, 7, 7, 7, 7, 7], $weeklyCounts);
+
+        foreach ($groups as $group) {
+            $matches = $group->matches;
+            $roundCounts = $matches->groupBy('round')->map->count()->sort()->values()->all();
+            $pairKeys = $matches
+                ->map(fn ($match) => collect([$match->home_entry_id, $match->away_entry_id])->sort()->implode('-'))
+                ->unique();
+
+            $this->assertSame([3, 3, 3, 3, 4, 4, 4, 4], $roundCounts);
+            $this->assertSame(28, $matches->count());
+            $this->assertSame(28, $pairKeys->count());
+            $this->assertSame(0, $matches->filter(fn ($match) => $match->home_entry_id === $match->away_entry_id)->count());
+        }
+    }
+
     public function test_brackets_support_shapes_for_four_five_and_eight_entries(): void
     {
         foreach ([4 => [2, 1], 5 => [4, 2, 1], 8 => [4, 2, 1]] as $count => $expectedRounds) {
