@@ -30,41 +30,52 @@ export default function Show({ activity }: { activity: Activity }) {
         <JRClubLayout active="Activities">
             <Head title={`${activity.title} - ${activity.sport.name}`} />
 
-            <section className="relative overflow-hidden rounded-xl bg-inverse-surface p-5 text-inverse-on-surface shadow-[0px_12px_32px_rgba(15,23,42,0.12)] sm:p-6 md:p-8">
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(45,49,51,0.95),rgba(0,86,164,0.76)_56%,rgba(0,110,207,0.44))]" />
-                <div className="absolute right-[-5rem] top-[-5rem] h-72 w-72 rounded-full border border-white/10" />
-                <div className="absolute bottom-[-6rem] left-[-3rem] h-72 w-72 rounded-full bg-primary-container/20 blur-3xl" />
-
-                <div className="relative">
-                    <Link href={route('activities.index')} className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-bold text-white backdrop-blur-md transition-transform active:scale-[0.98]">
-                        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                        Activities
-                    </Link>
-
-                    <div className="grid gap-6 lg:grid-cols-[1.35fr_0.8fr] lg:items-end">
+            <section className="-mt-4 bg-inverse-surface" style={{ marginLeft: 'calc(50% - 50vw)', width: '100vw' }}>
+                <div className="mx-auto max-w-md px-4 pt-5 pb-0 md:max-w-7xl md:px-6 lg:px-8">
+                    <div className="flex items-start justify-between gap-6">
                         <div>
-                            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-white backdrop-blur-md">
-                                <span className="material-symbols-outlined fill text-[16px]">{activity.sport.icon || 'sports_tennis'}</span>
-                                {activity.sport.name}
-                            </span>
-                            <h1 className="mt-5 max-w-3xl text-[2.5rem] font-black leading-[0.95] tracking-normal text-white sm:text-5xl lg:text-6xl">{activity.title}</h1>
-                            {activity.description ? <p className="mt-4 max-w-2xl text-sm leading-6 text-white/80 sm:text-base">{activity.description}</p> : null}
+                            <Link href={route('activities.index')} className="mb-3 inline-flex items-center gap-2 text-sm font-bold text-inverse-on-surface/60 transition-colors hover:text-inverse-on-surface">
+                                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                                Events
+                            </Link>
+                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">
+                                {activity.sport.name} · {displayDate}
+                            </p>
+                            <h1 className="mt-1 text-4xl font-black leading-none text-inverse-on-surface md:text-5xl">{activity.title}</h1>
                         </div>
+                        <div className="hidden items-center gap-2 self-center rounded-xl bg-white/10 px-4 py-2.5 text-sm text-inverse-on-surface/60 md:flex">
+                            <span className="material-symbols-outlined fill text-[16px]">{activity.sport.icon || 'sports_tennis'}</span>
+                            <span>{activity.sport.name}</span>
+                        </div>
+                    </div>
 
-                        <div className="rounded-xl bg-white/85 p-5 text-on-surface shadow-[0px_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-md">
-                            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Participation</p>
-                            <div className="mt-3 flex items-end justify-between gap-4">
-                                <div>
-                                    <p className="text-4xl font-black tracking-normal text-on-surface">{slotsFilled}/{totalSlots}</p>
-                                    <p className="text-sm text-on-surface-variant">{spotsLeft} spots left</p>
-                                </div>
-                                <span className={`rounded-full px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] ${isParticipating ? 'bg-primary-fixed text-primary' : isFull ? 'bg-surface-container-high text-on-surface-variant' : 'bg-tertiary-fixed text-tertiary'}`}>
-                                    {isParticipating ? 'Joined' : isFull ? 'Full' : 'Open'}
-                                </span>
-                            </div>
-                            <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-container">
-                                <div className="h-full rounded-full bg-gradient-to-br from-primary to-primary-container" style={{ width: `${fillPercent}%` }} />
-                            </div>
+                    {activity.description ? (
+                        <p className="mt-3 max-w-2xl text-sm leading-6 text-inverse-on-surface/60">{activity.description}</p>
+                    ) : null}
+
+                    <div className="mt-4 flex items-center gap-6 border-t border-white/10 pt-4 md:gap-10">
+                        <div>
+                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">Slots</p>
+                            <p className="mt-0.5 text-xl font-black text-inverse-on-surface md:text-2xl">{slotsFilled}/{totalSlots}</p>
+                        </div>
+                        <div className="h-8 w-px bg-white/10" />
+                        <div>
+                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">Spots Left</p>
+                            <p className="mt-0.5 text-xl font-black text-inverse-on-surface md:text-2xl">{spotsLeft}</p>
+                        </div>
+                        <div className="h-8 w-px bg-white/10" />
+                        <div>
+                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">Status</p>
+                            <p className="mt-0.5 text-xl font-black text-inverse-on-surface md:text-2xl">
+                                {isParticipating ? 'Joined' : isFull ? 'Full' : 'Open'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Fill bar */}
+                    <div className="mt-4 pb-5">
+                        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary-container" style={{ width: `${fillPercent}%` }} />
                         </div>
                     </div>
                 </div>

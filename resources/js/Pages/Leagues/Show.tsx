@@ -2,7 +2,12 @@ import BracketTree from '@/Components/BracketTree';
 import JRClubLayout from '@/Layouts/JRClubLayout';
 import { GameMatch, League, LeagueGroupStanding, LeagueStandingGroup, Standing } from '@/types/jrclub';
 import { Head, Link } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
+
+function fallbackIcon(id?: number): string {
+    if (!id) return `/images/icon-1.jpeg`;
+    return `/images/icon-${((id - 1) % 7) + 1}.jpeg`;
+}
 
 const sportImages: Record<string, string> = {
     badminton: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80',
@@ -61,7 +66,9 @@ export default function Show({
 
     const groupedMatches = useMemo(() => {
         return visibleMatches.reduce<Record<string, GameMatch[]>>((groups, match) => {
-            const key = match.stage || 'unassigned';
+            const key = match.stage === 'group' && match.group
+                ? `group|${match.group.position}|${match.group.name}`
+                : (match.stage || 'unassigned');
             groups[key] = [...(groups[key] || []), match];
             return groups;
         }, {});
@@ -71,24 +78,41 @@ export default function Show({
         <JRClubLayout active="Leagues">
             <Head title={`${league.name} - ${league.sport?.name || 'League'} Details`} />
 
-            <section className="-mx-4 -mt-4 bg-surface-container-lowest px-4 pb-0 pt-4 shadow-[0px_12px_32px_rgba(15,23,42,0.06)] md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
-                <div className="flex flex-col gap-5">
-                    <div className="flex items-end justify-between gap-4">
+            <section className="-mt-4 bg-inverse-surface" style={{ marginLeft: 'calc(50% - 50vw)', width: '100vw' }}>
+                <div className="mx-auto max-w-md px-4 pt-5 pb-0 md:max-w-7xl md:px-6 lg:px-8">
+                    <div className="flex items-start justify-between gap-6">
                         <div>
-                            <Link href={route('leagues.index')} className="mb-3 inline-flex items-center gap-2 text-sm font-bold text-primary">
+                            <Link href={route('leagues.index')} className="mb-3 inline-flex items-center gap-2 text-sm font-bold text-inverse-on-surface/60 transition-colors hover:text-inverse-on-surface">
                                 <span className="material-symbols-outlined text-[18px]">arrow_back</span>
                                 Leagues
                             </Link>
-                            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">League Details · {league.status}</p>
-                            <h1 className="mt-1 text-4xl font-black leading-none tracking-normal text-on-surface md:text-5xl">{league.name}</h1>
+                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">League Details · {league.status}</p>
+                            <h1 className="mt-1 text-4xl font-black leading-none text-inverse-on-surface md:text-5xl">{league.name}</h1>
                         </div>
-                        <div className="hidden items-center gap-2 rounded-xl bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant md:flex">
+                        <div className="hidden items-center gap-2 self-center rounded-xl bg-white/10 px-4 py-2.5 text-sm text-inverse-on-surface/60 md:flex">
                             <span className="material-symbols-outlined text-[16px]">{league.sport?.icon || 'emoji_events'}</span>
                             <span>{league.sport?.name || 'League'}</span>
                         </div>
                     </div>
 
-                    <div className="flex gap-2 overflow-x-auto">
+                    <div className="mt-4 flex items-center gap-6 border-t border-white/10 pt-4 md:gap-10">
+                        <div>
+                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">Entrants</p>
+                            <p className="mt-0.5 text-xl font-black text-inverse-on-surface md:text-2xl">{entrants}</p>
+                        </div>
+                        <div className="h-8 w-px bg-white/10" />
+                        <div>
+                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">Matches</p>
+                            <p className="mt-0.5 text-xl font-black text-inverse-on-surface md:text-2xl">{allMatches.length}</p>
+                        </div>
+                        <div className="h-8 w-px bg-white/10" />
+                        <div>
+                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">Period</p>
+                            <p className="mt-0.5 text-xl font-black text-inverse-on-surface md:text-2xl">{startDate} – {endDate}</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 flex overflow-x-auto">
                         <DetailTab label="Overview" active />
                         <DetailTab label="Schedule" />
                         <DetailTab label="Standings" />
@@ -97,7 +121,7 @@ export default function Show({
                 </div>
             </section>
 
-            <section className="mt-6 overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_12px_32px_rgba(15,23,42,0.04)] md:grid md:grid-cols-[20rem_minmax(0,1fr)]">
+            <section className="mt-6 overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_2px_12px_rgba(15,23,42,0.08),0px_0px_0px_1px_rgba(15,23,42,0.04)] md:grid md:grid-cols-[20rem_minmax(0,1fr)]">
                 <div className="relative min-h-56 overflow-hidden md:min-h-72">
                     <img src={getSportImage(league.sport?.name)} alt="" className="h-full w-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-r from-inverse-surface/20 via-transparent to-surface-container-lowest md:to-surface-container-lowest" />
@@ -113,10 +137,14 @@ export default function Show({
                         {league.description || getStatusCopy(league.status)}
                     </p>
 
-                    <div className="my-7 grid grid-cols-3 gap-4 bg-surface-container-lowest py-4">
+                    <div className="my-6 grid grid-cols-3 border-b border-t border-outline-variant py-4">
                         <FeaturedMetric label="Entrants" value={String(entrants)} />
-                        <FeaturedMetric label="Schedule" value={`${startDate} - ${endDate}`} />
-                        <FeaturedMetric label="Matches" value={String(allMatches.length)} />
+                        <div className="border-l border-outline-variant pl-4">
+                            <FeaturedMetric label="Schedule" value={`${startDate} - ${endDate}`} />
+                        </div>
+                        <div className="border-l border-outline-variant pl-4">
+                            <FeaturedMetric label="Matches" value={String(allMatches.length)} />
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
@@ -126,7 +154,7 @@ export default function Show({
                                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                             </Link>
                         ) : null}
-                        <Link href={route('leaderboards.index')} className="rounded-full bg-surface-container-low px-5 py-3 text-sm font-bold text-on-surface transition-colors hover:bg-surface-container">
+                        <Link href={route('leaderboards.index')} className="rounded-full border border-outline-variant bg-surface-container-low px-5 py-3 text-sm font-bold text-on-surface transition-colors hover:bg-surface-container">
                             View Leaderboard
                         </Link>
                     </div>
@@ -142,7 +170,7 @@ export default function Show({
                                 key={option.value}
                                 type="button"
                                 onClick={() => setSelectedSchedule(option.value)}
-                                className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold transition-all active:scale-[0.98] ${selectedSchedule === option.value ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)]' : 'bg-surface-container-lowest text-on-surface-variant shadow-[0px_4px_12px_rgba(15,23,42,0.03)] hover:bg-surface-container-high'}`}
+                                className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold transition-all active:scale-[0.98] ${selectedSchedule === option.value ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)]' : 'border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'}`}
                             >
                                 {option.label}
                             </button>
@@ -196,7 +224,7 @@ export default function Show({
                     <SectionHeader eyebrow={`Teams · ${league.teams.length}`} title="Participating teams" />
                     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                         {league.teams.map((team) => (
-                            <ParticipantCard key={team.id} label={team.name} />
+                            <ParticipantCard key={team.id} id={team.id} label={team.name} />
                         ))}
                     </div>
                 </section>
@@ -207,7 +235,7 @@ export default function Show({
                     <SectionHeader eyebrow={`Entries · ${league.entries.length}`} title="Participating entries" />
                     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                         {league.entries.map((entry) => (
-                            <ParticipantCard key={entry.id} label={entry.label} imagePath={entry.group_picture_path} />
+                            <ParticipantCard key={entry.id} id={entry.id} label={entry.label} imagePath={entry.group_picture_path} />
                         ))}
                     </div>
                 </section>
@@ -217,14 +245,18 @@ export default function Show({
 }
 
 function DetailTab({ label, active = false }: { label: string; active?: boolean }) {
-    return <span className={`whitespace-nowrap px-4 py-3 text-sm font-bold ${active ? 'bg-surface text-primary' : 'text-on-surface-variant'}`}>{label}</span>;
+    return (
+        <span className={`whitespace-nowrap px-4 py-3 text-sm font-bold ${active ? 'border-b-[3px] border-white text-white' : 'border-b-[3px] border-transparent text-outline'}`}>
+            {label}
+        </span>
+    );
 }
 
 function SectionHeader({ eyebrow, title, action }: { eyebrow: string; title: string; action?: React.ReactNode }) {
     return (
         <div className="mb-4 flex items-end justify-between gap-4">
             <div>
-                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">{eyebrow}</p>
+                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">{eyebrow}</p>
                 <h2 className="mt-1 text-2xl font-black tracking-normal text-on-surface">{title}</h2>
             </div>
             {action}
@@ -232,51 +264,77 @@ function SectionHeader({ eyebrow, title, action }: { eyebrow: string; title: str
     );
 }
 
+function getMatchAccentStyle(status: string): React.CSSProperties {
+    if (status === 'completed') return { borderLeft: '3px solid #8f3d00' };
+    if (status === 'active') return { borderLeft: '3px solid #0056a4' };
+    if (status === 'scheduled') return { borderLeft: '3px solid #0056a4' };
+    return { borderLeft: '3px solid #c1c6d5' };
+}
+
+function getMatchStatusBadge(status: string) {
+    if (status === 'completed') return 'bg-tertiary-fixed text-tertiary';
+    if (status === 'active') return 'bg-primary-fixed text-primary';
+    if (status === 'scheduled') return 'bg-primary-fixed text-primary';
+    return 'bg-surface-container text-on-surface-variant';
+}
+
 function MatchCard({ match }: { match: GameMatch }) {
     return (
-        <Link href={route('matches.show', match.id)} className="grid gap-4 rounded-xl bg-surface-container-lowest p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)] transition-transform active:scale-[0.98]">
+        <Link
+            href={route('matches.show', match.id)}
+            className="grid gap-4 rounded-xl bg-surface-container-lowest p-4 shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)] transition-transform active:scale-[0.98]"
+            style={getMatchAccentStyle(match.status)}
+        >
             <div className="flex items-center justify-between gap-3">
-                <span className="rounded-full bg-primary-fixed px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">{formatMatchDate(match.scheduled_at)}</span>
-                <span className="rounded-full bg-surface-container-low px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">{match.status}</span>
+                <span className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">{formatMatchDate(match.scheduled_at)}</span>
+                <span className={`rounded-full px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.04em] ${getMatchStatusBadge(match.status)}`}>{match.status}</span>
             </div>
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                <MatchSide label={match.home_label ?? 'TBC'} imagePath={match.home_entry?.group_picture_path} align="right" />
-                <span className="rounded-full bg-surface-container-low px-3 py-1 text-xs font-black text-on-surface-variant">VS</span>
-                <MatchSide label={match.away_label ?? 'TBC'} imagePath={match.away_entry?.group_picture_path} />
+                <MatchSide label={match.home_label ?? 'TBC'} imagePath={match.home_entry?.group_picture_path} id={match.home_entry?.id} align="right" highlight={match.status === 'completed' && match.home_score > match.away_score} />
+                {match.status === 'completed' ? (
+                    <div className="flex items-center gap-1.5 rounded-full bg-inverse-surface px-3 py-1 text-inverse-on-surface">
+                        <span className={`text-sm font-black tabular-nums ${match.home_score > match.away_score ? '' : 'opacity-60'}`}>{match.home_score}</span>
+                        <span className="text-xs font-bold opacity-60">-</span>
+                        <span className={`text-sm font-black tabular-nums ${match.away_score > match.home_score ? '' : 'opacity-60'}`}>{match.away_score}</span>
+                    </div>
+                ) : (
+                    <span className="rounded-full bg-inverse-surface px-3 py-1 text-xs font-black text-inverse-on-surface">VS</span>
+                )}
+                <MatchSide label={match.away_label ?? 'TBC'} imagePath={match.away_entry?.group_picture_path} id={match.away_entry?.id} highlight={match.status === 'completed' && match.away_score > match.home_score} />
             </div>
         </Link>
     );
 }
 
-function MatchSide({ label, imagePath, align = 'left' }: { label: string; imagePath?: string | null; align?: 'left' | 'right' }) {
+function MatchSide({ label, imagePath, id, align = 'left', highlight = false }: { label: string; imagePath?: string | null; id?: number; align?: 'left' | 'right'; highlight?: boolean }) {
     return (
         <div className={`flex min-w-0 items-center gap-3 ${align === 'right' ? 'flex-row-reverse text-right' : ''}`}>
-            {imagePath ? (
-                <img src={`/storage/${imagePath}`} alt={label} className="h-11 w-11 shrink-0 rounded-full object-cover shadow-sm" />
-            ) : (
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-xs font-black text-on-surface-variant">{label.substring(0, 2).toUpperCase()}</div>
-            )}
-            <p className="truncate text-sm font-black text-on-surface">{label}</p>
+            <img
+                src={imagePath ? `/storage/${imagePath}` : fallbackIcon(id)}
+                alt={label}
+                className="h-11 w-11 shrink-0 rounded-full object-cover shadow-sm bg-surface-container-high"
+            />
+            <p className={`truncate text-sm font-black ${highlight ? 'text-primary' : 'text-on-surface'}`}>{label}</p>
         </div>
     );
 }
 
 function TeamStandings({ standings }: { standings: Standing[] }) {
     return (
-        <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
-            <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_repeat(4,2.5rem)] items-center bg-surface-container-low px-4 py-3 text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant">
+        <div className="overflow-hidden rounded-xl shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
+            <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_repeat(4,2.5rem)] items-center bg-inverse-surface px-4 py-3 text-xs font-bold uppercase tracking-[0.05em] text-outline">
                 <div>#</div>
                 <div>Team</div>
                 <div className="text-center">P</div>
                 <div className="text-center">W</div>
                 <div className="text-center">L</div>
-                <div className="text-right text-on-surface">Pts</div>
+                <div className="text-right text-inverse-on-surface">Pts</div>
             </div>
             {standings.map((row, index) => (
                 <div key={row.team.id} className={`grid grid-cols-[2.5rem_minmax(0,1fr)_repeat(4,2.5rem)] items-center px-4 py-3 text-sm ${index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'}`}>
                     <div className="font-black text-primary">{index + 1}</div>
                     <div className="flex min-w-0 items-center gap-2">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-fixed text-xs font-bold text-on-primary-fixed">{row.team.name.charAt(0)}</div>
+                        <img src={fallbackIcon(row.team.id)} alt={row.team.name} className="h-7 w-7 shrink-0 rounded-full object-cover bg-surface-container-high" />
                         <span className="truncate font-bold text-on-surface">{row.team.name}</span>
                     </div>
                     <div className="text-center text-on-surface-variant">{row.played}</div>
@@ -291,8 +349,8 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
 
 function GroupStanding({ group }: { group: LeagueStandingGroup }) {
     return (
-        <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
-            <div className="bg-surface-container-low px-4 py-3 text-sm font-black uppercase tracking-[0.05em] text-primary">{group.group}</div>
+        <div className="overflow-hidden rounded-xl shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
+            <div className="bg-inverse-surface px-4 py-3 text-sm font-black uppercase tracking-[0.05em] text-inverse-primary">{group.group}</div>
             <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_repeat(5,2.5rem)] items-center px-4 py-3 text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant">
                 <div>#</div>
                 <div>Club</div>
@@ -306,11 +364,11 @@ function GroupStanding({ group }: { group: LeagueStandingGroup }) {
                 <div key={row.id} className={`grid grid-cols-[2.5rem_minmax(0,1fr)_repeat(5,2.5rem)] items-center px-4 py-3 text-sm ${index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'}`}>
                     <div className="font-black text-primary">{index + 1}</div>
                     <div className="flex min-w-0 items-center gap-2">
-                        {row.entry.group_picture_path ? (
-                            <img src={`/storage/${row.entry.group_picture_path}`} alt={row.entry.label} className="h-7 w-7 shrink-0 rounded-full object-cover" />
-                        ) : (
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-fixed text-xs font-bold text-on-primary-fixed">{row.entry.label.charAt(0)}</div>
-                        )}
+                        <img
+                            src={row.entry.group_picture_path ? `/storage/${row.entry.group_picture_path}` : fallbackIcon(row.id)}
+                            alt={row.entry.label}
+                            className="h-7 w-7 shrink-0 rounded-full object-cover bg-surface-container-high"
+                        />
                         <span className="truncate font-bold text-on-surface">{row.entry.label}</span>
                     </div>
                     <div className="text-center text-on-surface-variant">{row.played ?? 0}</div>
@@ -324,14 +382,14 @@ function GroupStanding({ group }: { group: LeagueStandingGroup }) {
     );
 }
 
-function ParticipantCard({ label, imagePath }: { label: string; imagePath?: string | null }) {
+function ParticipantCard({ label, imagePath, id }: { label: string; imagePath?: string | null; id?: number }) {
     return (
-        <div className="flex items-center gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
-            {imagePath ? (
-                <img src={`/storage/${imagePath}`} alt={label} className="h-11 w-11 rounded-full object-cover" />
-            ) : (
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-fixed text-sm font-black text-on-primary-fixed">{label.substring(0, 2).toUpperCase()}</div>
-            )}
+        <div className="flex items-center gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
+            <img
+                src={imagePath ? `/storage/${imagePath}` : fallbackIcon(id)}
+                alt={label}
+                className="h-11 w-11 shrink-0 rounded-full object-cover bg-surface-container-high"
+            />
             <p className="min-w-0 truncate font-bold text-on-surface">{label}</p>
         </div>
     );
@@ -384,6 +442,7 @@ function getStatusCopy(status: string) {
 }
 
 function getStageName(stage: string) {
+    if (stage.startsWith('group|')) return stage.split('|')[2];
     if (stage.toLowerCase() === 'group') return 'Group Stage';
     if (stage.toLowerCase() === 'upper') return 'Upper Bracket';
     if (stage.toLowerCase() === 'lower') return 'Lower Bracket';
