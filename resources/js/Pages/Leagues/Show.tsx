@@ -10,7 +10,7 @@ function fallbackIcon(id?: number): string {
 }
 
 const sportImages: Record<string, string> = {
-    badminton: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80',
+    badminton: '/images/badminton.jpeg',
     futsal: 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=900&q=80',
     soccer: 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=900&q=80',
     basketball: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=900&q=80',
@@ -203,7 +203,7 @@ export default function Show({
                 ) : league.category ? (
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {(standings as LeagueStandingGroup[]).map((group) => (
-                            <GroupStanding key={group.group} group={group} />
+                            <GroupStanding key={group.group} group={group} advanceCount={league.advance_upper_count ?? 0} />
                         ))}
                     </div>
                 ) : (
@@ -289,7 +289,7 @@ function MatchCard({ match }: { match: GameMatch }) {
                 <span className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">{formatMatchDate(match.scheduled_at)}</span>
                 <span className={`rounded-full px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.04em] ${getMatchStatusBadge(match.status)}`}>{match.status}</span>
             </div>
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
                 <MatchSide label={match.home_label ?? 'TBC'} imagePath={match.home_entry?.group_picture_path} id={match.home_entry?.id} align="right" highlight={match.status === 'completed' && match.home_score > match.away_score} />
                 {match.status === 'completed' ? (
                     <div className="flex items-center gap-1.5 rounded-full bg-inverse-surface px-3 py-1 text-inverse-on-surface">
@@ -308,76 +308,95 @@ function MatchCard({ match }: { match: GameMatch }) {
 
 function MatchSide({ label, imagePath, id, align = 'left', highlight = false }: { label: string; imagePath?: string | null; id?: number; align?: 'left' | 'right'; highlight?: boolean }) {
     return (
-        <div className={`flex min-w-0 items-center gap-3 ${align === 'right' ? 'flex-row-reverse text-right' : ''}`}>
+        <div className={`flex min-w-0 items-center gap-2 sm:gap-3 ${align === 'right' ? 'flex-row-reverse text-right' : ''}`}>
             <img
                 src={imagePath ? `/storage/${imagePath}` : fallbackIcon(id)}
                 alt={label}
-                className="h-11 w-11 shrink-0 rounded-full object-cover shadow-sm bg-surface-container-high"
+                className="h-10 w-10 shrink-0 rounded-full object-cover shadow-sm bg-surface-container-high sm:h-11 sm:w-11"
             />
-            <p className={`truncate text-sm font-black ${highlight ? 'text-primary' : 'text-on-surface'}`}>{label}</p>
+            <p className={`min-w-0 flex-1 break-words text-xs font-black leading-tight [overflow-wrap:anywhere] sm:text-sm ${highlight ? 'text-primary' : 'text-on-surface'}`}>{label}</p>
         </div>
     );
 }
 
 function TeamStandings({ standings }: { standings: Standing[] }) {
     return (
-        <div className="overflow-hidden rounded-xl shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
-            <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_repeat(4,2.5rem)] items-center bg-inverse-surface px-4 py-3 text-xs font-bold uppercase tracking-[0.05em] text-outline">
-                <div>#</div>
-                <div>Team</div>
-                <div className="text-center">P</div>
-                <div className="text-center">W</div>
-                <div className="text-center">L</div>
-                <div className="text-right text-inverse-on-surface">Pts</div>
+        <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
+            <div className="flex items-center border-b border-outline-variant/30 bg-surface-container-low px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                <div className="w-5 shrink-0 text-center">#</div>
+                <div className="min-w-0 flex-grow pl-2">Club</div>
+                <div className="w-7 shrink-0 text-center">MP</div>
+                <div className="w-7 shrink-0 text-center">W</div>
+                <div className="w-7 shrink-0 text-center">L</div>
+                <div className="w-9 shrink-0 text-right font-black text-on-surface">Pts</div>
             </div>
-            {standings.map((row, index) => (
-                <div key={row.team.id} className={`grid grid-cols-[2.5rem_minmax(0,1fr)_repeat(4,2.5rem)] items-center px-4 py-3 text-sm ${index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'}`}>
-                    <div className="font-black text-primary">{index + 1}</div>
-                    <div className="flex min-w-0 items-center gap-2">
-                        <img src={fallbackIcon(row.team.id)} alt={row.team.name} className="h-7 w-7 shrink-0 rounded-full object-cover bg-surface-container-high" />
-                        <span className="truncate font-bold text-on-surface">{row.team.name}</span>
+            {standings.map((row, index) => {
+                const isLeader = index === 0 && row.played > 0;
+
+                return (
+                    <div key={row.team.id} className={`flex items-center border-b border-outline-variant/10 px-3 py-2.5 text-sm last:border-b-0 ${isLeader ? 'border-l-2 border-l-primary bg-primary/5' : ''}`}>
+                        <div className={`w-5 shrink-0 text-center ${isLeader ? 'font-black text-primary' : 'font-medium text-on-surface-variant'}`}>{index + 1}</div>
+                        <div className="flex min-w-0 flex-grow items-center gap-2 pl-2">
+                            <img src={fallbackIcon(row.team.id)} alt={row.team.name} className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover shadow-sm" />
+                            <span className={`min-w-0 break-words leading-tight [overflow-wrap:anywhere] ${isLeader ? 'font-black text-on-surface' : 'font-semibold text-on-surface'}`}>{row.team.name}</span>
+                        </div>
+                        <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.played}</div>
+                        <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.won}</div>
+                        <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.lost}</div>
+                        <div className={`w-9 shrink-0 text-right ${isLeader ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{row.points ?? (row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
                     </div>
-                    <div className="text-center text-on-surface-variant">{row.played}</div>
-                    <div className="text-center text-on-surface-variant">{row.won}</div>
-                    <div className="text-center text-on-surface-variant">{row.lost}</div>
-                    <div className="text-right font-black text-on-surface">{row.points ?? (row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 }
 
-function GroupStanding({ group }: { group: LeagueStandingGroup }) {
+function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; advanceCount: number }) {
     return (
-        <div className="overflow-hidden rounded-xl shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
-            <div className="bg-inverse-surface px-4 py-3 text-sm font-black uppercase tracking-[0.05em] text-inverse-primary">{group.group}</div>
-            <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_repeat(5,2.5rem)] items-center px-4 py-3 text-xs font-bold uppercase tracking-[0.05em] text-on-surface-variant">
-                <div>#</div>
-                <div>Club</div>
-                <div className="text-center">MP</div>
-                <div className="text-center">W</div>
-                <div className="text-center">L</div>
-                <div className="text-center">Scr</div>
-                <div className="text-right text-on-surface">Pts</div>
+        <div className="flex h-full flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
+            <div className="flex items-center justify-between border-b border-outline-variant/30 bg-surface-container-low px-4 py-2.5">
+                <span className="text-xs font-black uppercase tracking-widest text-on-surface">{group.group}</span>
+                {advanceCount > 0 ? <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Top {advanceCount} advance</span> : null}
             </div>
-            {group.entries.map((row: LeagueGroupStanding, index) => (
-                <div key={row.id} className={`grid grid-cols-[2.5rem_minmax(0,1fr)_repeat(5,2.5rem)] items-center px-4 py-3 text-sm ${index % 2 === 0 ? 'bg-surface-container-lowest' : 'bg-surface-container-low'}`}>
-                    <div className="font-black text-primary">{index + 1}</div>
-                    <div className="flex min-w-0 items-center gap-2">
-                        <img
-                            src={row.entry.group_picture_path ? `/storage/${row.entry.group_picture_path}` : fallbackIcon(row.id)}
-                            alt={row.entry.label}
-                            className="h-7 w-7 shrink-0 rounded-full object-cover bg-surface-container-high"
-                        />
-                        <span className="truncate font-bold text-on-surface">{row.entry.label}</span>
+            <div className="flex items-center border-b border-outline-variant/20 bg-surface-container-low/60 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                <div className="w-5 shrink-0 text-center">#</div>
+                <div className="min-w-0 flex-grow pl-2">Club</div>
+                <div className="w-7 shrink-0 text-center" title="Match Played">MP</div>
+                <div className="w-7 shrink-0 text-center" title="Win">W</div>
+                <div className="w-7 shrink-0 text-center" title="Loss">L</div>
+                <div className="w-9 shrink-0 text-center" title="Accumulated Score">Scr</div>
+                <div className="w-9 shrink-0 text-right font-black text-on-surface" title="Points">Pts</div>
+            </div>
+            {group.entries.map((row: LeagueGroupStanding, index) => {
+                const advances = advanceCount > 0 && index < advanceCount;
+                const isCutRow = advanceCount > 0 && index === advanceCount;
+
+                return (
+                    <div key={row.id}>
+                        {isCutRow ? (
+                            <div className="border-t border-dashed border-outline-variant/60 px-3 py-0.5 text-center text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/70">
+                                Cut line
+                            </div>
+                        ) : null}
+                        <div className={`flex items-center border-b border-outline-variant/10 px-3 py-2.5 text-sm last:border-b-0 transition-colors ${advances ? 'border-l-2 border-l-primary bg-primary/5' : ''}`}>
+                            <div className={`w-5 shrink-0 text-center ${advances ? 'font-black text-primary' : 'font-medium text-on-surface-variant'}`}>{index + 1}</div>
+                            <div className="flex min-w-0 flex-grow items-center gap-2 pl-2">
+                                <img
+                                    src={row.entry.group_picture_path ? `/storage/${row.entry.group_picture_path}` : fallbackIcon(row.id)}
+                                    alt={row.entry.label}
+                                    className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover shadow-sm"
+                                />
+                                <span className={`min-w-0 break-words leading-tight [overflow-wrap:anywhere] ${advances ? 'font-black text-on-surface' : 'font-semibold text-on-surface'}`}>{row.entry.label}</span>
+                            </div>
+                            <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.played ?? 0}</div>
+                            <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.won ?? 0}</div>
+                            <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.lost ?? 0}</div>
+                            <div className="w-9 shrink-0 text-center text-on-surface-variant">{row.score ?? 0}</div>
+                            <div className={`w-9 shrink-0 text-right ${advances ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{row.points ?? (row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
+                        </div>
                     </div>
-                    <div className="text-center text-on-surface-variant">{row.played ?? 0}</div>
-                    <div className="text-center text-on-surface-variant">{row.won ?? 0}</div>
-                    <div className="text-center text-on-surface-variant">{row.lost ?? 0}</div>
-                    <div className="text-center text-on-surface-variant">{row.score ?? 0}</div>
-                    <div className="text-right font-black text-on-surface">{row.points ?? (row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 }

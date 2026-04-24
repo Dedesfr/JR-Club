@@ -6,7 +6,7 @@ import { useState } from 'react';
 const statusLabels = ['upcoming', 'active', 'completed'] as const;
 
 const sportImages: Record<string, string> = {
-    badminton: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80',
+    badminton: '/images/badminton.jpeg',
     futsal: 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=900&q=80',
     soccer: 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=900&q=80',
     basketball: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=900&q=80',
@@ -130,11 +130,11 @@ export default function Index({
 
             {/* Section: Featured League Card */}
             {featuredLeague ? (
-                <section className="mt-5 overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_12px_32px_rgba(15,23,42,0.06)] md:grid md:grid-cols-[2fr_3fr]">
+                <section className="mt-5 overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_2px_12px_rgba(15,23,42,0.08),0px_0px_0px_1px_rgba(15,23,42,0.04)] md:grid md:grid-cols-[20rem_minmax(0,1fr)]">
                     {/* Cover image */}
-                    <div className="relative h-52 md:h-auto md:min-h-72">
+                    <div className="relative min-h-56 overflow-hidden md:min-h-72">
                         <img src={getSportImage(featuredLeague.sport.name)} alt="" className="h-full w-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/70 via-inverse-surface/20 to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-surface-container-lowest" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/70 via-inverse-surface/20 to-transparent md:bg-gradient-to-r md:from-inverse-surface/20 md:via-transparent md:to-surface-container-lowest" />
                         {/* Status pill */}
                         <StatusPill status={featuredLeague.status} className="absolute left-4 top-4" />
                         {/* Mobile-only: title overlay on image */}
@@ -221,9 +221,22 @@ export default function Index({
             ) : null}
 
             {visibleLeagues.length === 0 ? (
-                <section className="mt-5 rounded-xl bg-surface-container-lowest p-8 text-center shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
-                    <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">No matching leagues</p>
-                    <h2 className="mt-2 text-2xl font-black tracking-normal text-on-surface">No leagues found for this sport and status.</h2>
+                <section className="mt-5 rounded-xl bg-surface-container-lowest px-6 py-10 text-center shadow-[0px_12px_32px_rgba(15,23,42,0.04)] md:px-10">
+                    <span className="material-symbols-outlined mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-low text-2xl text-on-surface-variant">
+                        emoji_events
+                    </span>
+                    <p className="mt-5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">No matching leagues</p>
+                    <h2 className="mx-auto mt-2 max-w-md text-2xl font-black tracking-normal text-on-surface">No leagues found for this sport and status.</h2>
+                    <p className="mx-auto mt-2 max-w-sm text-sm font-medium leading-6 text-on-surface-variant">Try a different sport or switch status tabs to see more competitions.</p>
+                    {selectedSportId !== 'all' ? (
+                        <button
+                            type="button"
+                            onClick={() => setSelectedSportId('all')}
+                            className="mt-5 inline-flex items-center justify-center rounded-full bg-surface-container-low px-5 py-2.5 text-sm font-bold text-on-surface transition-all hover:bg-surface-container active:scale-[0.98]"
+                        >
+                            Show all sports
+                        </button>
+                    ) : null}
                 </section>
             ) : null}
         </JRClubLayout>
