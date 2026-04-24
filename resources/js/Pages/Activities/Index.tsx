@@ -178,9 +178,16 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
 
             {/* Section: Remaining event cards */}
             {remaining.length > 0 ? (
-                <section className="mt-5">
-                    <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">More Events</p>
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <section className="mt-6">
+                    <div className="mb-4 flex items-end justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg font-black tracking-tight text-on-surface md:text-xl">More Events</h2>
+                            <span className="inline-flex h-6 min-w-[1.75rem] items-center justify-center rounded-full bg-surface-container px-2 text-xs font-bold text-on-surface-variant">
+                                {remaining.length}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {remaining.map((activity) => (
                             <CompactEventCard key={activity.id} activity={activity} userId={user.id} onJoin={() => join(activity)} />
                         ))}
@@ -202,40 +209,83 @@ function CompactEventCard({ activity, userId, onJoin }: { activity: Activity; us
     const isFull = activity.status === 'full' || participants >= activity.max_participants;
     const joined = isParticipating(activity, userId);
     const isDone = activity.status === 'completed' || activity.status === 'cancelled';
+    const isOpen = !isDone && !isFull;
+    const fillPct = getFillPercent(activity);
 
     return (
-        <article className={`flex items-center gap-4 rounded-xl bg-surface-container-lowest p-4 shadow-[0px_4px_16px_rgba(15,23,42,0.04)] transition-all active:scale-[0.98] hover:shadow-[0px_8px_24px_rgba(15,23,42,0.08)] ${isDone ? 'opacity-60' : ''}`}>
-            <Link href={route('activities.show', activity.id)} className="h-12 w-12 flex-none overflow-hidden rounded-xl bg-surface-container">
-                <img src={getSportImage(activity.sport.name)} alt="" className="h-full w-full object-cover" />
+        <article className={`group flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_16px_rgba(15,23,42,0.04)] transition-all active:scale-[0.98] hover:shadow-[0px_12px_32px_rgba(15,23,42,0.08)] ${isDone ? 'opacity-75' : ''}`}>
+            {/* Banner */}
+            <Link href={route('activities.show', activity.id)} className="relative block aspect-[16/6] overflow-hidden">
+                <img
+                    src={getSportImage(activity.sport.name)}
+                    alt=""
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/40 via-inverse-surface/10 to-transparent" />
+
+                {/* Status pill — top right */}
+                <span
+                    className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-[0.6rem] font-black uppercase tracking-wider backdrop-blur-sm ${
+                        isOpen ? 'bg-inverse-surface/80 text-inverse-on-surface' : 'bg-white/90 text-on-surface'
+                    }`}
+                >
+                    {joined ? 'Joined' : getStatusText(activity)}
+                </span>
+
+                {/* Sport / location chip — bottom left */}
+                <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-on-surface backdrop-blur-sm">
+                    {activity.sport.name} · {activity.location.split(',')[0]}
+                </span>
             </Link>
-            <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                        <p className="truncate text-[0.65rem] font-bold uppercase tracking-wide text-on-surface-variant">{activity.sport.name}</p>
-                        <Link href={route('activities.show', activity.id)} className="mt-0.5 block truncate text-[0.95rem] font-black leading-snug text-on-surface">
-                            {activity.title}
-                        </Link>
+
+            <div className="flex flex-1 flex-col gap-3 p-4">
+                <Link href={route('activities.show', activity.id)} className="line-clamp-2 text-[1rem] font-black leading-snug text-on-surface">
+                    {activity.title}
+                </Link>
+
+                {/* Metric row */}
+                <div className="grid grid-cols-3 divide-x divide-surface-container rounded-lg bg-surface-container-low py-2">
+                    <div className="px-2 text-center">
+                        <p className="text-[0.55rem] font-bold uppercase tracking-wider text-on-surface-variant">Joined</p>
+                        <p className="text-sm font-black text-on-surface">{participants}/{activity.max_participants}</p>
                     </div>
-                    <StatusPill activity={activity} />
+                    <div className="px-2 text-center">
+                        <p className="text-[0.55rem] font-bold uppercase tracking-wider text-on-surface-variant">Fill</p>
+                        <p className="text-sm font-black text-on-surface">{fillPct}%</p>
+                    </div>
+                    <div className="px-2 text-center">
+                        <p className="text-[0.55rem] font-bold uppercase tracking-wider text-on-surface-variant">Date</p>
+                        <p className="text-sm font-black text-on-surface">{formatShortDate(activity.scheduled_at)}</p>
+                    </div>
                 </div>
-                <p className="mt-1 truncate text-xs font-medium text-on-surface-variant">
-                    {activity.location} · {formatShortDate(activity.scheduled_at)}
-                </p>
-                <div className="mt-2.5 flex items-center gap-3">
+
+                {/* Footer: fill bar + join button */}
+                <div className="mt-auto flex items-center gap-3">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-container">
-                        <div className="h-full rounded-full bg-gradient-to-br from-primary to-primary-container" style={{ width: `${getFillPercent(activity)}%` }} />
+                        <div
+                            className={`h-full rounded-full transition-all ${
+                                isFull ? 'bg-on-surface-variant' : 'bg-gradient-to-br from-primary to-primary-container'
+                            }`}
+                            style={{ width: `${fillPct}%` }}
+                        />
                     </div>
-                    <p className="w-14 text-right text-[0.6875rem] font-black text-on-surface">{participants}/{activity.max_participants}</p>
+                    <button
+                        type="button"
+                        disabled={isFull || joined || isDone}
+                        onClick={onJoin}
+                        className={`flex-none rounded-full px-4 py-2 text-xs font-bold transition-colors ${
+                            joined
+                                ? 'bg-primary-fixed text-primary'
+                                : isFull || isDone
+                                  ? 'bg-surface-container-high text-on-surface-variant'
+                                  : 'bg-surface-container-low text-on-surface hover:bg-primary hover:text-on-primary'
+                        }`}
+                    >
+                        {joined ? 'Joined' : isFull ? 'Full' : isDone ? 'Done' : 'Join'}
+                    </button>
                 </div>
             </div>
-            <button
-                type="button"
-                disabled={isFull || joined}
-                onClick={onJoin}
-                className={`hidden flex-none rounded-full px-4 py-2 text-xs font-bold md:block ${joined ? 'bg-primary-fixed text-primary' : isFull ? 'bg-surface-container-high text-on-surface-variant' : 'bg-surface-container-low text-on-surface hover:bg-primary hover:text-on-primary'}`}
-            >
-                {joined ? 'Joined' : isFull ? 'Full' : 'Join'}
-            </button>
         </article>
     );
 }

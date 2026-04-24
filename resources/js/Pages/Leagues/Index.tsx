@@ -203,9 +203,16 @@ export default function Index({
 
             {/* Section: Remaining league cards */}
             {remainingLeagues.length > 0 ? (
-                <section className="mt-5">
-                    <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">Other Leagues</p>
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <section className="mt-6">
+                    <div className="mb-4 flex items-end justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg font-black tracking-tight text-on-surface md:text-xl">Other Leagues</h2>
+                            <span className="inline-flex h-6 min-w-[1.75rem] items-center justify-center rounded-full bg-surface-container px-2 text-xs font-bold text-on-surface-variant">
+                                {remainingLeagues.length}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {remainingLeagues.map((league) => (
                             <CompactLeagueCard key={league.id} league={league} />
                         ))}
@@ -226,31 +233,96 @@ export default function Index({
 function CompactLeagueCard({ league }: { league: League }) {
     const entrants = getLeagueEntrants(league);
     const isCompleted = league.status === 'completed';
+    const isActive = league.status === 'active';
+    const isUpcoming = league.status === 'upcoming';
+    const bannerUrl = getSportImage(league.sport.name);
+    const groupCount = league.group_count ?? league.groups?.length ?? '-';
+    const matchCount = league.matches?.length ?? 0;
+    const champion = isCompleted ? (league.upper_champion ?? league.lower_champion) : null;
 
     return (
         <Link
             href={route('leagues.show', league.id)}
-            className={`flex items-center gap-4 rounded-xl bg-surface-container-lowest p-4 shadow-[0px_4px_16px_rgba(15,23,42,0.04)] transition-all active:scale-[0.98] hover:shadow-[0px_8px_24px_rgba(15,23,42,0.08)] ${isCompleted ? 'opacity-60' : ''}`}
+            className={`group flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_16px_rgba(15,23,42,0.04)] transition-all active:scale-[0.98] hover:shadow-[0px_12px_32px_rgba(15,23,42,0.08)] ${isCompleted ? 'opacity-75' : ''}`}
         >
-            <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-primary-fixed text-primary">
-                <span className="material-symbols-outlined fill text-[24px]">{league.sport.icon}</span>
+            {/* Banner */}
+            <div className="relative aspect-[16/6] overflow-hidden">
+                <img
+                    src={bannerUrl}
+                    alt=""
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/40 via-inverse-surface/10 to-transparent" />
+
+                <span
+                    className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-[0.6rem] font-black uppercase tracking-wider backdrop-blur-sm ${
+                        isActive ? 'bg-inverse-surface/80 text-inverse-on-surface' : 'bg-white/90 text-on-surface'
+                    }`}
+                >
+                    {toTitle(league.status)}
+                </span>
+
+                <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-on-surface backdrop-blur-sm">
+                    {league.sport.name} · {getLeagueFormat(league)}
+                </span>
             </div>
-            <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                        <p className="truncate text-[0.65rem] font-bold uppercase tracking-wide text-on-surface-variant">
-                            {league.sport.name} · {getLeagueFormat(league)}
-                        </p>
-                        <p className="mt-0.5 truncate text-[0.95rem] font-black leading-snug text-on-surface">{league.name}</p>
+
+            <div className="flex flex-1 flex-col gap-3 p-4">
+                <h3 className="line-clamp-2 text-[1rem] font-black leading-snug text-on-surface">{league.name}</h3>
+
+                <div className="grid grid-cols-3 divide-x divide-surface-container rounded-lg bg-surface-container-low py-2">
+                    <div className="px-2 text-center">
+                        <p className="text-[0.55rem] font-bold uppercase tracking-wider text-on-surface-variant">{getEntrantLabel(league)}</p>
+                        <p className="text-sm font-black text-on-surface">{entrants}</p>
                     </div>
-                    <StatusPill status={league.status} />
+                    <div className="px-2 text-center">
+                        <p className="text-[0.55rem] font-bold uppercase tracking-wider text-on-surface-variant">Groups</p>
+                        <p className="text-sm font-black text-on-surface">{groupCount}</p>
+                    </div>
+                    <div className="px-2 text-center">
+                        <p className="text-[0.55rem] font-bold uppercase tracking-wider text-on-surface-variant">
+                            {isCompleted ? 'Matches' : isUpcoming ? 'Format' : 'Matches'}
+                        </p>
+                        <p className="text-sm font-black text-on-surface">
+                            {isCompleted ? matchCount : isUpcoming ? getLeagueFormatShort(league) : matchCount}
+                        </p>
+                    </div>
                 </div>
-                <div className="mt-2 flex items-center justify-between text-xs font-medium text-on-surface-variant">
-                    <span>Starts {formatDate(league.start_date)}</span>
-                    <span className="font-bold text-on-surface">{entrants} teams</span>
-                </div>
+
+                {isActive && (
+                    <div className="mt-auto flex items-center justify-between rounded-lg bg-surface-container-low px-3 py-2">
+                        <div className="flex items-center gap-2 text-xs font-bold text-on-surface">
+                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">play_circle</span>
+                            <span>{league.stage ? toTitle(league.stage) : 'In Progress'}</span>
+                        </div>
+                        <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+                    </div>
+                )}
+
+                {isUpcoming && (
+                    <div className="mt-auto flex items-center justify-between rounded-lg bg-surface-container-low px-3 py-2">
+                        <div className="flex items-center gap-2 text-xs font-bold text-on-surface">
+                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">event</span>
+                            <span>Starts {formatDate(league.start_date)}</span>
+                        </div>
+                        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-on-surface-variant">{getDaysUntil(league.start_date)}</span>
+                    </div>
+                )}
+
+                {isCompleted && champion && (
+                    <div className="mt-auto flex items-center justify-between rounded-lg bg-surface-container-low px-3 py-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <span className="material-symbols-outlined text-[18px] text-on-surface">emoji_events</span>
+                            <div className="min-w-0">
+                                <p className="text-[0.55rem] font-bold uppercase tracking-wider text-on-surface-variant leading-none">Champion</p>
+                                <p className="text-xs font-black text-on-surface truncate leading-tight mt-0.5">{champion.label}</p>
+                            </div>
+                        </div>
+                        <span className="material-symbols-outlined text-outline-variant">chevron_right</span>
+                    </div>
+                )}
             </div>
-            <span className="material-symbols-outlined flex-none text-outline-variant">chevron_right</span>
         </Link>
     );
 }
@@ -288,6 +360,24 @@ function getStatusCopy(status: string) {
 
 function getSportImage(name: string) {
     return sportImages[name.toLowerCase()] ?? sportImages.badminton;
+}
+
+function getEntrantLabel(league: League) {
+    if (league.sport.name.toLowerCase() === 'running') return 'Runners';
+    if (league.sport.name.toLowerCase() === 'badminton' && league.entry_type === 'single') return 'Players';
+    return 'Teams';
+}
+
+function getLeagueFormatShort(league: League) {
+    if (league.category) return league.category;
+    if (league.entry_type) return toTitle(league.entry_type);
+    return 'League';
+}
+
+function getDaysUntil(date: string) {
+    const diff = new Date(date).getTime() - new Date().getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return days > 0 ? `in ${days}d` : days === 0 ? 'today' : 'started';
 }
 
 function formatDate(date: string) {
