@@ -3,24 +3,25 @@ import DatePicker from '@/Components/DatePicker';
 import SelectInput, { SelectOption } from '@/Components/SelectInput';
 import { Sport } from '@/types/jrclub';
 import { Head, useForm } from '@inertiajs/react';
+import { useMemo } from 'react';
 
-const categoryOptions: SelectOption[] = [
-    { value: 'MS', label: 'Single Putra' },
-    { value: 'WS', label: 'Single Putri' },
-    { value: 'MD', label: 'Ganda Putra' },
-    { value: 'WD', label: 'Ganda Putri' },
-    { value: 'XD', label: 'Ganda Campuran' },
+const startStageOptions: SelectOption[] = [
+    { value: 'group', label: 'Group Stage' },
+    { value: 'bracket', label: 'Bracket' },
 ];
 
 export default function Create({ sports }: { sports: Sport[] }) {
+    const initialSport = sports[0];
+    const initialCategory = initialSport?.categories?.[0];
     const form = useForm({
         name: '',
-        sport_id: sports[0]?.id ?? '',
-        category: 'MS',
+        sport_id: initialSport?.id ?? '',
+        sport_category_id: initialCategory?.id ? String(initialCategory.id) : '',
         description: '',
         start_date: '',
         end_date: '',
         status: 'upcoming',
+        start_stage: 'group',
         participant_total: '8',
         sets_to_win: '2',
         points_per_set: '21',
@@ -28,6 +29,18 @@ export default function Create({ sports }: { sports: Sport[] }) {
         advance_lower_count: '1',
     });
     const sportOptions = sports.map((sport) => ({ value: String(sport.id), label: sport.name }));
+    const selectedSport = useMemo(() => sports.find((sport) => sport.id === Number(form.data.sport_id)), [sports, form.data.sport_id]);
+    const categoryOptions = (selectedSport?.categories ?? []).map((category) => ({ value: String(category.id), label: category.name }));
+    const selectedCategory = selectedSport?.categories?.find((category) => String(category.id) === form.data.sport_category_id);
+
+    const handleSportChange = (value: string) => {
+        const sport = sports.find((item) => item.id === Number(value));
+        form.setData((data) => ({
+            ...data,
+            sport_id: Number(value || sports[0]?.id || 0),
+            sport_category_id: sport?.categories?.[0]?.id ? String(sport.categories[0].id) : '',
+        }));
+    };
 
     return (
         <AdminLayout 
@@ -58,12 +71,18 @@ export default function Create({ sports }: { sports: Sport[] }) {
                         </Field>
                         <Field label="Sport">
                             <div className="editorial-select-wrapper relative">
-                                <SelectInput options={sportOptions} value={form.data.sport_id} onChange={(value) => form.setData('sport_id', Number(value || sports[0]?.id || 0))} placeholder="Select sport" />
+                                <SelectInput options={sportOptions} value={form.data.sport_id} onChange={handleSportChange} placeholder="Select sport" />
                             </div>
                         </Field>
                         <Field label="Category">
                             <div className="editorial-select-wrapper relative">
-                                <SelectInput options={categoryOptions} value={form.data.category} onChange={(value) => form.setData('category', value || 'MS')} placeholder="Select category" />
+                                <SelectInput options={categoryOptions} value={form.data.sport_category_id} onChange={(value) => form.setData('sport_category_id', value || '')} placeholder={categoryOptions.length > 0 ? 'Select category' : 'No categories configured'} />
+                            </div>
+                            {selectedCategory ? <span className="mt-1 block text-xs text-on-surface-variant">{selectedCategory.player_count} player{selectedCategory.player_count > 1 ? 's' : ''} • {selectedCategory.entry_type}</span> : null}
+                        </Field>
+                        <Field label="Start from">
+                            <div className="editorial-select-wrapper relative">
+                                <SelectInput options={startStageOptions} value={form.data.start_stage} onChange={(value) => form.setData('start_stage', value || 'group')} placeholder="Select start stage" />
                             </div>
                         </Field>
                         <Field label="Description" full>

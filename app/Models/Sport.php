@@ -20,4 +20,9 @@ class Sport extends Model
     {
         return $this->hasMany(Team::class);
     }
+
+    public function categories()
+    {
+        return $this->hasMany(SportCategory::class)->orderBy('sort_order')->orderBy('name');
+    }
 }

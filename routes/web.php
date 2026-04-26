@@ -72,6 +72,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/leagues/{league}', [AdminLeagueController::class, 'show'])->name('leagues.show');
         Route::patch('/leagues/{league}', [AdminLeagueController::class, 'update'])->name('leagues.update');
         Route::delete('/leagues/{league}', [AdminLeagueController::class, 'destroy'])->name('leagues.destroy');
+        Route::post('/leagues/{league}/teams', [AdminLeagueController::class, 'storeTeam'])->name('leagues.teams.store');
+        Route::delete('/leagues/{league}/teams/{team}', [AdminLeagueController::class, 'destroyTeam'])->name('leagues.teams.destroy');
         
         Route::get('/leagues/participants/template', [AdminParticipantImportExportController::class, 'template'])->name('leagues.participants.template');
         Route::post('/leagues/{league}/participants/import', [AdminParticipantImportExportController::class, 'import'])->name('leagues.participants.import');
@@ -96,6 +98,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/sports', [AdminSportController::class, 'index'])->name('sports.index');
         Route::get('/sports/{sport}/edit', [AdminSportController::class, 'edit'])->name('sports.edit');
         Route::patch('/sports/{sport}', [AdminSportController::class, 'update'])->name('sports.update');
+        Route::post('/sports/{sport}/categories', [AdminSportController::class, 'storeCategory'])->name('sports.categories.store');
+        Route::patch('/sports/{sport}/categories/{category}', [AdminSportController::class, 'updateCategory'])->name('sports.categories.update');
+        Route::delete('/sports/{sport}/categories/{category}', [AdminSportController::class, 'destroyCategory'])->name('sports.categories.destroy');
 
         Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
         Route::get('/activities/{activity}/edit', [AdminActivityController::class, 'edit'])->name('activities.edit');

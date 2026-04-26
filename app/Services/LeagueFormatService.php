@@ -317,7 +317,7 @@ class LeagueFormatService
 
     public function standings(League $league): array
     {
-        if (! $league->isBadminton()) {
+        if (! $league->usesDirectEntries()) {
             return $this->teamStandings($league);
         }
 

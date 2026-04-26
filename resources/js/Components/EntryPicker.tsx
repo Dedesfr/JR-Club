@@ -70,7 +70,7 @@ export default function EntryPicker({
     leagueId: number;
     users: UserOption[];
     category: NonNullable<League['category']>;
-    entryType?: 'single' | 'double' | null;
+    entryType?: League['entry_type'];
 }) {
     const allowsGroupPicture = ['MD', 'WD', 'XD'].includes(category);
     const form = useForm({ group_name: '', player1_id: '', player2_id: '', substitute_ids: [] as string[], group_picture: null as File | null });

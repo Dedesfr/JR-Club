@@ -8,6 +8,8 @@ use App\Services\BracketService;
 use App\Services\LeagueFormatService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 class LeagueBracketController extends Controller
 {
@@ -46,22 +48,44 @@ class LeagueBracketController extends Controller
             'advance_lower_count' => $validated['advance_lower_count'],
         ]);
 
+        [$upperEntries, $lowerEntries] = $this->entriesForBracket($league->fresh(), $leagueFormatService, $validated);
+
+        $scheduleMap = collect($validated['schedule'] ?? [])->keyBy('round')->map->scheduled_at;
+
+        $bracketService->seedBrackets($league->fresh(), $upperEntries, $lowerEntries, $scheduleMap, (int) $validated['interval'], ($league->start_stage ?? 'group') === 'group');
+
+        return back()->with('success', 'Brackets seeded.');
+    }
+
+    private function entriesForBracket(League $league, LeagueFormatService $leagueFormatService, array $validated): array
+    {
+        if (($league->start_stage ?? 'group') === 'bracket') {
+            $entries = $league->entries()->orderBy('seed')->orderBy('id')->get();
+
+            if ($entries->isEmpty()) {
+                throw ValidationException::withMessages(['advance_upper_count' => 'Register league entries before seeding brackets.']);
+            }
+
+            if ($league->participant_total !== null && $entries->count() !== $league->participant_total) {
+                throw ValidationException::withMessages(['advance_upper_count' => 'Participant total must match the number of league entries before brackets are seeded.']);
+            }
+
+            return [$entries, collect()];
+        }
+
         $rankedEntries = collect($leagueFormatService->standings($league))
             ->flatMap(fn ($group) => $group['entries'])
             ->map(fn ($row) => $row['entry']);
 
         $perGroup = $league->groups()->count();
-        $upperEntries = $this->slicePerGroup($rankedEntries, $perGroup, 0, (int) $validated['advance_upper_count']);
-        $lowerEntries = $this->slicePerGroup($rankedEntries, $perGroup, (int) $validated['advance_upper_count'], (int) $validated['advance_lower_count']);
 
-        $scheduleMap = collect($validated['schedule'] ?? [])->keyBy('round')->map->scheduled_at;
-
-        $bracketService->seedBrackets($league->fresh(), $upperEntries, $lowerEntries, $scheduleMap, (int) $validated['interval']);
-
-        return back()->with('success', 'Brackets seeded.');
+        return [
+            $this->slicePerGroup($rankedEntries, $perGroup, 0, (int) $validated['advance_upper_count']),
+            $this->slicePerGroup($rankedEntries, $perGroup, (int) $validated['advance_upper_count'], (int) $validated['advance_lower_count']),
+        ];
     }
 
-    private function slicePerGroup($rankedEntries, int $groupCount, int $offset, int $take)
+    private function slicePerGroup(Collection $rankedEntries, int $groupCount, int $offset, int $take): Collection
     {
         if ($take === 0) {
             return collect();

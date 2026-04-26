@@ -11,6 +11,7 @@ class LeagueEntry extends Model
 
     protected $fillable = [
         'league_id',
+        'team_id',
         'group_name',
         'group_picture_path',
         'player1_id',
@@ -24,6 +25,11 @@ class LeagueEntry extends Model
     public function league()
     {
         return $this->belongsTo(League::class);
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
 
     public function player1()
@@ -58,6 +64,10 @@ class LeagueEntry extends Model
     {
         if ($this->group_name) {
             return $this->group_name;
+        }
+
+        if ($this->team?->name) {
+            return $this->team->name;
         }
 
         $players = collect([$this->player1?->name, $this->player2?->name])->filter()->implode(' / ');

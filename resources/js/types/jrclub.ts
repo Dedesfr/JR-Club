@@ -1,9 +1,22 @@
+export type SportCategory = {
+    id: number;
+    sport_id: number;
+    code: string;
+    name: string;
+    entry_type: 'single' | 'double' | 'team';
+    player_count: number;
+    gender_rule: 'male' | 'female' | 'mixed' | 'open' | string;
+    sort_order: number;
+    is_active: boolean;
+};
+
 export type Sport = {
     id: number;
     name: string;
     icon: string;
     max_players_per_team: number;
     description?: string;
+    categories?: SportCategory[];
 };
 
 export type Activity = {
@@ -22,6 +35,7 @@ export type Activity = {
 export type LeagueEntry = {
     id: number;
     label: string;
+    team?: Team | null;
     group_name?: string | null;
     group_picture_path?: string | null;
     seed?: number | null;
@@ -68,8 +82,10 @@ export type League = {
     description?: string;
     status: string;
     stage?: string;
-    category?: 'MS' | 'WS' | 'MD' | 'WD' | 'XD' | null;
-    entry_type?: 'single' | 'double' | null;
+    start_stage?: 'group' | 'bracket';
+    sport_category_id?: number | null;
+    category?: string | null;
+    entry_type?: 'single' | 'double' | 'team' | null;
     start_date: string;
     end_date?: string;
     participant_total?: number | null;
@@ -80,6 +96,7 @@ export type League = {
     advance_upper_count?: number;
     advance_lower_count?: number;
     sport: Sport;
+    sport_category?: SportCategory | null;
     teams?: Team[];
     entries?: LeagueEntry[];
     groups?: {

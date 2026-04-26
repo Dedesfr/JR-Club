@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\League;
 use App\Models\Sport;
+use App\Models\SportCategory;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -33,10 +34,16 @@ class MensDoublesLeagueSeeder extends Seeder
             ],
         );
 
+        $category = SportCategory::firstOrCreate(
+            ['sport_id' => $badminton->id, 'code' => 'MD'],
+            ['name' => 'Ganda Putra', 'entry_type' => 'double', 'player_count' => 2, 'gender_rule' => 'male', 'sort_order' => 3],
+        );
+
         $league = League::query()->updateOrCreate(
             ['name' => 'JR Men Doubles Championship'],
             [
                 'sport_id' => $badminton->id,
+                'sport_category_id' => $category->id,
                 'category' => 'MD',
                 'entry_type' => 'double',
                 'description' => 'Seeded ganda putra league with 16 doubles entries.',

@@ -6,6 +6,7 @@ use App\Models\GameMatch;
 use App\Models\League;
 use App\Models\MatchSet;
 use App\Models\Sport;
+use App\Models\SportCategory;
 use App\Models\User;
 use App\Services\BracketService;
 use App\Services\LeagueFormatService;
@@ -37,10 +38,16 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
             ],
         );
 
+        $category = SportCategory::firstOrCreate(
+            ['sport_id' => $badminton->id, 'code' => 'MD'],
+            ['name' => 'Ganda Putra', 'entry_type' => 'double', 'player_count' => 2, 'gender_rule' => 'male', 'sort_order' => 3],
+        );
+
         $league = League::query()->updateOrCreate(
             ['name' => 'JR Men Doubles Finals Seed'],
             [
                 'sport_id' => $badminton->id,
+                'sport_category_id' => $category->id,
                 'category' => 'MD',
                 'entry_type' => 'double',
                 'description' => 'Completed ganda putra league with group stage, upper bracket, and lower bracket results.',

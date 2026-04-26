@@ -5,6 +5,7 @@ import { Bracket, Seed, SeedItem, SeedTeam, type IRenderSeedProps, type IRoundPr
 import SecondaryButton from './SecondaryButton';
 import Modal from './Modal';
 import SelectInput from './SelectInput';
+import SetScoreEntry from './SetScoreEntry';
 
 type BracketTeam = {
     name: string;
@@ -133,7 +134,13 @@ export default function BracketTree({
                     </div>
 
                     {thirdPlaceMatch && (
-                        <div className="flex-1 grid gap-2 rounded-lg border border-outline bg-surface-container-lowest p-3 shadow-[0px_8px_20px_rgba(15,23,42,0.06)]">
+                        <div
+                            className={[
+                                'flex-1 grid gap-2 rounded-lg border border-outline bg-surface-container-lowest p-3 shadow-[0px_8px_20px_rgba(15,23,42,0.06)]',
+                                adjustMode && !readOnly && (!thirdPlaceMatch.sets || thirdPlaceMatch.sets.length === 0) ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : '',
+                            ].join(' ')}
+                            onClick={() => handleMatchClick(thirdPlaceMatch)}
+                        >
                             <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">Third Place Match</p>
                             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mt-2">
                                 <span className={['text-sm font-bold truncate text-right', isWinner(thirdPlaceMatch, 'home') ? 'text-primary' : 'text-on-surface'].join(' ')}>
@@ -148,6 +155,21 @@ export default function BracketTree({
                                 <p className="text-center text-xs font-black text-primary mt-1">
                                     {thirdPlaceMatch.home_score} - {thirdPlaceMatch.away_score}
                                 </p>
+                            )}
+                            <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">{matchStatus(thirdPlaceMatch.status)}</p>
+                            {(thirdPlaceMatch.sets ?? []).length > 0 && (
+                                <div className="flex flex-wrap justify-center gap-1">
+                                    {thirdPlaceMatch.sets?.map((set) => (
+                                        <span key={set.id} className="rounded bg-surface-container border border-outline-variant/20 px-2 py-0.5 text-[0.6875rem] font-bold text-on-surface-variant">
+                                            {set.home_points}-{set.away_points}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                            {!readOnly && (
+                                <div className="flex justify-center pt-1" onClick={(event) => event.stopPropagation()}>
+                                    <SetScoreEntry matchId={thirdPlaceMatch.id} label="Record Set" homeLabel={thirdPlaceMatch.home_label} awayLabel={thirdPlaceMatch.away_label} />
+                                </div>
                             )}
                         </div>
                     )}

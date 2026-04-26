@@ -1,26 +1,4 @@
-# admin-area Specification
-
-## Purpose
-TBD - created by archiving change add-league-tournament-format. Update Purpose after archive.
-## Requirements
-### Requirement: Admin Shell
-The system SHALL provide an authenticated admin area mounted at `/admin`, accessible only to users with `users.role = 'admin'`. The admin shell SHALL render a persistent sidebar (Dashboard, Leagues, Sports, Activities, Users, Teams, return-to-app link) and a top bar showing the current admin.
-
-#### Scenario: Admin accesses /admin
-- **WHEN** a user with admin role navigates to `/admin`
-- **THEN** the admin shell is rendered with sidebar navigation
-
-#### Scenario: Non-admin is denied
-- **WHEN** a member navigates to `/admin`
-- **THEN** the request is rejected by the `admin` Gate
-
-### Requirement: Admin Dashboard
-The system SHALL display an admin dashboard summarising counts of active leagues, registered entries, upcoming matches, and live matches.
-
-#### Scenario: Dashboard KPIs
-- **WHEN** an admin opens `/admin`
-- **THEN** dashboard cards display current counts sourced from the database
-
+## MODIFIED Requirements
 ### Requirement: Admin League Management
 The admin area SHALL provide dedicated league management screens including list, create, and detail views. The create and detail views SHALL allow admins to choose and view whether a badminton league starts from group stage or bracket stage. The detail view SHALL expose tabs for Overview, Participants, Groups, Bracket, and Matches, each backed by admin-only endpoints, with group-only controls disabled or replaced by explanatory guidance for bracket-start leagues.
 
@@ -46,11 +24,3 @@ The admin area SHALL provide dedicated league management screens including list,
 - **WHEN** an admin seeds upper and lower brackets for a group-start league after the group stage or seeds a bracket-start league after participants are registered
 - **THEN** bracket trees are created and the league transitions to `stage = upper`
 - **AND** a visual `BracketTree` renders both brackets for admin editing
-
-### Requirement: Admin Stub Modules
-The admin area SHALL include list and basic edit screens for Sports, Activities, Users, and Teams. Deep CRUD (bulk actions, advanced filters) is out of scope for this increment but the routes and layouts SHALL exist so future increments can extend them without restructuring navigation.
-
-#### Scenario: Admin opens Users list
-- **WHEN** an admin navigates to `/admin/users`
-- **THEN** a paginated list of users is displayed with edit links for basic fields (name, email, role, gender)
-

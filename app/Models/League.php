@@ -13,6 +13,7 @@ class League extends Model
     protected $fillable = [
         'name',
         'sport_id',
+        'sport_category_id',
         'category',
         'entry_type',
         'description',
@@ -20,6 +21,7 @@ class League extends Model
         'end_date',
         'status',
         'stage',
+        'start_stage',
         'participant_total',
         'group_count',
         'group_size',
@@ -52,6 +54,11 @@ class League extends Model
     public function sport()
     {
         return $this->belongsTo(Sport::class);
+    }
+
+    public function sportCategory()
+    {
+        return $this->belongsTo(SportCategory::class);
     }
 
     public function teams()
@@ -98,12 +105,17 @@ class League extends Model
 
     public function isBadminton(): bool
     {
-        return $this->category !== null;
+        return in_array($this->category, ['MS', 'WS', 'MD', 'WD', 'XD'], true);
+    }
+
+    public function usesDirectEntries(): bool
+    {
+        return $this->sport_category_id !== null || in_array($this->entry_type, ['single', 'double'], true);
     }
 
     public function isTeamBased(): bool
     {
-        return ! $this->isBadminton();
+        return $this->entry_type === 'team';
     }
 
     public function standings(): array

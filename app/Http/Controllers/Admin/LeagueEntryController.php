@@ -16,8 +16,8 @@ class LeagueEntryController extends Controller
 {
     public function store(Request $request, League $league): RedirectResponse
     {
-        if (! $league->isBadminton()) {
-            throw ValidationException::withMessages(['league' => 'Entries are only available for badminton leagues.']);
+        if (! in_array($league->entry_type, ['single', 'double'], true)) {
+            throw ValidationException::withMessages(['league' => 'Entries are only available for direct-entry league categories.']);
         }
 
         $validated = $request->validate([
@@ -59,8 +59,8 @@ class LeagueEntryController extends Controller
     {
         abort_unless($entry->league_id === $league->id, 404);
 
-        if (! $league->isBadminton()) {
-            throw ValidationException::withMessages(['league' => 'Entries are only available for badminton leagues.']);
+        if (! in_array($league->entry_type, ['single', 'double'], true)) {
+            throw ValidationException::withMessages(['league' => 'Entries are only available for direct-entry league categories.']);
         }
 
         $validated = $request->validate([
@@ -132,12 +132,17 @@ class LeagueEntryController extends Controller
 
     private function assertCategoryRules(League $league, User $player1, ?User $player2, $substitutes): void
     {
-        $valid = match ($league->category) {
-            'MS' => $player1->gender === 'male' && $player2 === null,
-            'WS' => $player1->gender === 'female' && $player2 === null,
+        $genderRule = $league->sportCategory?->gender_rule;
+        $playerCount = $league->sportCategory?->player_count;
+        $requiresPartner = $playerCount !== 1 && $league->entry_type !== 'single';
+
+        $valid = match ($genderRule ?? $league->category) {
+            'male', 'MS' => $player1->gender === 'male' && ($requiresPartner ? $player2?->gender === 'male' : $player2 === null),
+            'female', 'WS' => $player1->gender === 'female' && ($requiresPartner ? $player2?->gender === 'female' : $player2 === null),
+            'mixed', 'XD' => collect([$player1->gender, $player2?->gender])->sort()->values()->all() === ['female', 'male'],
             'MD' => $player1->gender === 'male' && $player2?->gender === 'male',
             'WD' => $player1->gender === 'female' && $player2?->gender === 'female',
-            'XD' => collect([$player1->gender, $player2?->gender])->sort()->values()->all() === ['female', 'male'],
+            'open' => $league->entry_type === 'single' ? $player2 === null : $player2 !== null,
             default => false,
         };
 
@@ -151,11 +156,11 @@ class LeagueEntryController extends Controller
             throw ValidationException::withMessages(['substitute_ids' => 'Substitutes must be different from the selected players.']);
         }
 
-        if (in_array($league->category, ['MS', 'MD'], true) && $substitutes->contains(fn (User $substitute) => $substitute->gender !== 'male')) {
+        if (($genderRule === 'male' || in_array($league->category, ['MS', 'MD'], true)) && $substitutes->contains(fn (User $substitute) => $substitute->gender !== 'male')) {
             throw ValidationException::withMessages(['substitute_ids' => 'Substitutes must satisfy the league gender rule.']);
         }
 
-        if (in_array($league->category, ['WS', 'WD'], true) && $substitutes->contains(fn (User $substitute) => $substitute->gender !== 'female')) {
+        if (($genderRule === 'female' || in_array($league->category, ['WS', 'WD'], true)) && $substitutes->contains(fn (User $substitute) => $substitute->gender !== 'female')) {
             throw ValidationException::withMessages(['substitute_ids' => 'Substitutes must satisfy the league gender rule.']);
         }
     }

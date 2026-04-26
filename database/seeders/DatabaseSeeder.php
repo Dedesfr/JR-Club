@@ -6,6 +6,7 @@ use App\Models\Activity;
 use App\Models\GameMatch;
 use App\Models\League;
 use App\Models\Sport;
+use App\Models\SportCategory;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -53,6 +54,8 @@ class DatabaseSeeder extends Seeder
             'max_players_per_team' => $sport[2],
             'description' => $sport[3],
         ]));
+
+        $this->seedSportCategories($sports);
 
         Activity::create([
             'sport_id' => $sports->firstWhere('name', 'Padel')->id,
@@ -120,5 +123,45 @@ class DatabaseSeeder extends Seeder
         $this->call(MensDoublesLeagueSeeder::class);
         $this->call(CompletedMensDoublesLeagueSeeder::class);
         $this->call(GroupStageMensDoublesLeagueSeeder::class);
+        $this->call(BasketballLeagueSeeder::class);
+    }
+
+    private function seedSportCategories($sports): void
+    {
+        $definitions = [
+            'Badminton' => [
+                ['MS', 'Single Putra', 'single', 1, 'male'],
+                ['WS', 'Single Putri', 'single', 1, 'female'],
+                ['MD', 'Ganda Putra', 'double', 2, 'male'],
+                ['WD', 'Ganda Putri', 'double', 2, 'female'],
+                ['XD', 'Ganda Campuran', 'double', 2, 'mixed'],
+            ],
+            'Basketball' => [
+                ['3V3', '3 vs 3', 'team', 3, 'open'],
+                ['5V5', '5 vs 5', 'team', 5, 'open'],
+            ],
+        ];
+
+        foreach ($definitions as $sportName => $categories) {
+            $sport = $sports->firstWhere('name', $sportName);
+
+            if (! $sport) {
+                continue;
+            }
+
+            foreach ($categories as $index => [$code, $name, $entryType, $playerCount, $genderRule]) {
+                SportCategory::updateOrCreate(
+                    ['sport_id' => $sport->id, 'code' => $code],
+                    [
+                        'name' => $name,
+                        'entry_type' => $entryType,
+                        'player_count' => $playerCount,
+                        'gender_rule' => $genderRule,
+                        'sort_order' => $index + 1,
+                        'is_active' => true,
+                    ],
+                );
+            }
+        }
     }
 }
