@@ -13,8 +13,8 @@ export default defineConfig({
         VitePWA({
             registerType: 'autoUpdate',
             manifest: {
-                name: 'JR Club',
-                short_name: 'JR Club',
+                name: 'JR Sports Club',
+                short_name: 'JR Sports Club',
                 description: 'Sports activities, leagues, live scores, and rankings for Jasa Raharja.',
                 theme_color: '#0056a4',
                 background_color: '#f7f9fb',

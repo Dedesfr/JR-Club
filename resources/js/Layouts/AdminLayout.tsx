@@ -1,3 +1,4 @@
+import ApplicationLogo from '@/Components/ApplicationLogo';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, useState } from 'react';
 import { PageProps } from '@/types';
@@ -23,9 +24,12 @@ export default function AdminLayout({ children, title, actions }: PropsWithChild
                     <button onClick={() => setSidebarOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-container-low">
                         <span className="material-symbols-outlined">menu</span>
                     </button>
-                    <div>
+                    <div className="flex items-center gap-3">
+                        <ApplicationLogo className="h-10 w-10 rounded-full object-cover" />
+                        <div>
                         <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Admin</p>
-                        <h1 className="text-lg font-black tracking-tight text-on-surface">JR Club</h1>
+                        <h1 className="text-lg font-black tracking-tight text-on-surface">JR Sports Club</h1>
+                        </div>
                     </div>
                 </div>
                 <Link href={route('activities.index')} className="rounded-full bg-surface-container-low px-3 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
@@ -45,9 +49,12 @@ export default function AdminLayout({ children, title, actions }: PropsWithChild
                 {/* Sidebar */}
                 <aside className={`fixed inset-y-0 left-0 z-50 w-72 flex flex-col justify-between transform border-r border-outline-variant/30 bg-surface-container-lowest p-5 transition-transform duration-200 ease-in-out md:static md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                     <div className="mb-8 flex items-center justify-between">
-                        <div>
+                        <div className="flex items-center gap-3">
+                            <ApplicationLogo className="h-11 w-11 rounded-full object-cover" />
+                            <div>
                             <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Admin Area</p>
-                            <h1 className="text-2xl font-black tracking-tight text-on-surface">JR Club</h1>
+                            <h1 className="text-2xl font-black tracking-tight text-on-surface">JR Sports Club</h1>
+                            </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <Link href={route('activities.index')} className="hidden rounded-full bg-surface-container-low px-3 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant md:block">

@@ -1,3 +1,4 @@
+import ApplicationLogo from '@/Components/ApplicationLogo';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { PageProps } from '@/types';
@@ -29,12 +30,9 @@ export default function JRClubLayout({ children, active, actionHref }: PropsWith
             <header className="fixed top-0 z-50 w-full bg-white/85 shadow-[0px_12px_32px_rgba(15,23,42,0.06)] backdrop-blur-md">
                 <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                     <Link href={route('profile.show')} className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-black text-on-primary shadow-sm">
-                            {user.name.charAt(0)}
-                        </div>
+                        <ApplicationLogo className="h-10 w-10 rounded-full object-cover" />
                         <div className="hidden sm:block">
-                            <p className="text-sm font-black tracking-normal text-on-surface">JR Club</p>
-                            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Event Hub</p>
+                            <p className="text-sm font-black tracking-normal text-on-surface">JR Sports Club</p>
                         </div>
                     </Link>
                     <nav className="hidden items-center gap-2 md:flex">
@@ -100,7 +98,7 @@ export default function JRClubLayout({ children, active, actionHref }: PropsWith
                     }}
                     className="fixed bottom-24 right-4 z-50 rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-3 text-sm font-bold text-on-primary shadow-[0px_12px_24px_rgba(0,86,164,0.25)] md:bottom-8"
                 >
-                    Install JR Club
+                    Install JR Sports Club
                 </button>
             ) : null}
 

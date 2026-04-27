@@ -1,20 +1,18 @@
+import ApplicationLogo from '@/Components/ApplicationLogo';
 import { PageProps } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 
 export default function Welcome({ auth }: PageProps<{ laravelVersion: string; phpVersion: string }>) {
     return (
         <>
-            <Head title="JR Club" />
+            <Head title="JR Sports Club" />
             <main className="min-h-screen bg-surface text-on-surface">
                 <header className="fixed left-0 right-0 top-0 z-50 bg-white/85 shadow-[0px_12px_32px_rgba(15,23,42,0.06)] backdrop-blur-md">
                     <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-container text-sm font-black tracking-normal text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)]">
-                                JR
-                            </div>
+                            <ApplicationLogo className="h-10 w-10 rounded-full object-cover shadow-[0px_8px_16px_rgba(0,86,164,0.15)]" />
                             <div>
-                                <p className="text-base font-black tracking-normal text-on-surface">JR Club</p>
-                                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Event Hub</p>
+                                <p className="text-base font-black tracking-normal text-on-surface">JR Sports Club</p>
                             </div>
                         </div>
 
@@ -52,7 +50,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                                 Play hard. Win together.
                             </h1>
                             <p className="mt-5 max-w-xl text-base leading-7 text-white/84">
-                                Corporate sports events, league standings, and registrations for JR Club members across every active fixture.
+                                Corporate sports events, league standings, and registrations for JR Sports Club members across every active fixture.
                             </p>
                             <div className="mt-8 flex flex-wrap gap-3">
                                 <Link href={auth.user ? route('activities.index') : route('login')} className="rounded-full bg-white px-6 py-3 text-sm font-black text-primary shadow-[0px_12px_24px_rgba(0,0,0,0.18)] transition-transform active:scale-[0.98]">

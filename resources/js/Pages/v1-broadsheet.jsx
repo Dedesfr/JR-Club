@@ -60,8 +60,7 @@ function A1Nav({ active }) {
           <span style={{ color:"#fff", fontSize:18, fontWeight:900, letterSpacing:"-0.04em" }}>JR</span>
         </div>
         <div>
-          <div style={{ fontWeight:700, fontSize:15, letterSpacing:"-0.01em", lineHeight:1 }}>JR Club</div>
-          <div style={{ fontSize:11, color: DS.onSurfaceVariant, fontWeight:600, letterSpacing:"0.04em", textTransform:"uppercase", lineHeight:1.2 }}>Event Hub</div>
+          <div style={{ fontWeight:700, fontSize:15, letterSpacing:"-0.01em", lineHeight:1 }}>JR Sports Club</div>
         </div>
       </div>
 

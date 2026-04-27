@@ -14,7 +14,7 @@ export default function Index({ teams, sports, myTeams, canManage }: { teams: Te
                 <div className="flex items-start justify-between">
                     <div>
                         <span className="mb-2 block text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Team Management</span>
-                        <h1 className="text-3xl font-black leading-none tracking-tight text-on-surface">{teams[0]?.name ?? 'JR Club Teams'}</h1>
+                        <h1 className="text-3xl font-black leading-none tracking-tight text-on-surface">{teams[0]?.name ?? 'JR Sports Club Teams'}</h1>
                     </div>
                     <div className="rounded-lg bg-surface-container-low p-2">
                         <span className="material-symbols-outlined fill text-primary">sports_soccer</span>

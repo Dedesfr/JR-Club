@@ -67,7 +67,7 @@ export default function Create({ sports }: { sports: Sport[] }) {
                     </div>
                     <div className="p-6 grid gap-6 md:grid-cols-2">
                         <Field label="League name" full>
-                            <input value={form.data.name} onChange={(event) => form.setData('name', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" placeholder="e.g. JR Club Championship 2026" />
+                            <input value={form.data.name} onChange={(event) => form.setData('name', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" placeholder="e.g. JR Sports Club Championship 2026" />
                         </Field>
                         <Field label="Sport">
                             <div className="editorial-select-wrapper relative">
