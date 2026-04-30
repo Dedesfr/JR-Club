@@ -13,8 +13,20 @@ const sportImages: Record<string, string> = {
     running: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=900&q=80',
 };
 
+const sportOrder = ['Badminton', 'Basketball', 'Padel', 'Mini Soccer', 'Other'] as const;
+
 export default function Index({ sports, activities, selectedSport, canManage }: { sports: Sport[]; activities: Activity[]; selectedSport?: string; canManage: boolean }) {
     const user = usePage<PageProps>().props.auth.user;
+    const orderedSports = [...sports].sort((left, right) => {
+        const leftIndex = sportOrder.indexOf(left.name as (typeof sportOrder)[number]);
+        const rightIndex = sportOrder.indexOf(right.name as (typeof sportOrder)[number]);
+
+        if (leftIndex === -1 && rightIndex === -1) return left.name.localeCompare(right.name);
+        if (leftIndex === -1) return 1;
+        if (rightIndex === -1) return -1;
+
+        return leftIndex - rightIndex;
+    });
     const featured = activities[0];
     const remaining = activities.slice(1);
     const openCount = activities.filter((a) => a.status !== 'completed' && a.status !== 'cancelled' && a.status !== 'full').length;
@@ -101,7 +113,7 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
                 >
                     All Sports
                 </Link>
-                {sports.map((sport) => (
+                {orderedSports.map((sport) => (
                     <Link
                         key={sport.id}
                         href={route('activities.index', { sport: sport.name })}

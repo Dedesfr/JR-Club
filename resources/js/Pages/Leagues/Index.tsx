@@ -4,6 +4,7 @@ import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
 const statusLabels = ['upcoming', 'active', 'completed'] as const;
+const sportOrder = ['Badminton', 'Basketball', 'Padel', 'Mini Soccer', 'Other'] as const;
 
 const sportImages: Record<string, string> = {
     badminton: '/images/badminton.jpeg',
@@ -31,6 +32,16 @@ export default function Index({
     canManage: boolean;
     statusFilter: (typeof statusLabels)[number];
 }) {
+    const orderedSports = [...sports].sort((left, right) => {
+        const leftIndex = sportOrder.indexOf(left.name as (typeof sportOrder)[number]);
+        const rightIndex = sportOrder.indexOf(right.name as (typeof sportOrder)[number]);
+
+        if (leftIndex === -1 && rightIndex === -1) return left.name.localeCompare(right.name);
+        if (leftIndex === -1) return 1;
+        if (rightIndex === -1) return -1;
+
+        return leftIndex - rightIndex;
+    });
     const [selectedSportId, setSelectedSportId] = useState<string>('all');
     const visibleLeagues = selectedSportId === 'all' ? leagues : leagues.filter((league) => String(league.sport.id) === selectedSportId);
     const featuredLeague = (selectedSportId === 'all' ? activeLeague : visibleLeagues[0]) ?? visibleLeagues[0];
@@ -122,7 +133,7 @@ export default function Index({
                 >
                     All Sports
                 </button>
-                {sports.map((sport) => (
+                {orderedSports.map((sport) => (
                     <button
                         key={sport.id}
                         type="button"
@@ -139,7 +150,7 @@ export default function Index({
                 <section className="mt-5 overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_2px_12px_rgba(15,23,42,0.08),0px_0px_0px_1px_rgba(15,23,42,0.04)] md:grid md:grid-cols-[20rem_minmax(0,1fr)]">
                     {/* Cover image */}
                     <div className="relative min-h-56 overflow-hidden md:min-h-72">
-                        <img src={getSportImage(featuredLeague.sport.name)} alt="" className="h-full w-full object-cover" />
+                        <img src={featuredLeague.banner_url || getSportImage(featuredLeague.sport.name)} alt="" className="h-full w-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/70 via-inverse-surface/20 to-transparent md:bg-gradient-to-r md:from-inverse-surface/20 md:via-transparent md:to-surface-container-lowest" />
                         {/* Status pill */}
                         <StatusPill status={featuredLeague.status} className="absolute left-4 top-4" />
@@ -254,7 +265,7 @@ function CompactLeagueCard({ league }: { league: League }) {
     const isCompleted = league.status === 'completed';
     const isActive = league.status === 'active';
     const isUpcoming = league.status === 'upcoming';
-    const bannerUrl = getSportImage(league.sport.name);
+    const bannerUrl = league.banner_url || getSportImage(league.sport.name);
     const groupCount = league.group_count ?? league.groups?.length ?? '-';
     const matchCount = league.matches?.length ?? 0;
     const champion = isCompleted ? (league.upper_champion ?? league.lower_champion) : null;

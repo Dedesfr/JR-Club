@@ -75,10 +75,12 @@ class DatabaseSeeder extends Seeder
             'max_participants' => 6,
         ])->participants()->attach($members->take(2)->pluck('id')->mapWithKeys(fn ($id) => [$id => ['joined_at' => now()]])->all());
 
-        $this->call(MensDoublesLeagueSeeder::class);
+        $this->call(TeamSeeder::class);
+        $this->call(UpcomingBadmintonChampionshipSeeder::class);
         $this->call(CompletedMensDoublesLeagueSeeder::class);
         $this->call(GroupStageMensDoublesLeagueSeeder::class);
         $this->call(BasketballLeagueSeeder::class);
+        $this->call(UpcomingBadmintonChampionshipSeeder::class);
     }
 
     private function seedSportCategories($sports): void

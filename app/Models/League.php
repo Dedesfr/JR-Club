@@ -10,6 +10,10 @@ class League extends Model
 {
     use HasFactory;
 
+    protected $appends = [
+        'banner_url',
+    ];
+
     protected $fillable = [
         'name',
         'sport_id',
@@ -121,5 +125,15 @@ class League extends Model
     public function standings(): array
     {
         return app(LeagueFormatService::class)->standings($this);
+    }
+
+    public function getBannerUrlAttribute(): ?string
+    {
+        return match ($this->name) {
+            'JR Men Double Championship' => '/images/badminton-men-double.png',
+            'JR Women Double Championship' => '/images/badminton-woman-double.png',
+            'Mix Double Championship' => '/images/badminton-mixed-double.png',
+            default => null,
+        };
     }
 }

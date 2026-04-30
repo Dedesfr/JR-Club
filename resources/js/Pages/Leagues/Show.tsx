@@ -123,7 +123,7 @@ export default function Show({
 
             <section className="mt-6 overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_2px_12px_rgba(15,23,42,0.08),0px_0px_0px_1px_rgba(15,23,42,0.04)] md:grid md:grid-cols-[20rem_minmax(0,1fr)]">
                 <div className="relative min-h-56 overflow-hidden md:min-h-72">
-                    <img src={getSportImage(league.sport?.name)} alt="" className="h-full w-full object-cover" />
+                    <img src={league.banner_url || getSportImage(league.sport?.name)} alt="" className="h-full w-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-r from-inverse-surface/20 via-transparent to-surface-container-lowest md:to-surface-container-lowest" />
                     <StatusPill status={league.status} className="absolute left-4 top-4" />
                 </div>

@@ -111,8 +111,13 @@ Route::middleware('auth')->group(function () {
         Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
 
         Route::get('/teams', [AdminTeamController::class, 'index'])->name('teams.index');
+        Route::get('/teams/create', [AdminTeamController::class, 'create'])->name('teams.create');
+        Route::post('/teams', [AdminTeamController::class, 'store'])->name('teams.store');
         Route::get('/teams/{team}/edit', [AdminTeamController::class, 'edit'])->name('teams.edit');
         Route::patch('/teams/{team}', [AdminTeamController::class, 'update'])->name('teams.update');
+        Route::delete('/teams/{team}', [AdminTeamController::class, 'destroy'])->name('teams.destroy');
+        Route::post('/teams/{team}/members', [AdminTeamController::class, 'addMember'])->name('teams.members.store');
+        Route::delete('/teams/{team}/members/{user}', [AdminTeamController::class, 'removeMember'])->name('teams.members.destroy');
     });
 });
 

@@ -79,6 +79,7 @@ export type Team = {
 export type League = {
     id: number;
     name: string;
+    banner_url?: string | null;
     description?: string;
     status: string;
     stage?: string;

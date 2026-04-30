@@ -44,7 +44,7 @@ class BasketballLeagueSeeder extends Seeder
             category: $threeVsThree,
             name: 'JR Basketball 3V3 Challenge',
             description: 'Fast-paced half-court basketball tournament for 3-player teams.',
-            teamNames: ['Asphalt Hawks', 'Blue Rim', 'Metro Ballers', 'Skyline Three'],
+            teamNames: ['Divisi Asuransi', 'Divisi Pelayanan', 'Divisi Human Capital (HC)', 'Divisi Umum'],
             playersPerTeam: 3,
             emailPrefix: 'basketball-3v3',
         );
@@ -95,8 +95,8 @@ class BasketballLeagueSeeder extends Seeder
         $league->entries()->delete();
 
         $teams = collect($teamNames)->map(function (string $teamName, int $teamIndex) use ($admin, $sport, $playersPerTeam, $emailPrefix) {
-            $team = Team::query()->updateOrCreate(
-                ['name' => $teamName, 'sport_id' => $sport->id],
+            $team = Team::query()->where('name', $teamName)->firstOrCreate(
+                ['name' => $teamName],
                 ['created_by' => $admin->id],
             );
 
