@@ -32,7 +32,7 @@
 
 ## 4. Sport Activities
 > Template: `template/sport_activities_feed/code.html`
-- [x] 4.1 Seed sports data (Padel, Basketball, Futsal, Badminton, Volleyball)
+- [x] 4.1 Seed sports data (Padel, Basketball, Futsal, Badminton, Other)
 - [x] 4.2 Create ActivityController with index, show, store, update, destroy
 - [x] 4.3 Create activity list page (Inertia React) with sport type filter
 - [x] 4.4 Create activity creation form page (admin only)

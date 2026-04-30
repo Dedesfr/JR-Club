@@ -43,8 +43,8 @@ export default function Create({ sports }: { sports: Sport[] }) {
     };
 
     return (
-        <AdminLayout 
-            title="Create League"
+            <AdminLayout 
+            title="Create Tournament"
             actions={
                 <button 
                     type="submit" 
@@ -52,11 +52,11 @@ export default function Create({ sports }: { sports: Sport[] }) {
                     disabled={form.processing}
                     className="rounded-full bg-gradient-to-br from-primary to-primary-container px-6 py-2.5 text-[0.875rem] font-bold text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)] hover:shadow-[0px_12px_24px_rgba(0,86,164,0.25)] hover:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
                 >
-                    Save League
+                    Save Tournament
                 </button>
             }
         >
-            <Head title="Create League" />
+            <Head title="Create Tournament" />
             
             <form id="create-league-form" onSubmit={(event) => { event.preventDefault(); form.post(route('admin.leagues.store')); }} className="space-y-6">
                 
@@ -66,8 +66,8 @@ export default function Create({ sports }: { sports: Sport[] }) {
                         <h3 className="text-[0.75rem] font-bold uppercase tracking-[0.05em] text-primary">General Information</h3>
                     </div>
                     <div className="p-6 grid gap-6 md:grid-cols-2">
-                        <Field label="League name" full>
-                            <input value={form.data.name} onChange={(event) => form.setData('name', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" placeholder="e.g. JR Sports Club Championship 2026" />
+                        <Field label="Tournament name" full>
+                            <input value={form.data.name} onChange={(event) => form.setData('name', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" placeholder="e.g. JR Sport Hub Championship 2026" />
                         </Field>
                         <Field label="Sport">
                             <div className="editorial-select-wrapper relative">
@@ -86,7 +86,7 @@ export default function Create({ sports }: { sports: Sport[] }) {
                             </div>
                         </Field>
                         <Field label="Description" full>
-                            <textarea value={form.data.description} onChange={(event) => form.setData('description', event.target.value)} className="w-full min-h-[120px] bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface resize-y" placeholder="League details and rules..." />
+                            <textarea value={form.data.description} onChange={(event) => form.setData('description', event.target.value)} className="w-full min-h-[120px] bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface resize-y" placeholder="Tournament details and rules..." />
                         </Field>
                     </div>
                 </div>

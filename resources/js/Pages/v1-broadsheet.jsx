@@ -60,7 +60,7 @@ function A1Nav({ active }) {
           <span style={{ color:"#fff", fontSize:18, fontWeight:900, letterSpacing:"-0.04em" }}>JR</span>
         </div>
         <div>
-          <div style={{ fontWeight:700, fontSize:15, letterSpacing:"-0.01em", lineHeight:1 }}>JR Sports Club</div>
+          <div style={{ fontWeight:700, fontSize:15, letterSpacing:"-0.01em", lineHeight:1 }}>JR Sport Hub</div>
         </div>
       </div>
 
@@ -233,7 +233,7 @@ function V1EventsIndex() {
             </div>
             <div style={{ padding:"28px 32px" }}>
               <div style={{ display:"flex", gap:8, marginBottom:12 }}>
-                <Pill bg={DS.primaryFixed} color={DS.onPrimaryFixed}>Monthly League</Pill>
+                <Pill bg={DS.primaryFixed} color={DS.onPrimaryFixed}>Monthly Tournament</Pill>
                 <Pill bg={DS.tertiaryFixed} color={DS.tertiary}>Jakarta</Pill>
               </div>
               <h2 style={{ fontSize:32, fontWeight:900, letterSpacing:"-0.025em", margin:"0 0 8px", lineHeight:1.1 }}>{events[0].name}</h2>

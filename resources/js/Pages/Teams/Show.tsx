@@ -4,7 +4,7 @@ import { Head } from '@inertiajs/react';
 
 export default function Show({ team }: { team: Team }) {
     return (
-        <JRClubLayout active="Leagues">
+        <JRClubLayout active="Tournaments">
             <Head title={team.name} />
             <section className="mt-4 flex flex-col gap-6 rounded-xl bg-surface-container-lowest p-6 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
                 <div className="flex items-start justify-between">

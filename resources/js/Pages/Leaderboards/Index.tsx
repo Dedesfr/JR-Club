@@ -29,7 +29,7 @@ export default function Index({ players }: { players: Player[] }) {
                         className="flex items-center justify-center gap-1.5 rounded-lg px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-on-surface-variant transition-colors hover:bg-surface-container"
                     >
                         <span className="material-symbols-outlined text-[14px]">emoji_events</span>
-                        Leagues
+                        Tournaments
                     </Link>
                 </div>
             </section>

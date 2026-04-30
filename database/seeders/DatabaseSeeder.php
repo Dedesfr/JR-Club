@@ -3,12 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Activity;
-use App\Models\GameMatch;
-use App\Models\League;
 use App\Models\Sport;
 use App\Models\SportCategory;
-use App\Models\Team;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -44,10 +42,10 @@ class DatabaseSeeder extends Seeder
 
         $sports = collect([
             ['Padel', 'sports_tennis', 2, 'Fast doubles sessions after work.'],
-            ['Basketball', 'sports_basketball', 5, 'Indoor half-court and league games.'],
-            ['Futsal', 'sports_soccer', 5, 'High-energy five-a-side matches.'],
+            ['Basketball', 'sports_basketball', 5, 'Indoor half-court and tournament games.'],
+            ['Mini Soccer', 'sports_soccer', 5, 'High-energy five-a-side matches.'],
             ['Badminton', 'sports_tennis', 2, 'Singles and doubles court sessions.'],
-            ['Volleyball', 'sports_volleyball', 6, 'Branch team volleyball.'],
+            ['Other', 'sports_other', 6, 'Branch team other.'],
         ])->map(fn ($sport) => Sport::create([
             'name' => $sport[0],
             'icon' => $sport[1],
@@ -58,67 +56,24 @@ class DatabaseSeeder extends Seeder
         $this->seedSportCategories($sports);
 
         Activity::create([
-            'sport_id' => $sports->firstWhere('name', 'Padel')->id,
+            'sport_id' => $sports->firstWhere('name', 'Badminton')->id,
             'created_by' => $admin->id,
             'title' => 'After Work Smash',
-            'description' => 'Friendly padel session for all skill levels.',
-            'location' => 'Senayan Padel Court',
-            'scheduled_at' => now()->addHours(6),
-            'max_participants' => 6,
-        ])->participants()->attach($members->take(2)->pluck('id')->mapWithKeys(fn ($id) => [$id => ['joined_at' => now()]])->all());
-
-        Activity::create([
-            'sport_id' => $sports->firstWhere('name', 'Futsal')->id,
-            'created_by' => $admin->id,
-            'title' => 'Friday Night League',
-            'description' => 'Open futsal run before the league cycle starts.',
-            'location' => 'Kuningan Arena',
-            'scheduled_at' => now()->addDay()->setTime(20, 0),
+            'description' => 'Weekly badminton session every Thursday from 17.00 to 20.00 at Grand Sport Centre, Kuningan.',
+            'location' => 'Grand Sport Centre, Kuningan',
+            'scheduled_at' => now()->next(Carbon::THURSDAY)->setTime(17, 0),
             'max_participants' => 12,
         ])->participants()->attach($members->pluck('id')->mapWithKeys(fn ($id) => [$id => ['joined_at' => now()]])->all());
 
-        $futsal = $sports->firstWhere('name', 'Futsal');
-        $teams = collect(['Jabar Titans', 'Jatim Spartans', 'JKT Knights', 'Sumut Mavericks'])
-            ->map(fn ($name) => Team::create(['name' => $name, 'sport_id' => $futsal->id, 'created_by' => $admin->id]));
-
-        foreach ($teams as $index => $team) {
-            $team->members()->attach($members[$index % $members->count()]->id, [
-                'role' => $index === 0 ? 'captain' : 'member',
-                'joined_at' => now(),
-            ]);
-        }
-
-        $league = League::create([
-            'name' => 'JR Premier League',
-            'sport_id' => $futsal->id,
-            'description' => 'The ultimate branch competition for the season.',
-            'start_date' => now()->toDateString(),
-            'end_date' => now()->addMonths(2)->toDateString(),
-            'status' => 'active',
+        Activity::create([
+            'sport_id' => $sports->firstWhere('name', 'Padel')->id,
             'created_by' => $admin->id,
-        ]);
-
-        $league->teams()->attach($teams->pluck('id')->mapWithKeys(fn ($id) => [$id => ['registered_at' => now()]])->all());
-
-        GameMatch::create([
-            'league_id' => $league->id,
-            'home_team_id' => $teams[0]->id,
-            'away_team_id' => $teams[3]->id,
-            'scheduled_at' => now()->subDays(2),
-            'status' => 'completed',
-            'home_score' => 3,
-            'away_score' => 1,
-        ]);
-
-        GameMatch::create([
-            'league_id' => $league->id,
-            'home_team_id' => $teams[1]->id,
-            'away_team_id' => $teams[2]->id,
-            'scheduled_at' => now()->addHour(),
-            'status' => 'live',
-            'home_score' => 1,
-            'away_score' => 1,
-        ]);
+            'title' => 'Padel Midweek Mood Booster',
+            'description' => 'Weekly padel session every Wednesday from 18.00 to 20.00 at Castle Padel Court.',
+            'location' => 'Castle Padel Court',
+            'scheduled_at' => now()->next(Carbon::WEDNESDAY)->setTime(18, 0),
+            'max_participants' => 6,
+        ])->participants()->attach($members->take(2)->pluck('id')->mapWithKeys(fn ($id) => [$id => ['joined_at' => now()]])->all());
 
         $this->call(MensDoublesLeagueSeeder::class);
         $this->call(CompletedMensDoublesLeagueSeeder::class);

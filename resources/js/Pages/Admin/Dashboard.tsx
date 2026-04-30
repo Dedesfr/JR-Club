@@ -8,7 +8,7 @@ export default function Dashboard({ kpis, recentLeagues }: { kpis: Record<string
             <Head title="Admin Dashboard" />
             <div className="grid gap-4 md:grid-cols-4">
                 {[
-                    ['Active leagues', kpis.activeLeagues],
+                    ['Active tournaments', kpis.activeLeagues],
                     ['Registered entries', kpis.registeredEntries],
                     ['Upcoming matches', kpis.upcomingMatches],
                     ['Live matches', kpis.liveMatches],
@@ -23,10 +23,10 @@ export default function Dashboard({ kpis, recentLeagues }: { kpis: Record<string
             <section className="mt-6 rounded-xl bg-surface-container-lowest p-5 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
                 <div className="mb-4 flex items-center justify-between">
                     <div>
-                        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Recent leagues</p>
+                        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Recent tournaments</p>
                         <h3 className="text-xl font-black tracking-tight text-on-surface">Latest competitions</h3>
                     </div>
-                    <Link href={route('admin.leagues.create')} className="rounded-full bg-gradient-to-br from-primary to-primary-container px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-primary">New league</Link>
+                    <Link href={route('admin.leagues.create')} className="rounded-full bg-gradient-to-br from-primary to-primary-container px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-primary">New tournament</Link>
                 </div>
                 <div className="grid gap-3">
                     {recentLeagues.map((league) => (

@@ -118,7 +118,7 @@ class LeagueController extends Controller
             'status' => ['required', 'in:upcoming,active,completed'],
         ]) + ['created_by' => $request->user()->id]);
 
-        return back()->with('success', 'League created.');
+        return back()->with('success', 'Tournament created.');
     }
 
     public function update(Request $request, League $league): RedirectResponse
@@ -133,7 +133,7 @@ class LeagueController extends Controller
             'status' => ['sometimes', 'in:upcoming,active,completed'],
         ]));
 
-        return back()->with('success', 'League updated.');
+        return back()->with('success', 'Tournament updated.');
     }
 
     public function destroy(League $league): RedirectResponse
@@ -141,7 +141,7 @@ class LeagueController extends Controller
         Gate::authorize('admin');
         $league->delete();
 
-        return back()->with('success', 'League deleted.');
+        return back()->with('success', 'Tournament deleted.');
     }
 
     public function registerTeam(Request $request, League $league): RedirectResponse

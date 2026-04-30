@@ -5,7 +5,7 @@ import { PageProps } from '@/types';
 
 const navItems = [
     ['Activities', 'Events', 'explore', 'activities.index'],
-    ['Leagues', 'Leagues', 'emoji_events', 'leagues.index'],
+    ['Tournaments', 'Tournaments', 'emoji_events', 'leagues.index'],
     ['Rankings', 'Standings', 'leaderboard', 'leaderboards.index'],
     ['Profile', 'Profile', 'person', 'profile.show'],
 ];
@@ -32,7 +32,7 @@ export default function JRClubLayout({ children, active, actionHref }: PropsWith
                     <Link href={route('profile.show')} className="flex items-center gap-3">
                         <ApplicationLogo className="h-10 w-10 rounded-full object-cover" />
                         <div className="hidden sm:block">
-                            <p className="text-sm font-black tracking-normal text-on-surface">JR Sports Club</p>
+                            <p className="text-sm font-black tracking-normal text-on-surface">JR Sport Hub</p>
                         </div>
                     </Link>
                     <nav className="hidden items-center gap-2 md:flex">
@@ -98,7 +98,7 @@ export default function JRClubLayout({ children, active, actionHref }: PropsWith
                     }}
                     className="fixed bottom-24 right-4 z-50 rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-3 text-sm font-bold text-on-primary shadow-[0px_12px_24px_rgba(0,86,164,0.25)] md:bottom-8"
                 >
-                    Install JR Sports Club
+                    Install JR Sport Hub
                 </button>
             ) : null}
 

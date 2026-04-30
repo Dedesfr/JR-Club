@@ -49,7 +49,7 @@ class GroupStageMensDoublesLeagueSeeder extends Seeder
                 'sport_category_id' => $category->id,
                 'category' => 'MD',
                 'entry_type' => 'double',
-                'description' => 'Completed ganda putra league group stage, waiting for bracket seeding.',
+                'description' => 'Completed ganda putra tournament group stage, waiting for bracket seeding.',
                 'start_date' => now()->subWeeks(8)->toDateString(),
                 'end_date' => now()->toDateString(),
                 'status' => 'upcoming',

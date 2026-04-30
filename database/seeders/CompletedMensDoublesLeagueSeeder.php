@@ -50,7 +50,7 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
                 'sport_category_id' => $category->id,
                 'category' => 'MD',
                 'entry_type' => 'double',
-                'description' => 'Completed ganda putra league with group stage, upper bracket, and lower bracket results.',
+                'description' => 'Completed ganda putra tournament with group stage, upper bracket, and lower bracket results.',
                 'start_date' => now()->subWeeks(8)->toDateString(),
                 'end_date' => now()->toDateString(),
                 'status' => 'upcoming',

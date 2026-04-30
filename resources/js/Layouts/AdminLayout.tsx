@@ -5,7 +5,7 @@ import { PageProps } from '@/types';
 
 const links = [
     { label: 'Dashboard', icon: 'dashboard', route: 'admin.dashboard' },
-    { label: 'Leagues', icon: 'emoji_events', route: 'admin.leagues.index' },
+    { label: 'Tournaments', icon: 'emoji_events', route: 'admin.leagues.index' },
     { label: 'Sports', icon: 'sports', route: 'admin.sports.index' },
     { label: 'Activities', icon: 'explore', route: 'admin.activities.index' },
     { label: 'Users', icon: 'group', route: 'admin.users.index' },
@@ -28,7 +28,7 @@ export default function AdminLayout({ children, title, actions }: PropsWithChild
                         <ApplicationLogo className="h-10 w-10 rounded-full object-cover" />
                         <div>
                         <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Admin</p>
-                        <h1 className="text-lg font-black tracking-tight text-on-surface">JR Sports Club</h1>
+                        <h1 className="text-lg font-black tracking-tight text-on-surface">JR Sport Hub</h1>
                         </div>
                     </div>
                 </div>
@@ -53,7 +53,7 @@ export default function AdminLayout({ children, title, actions }: PropsWithChild
                             <ApplicationLogo className="h-11 w-11 rounded-full object-cover" />
                             <div>
                             <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Admin Area</p>
-                            <h1 className="text-2xl font-black tracking-tight text-on-surface">JR Sports Club</h1>
+                            <h1 className="text-2xl font-black tracking-tight text-on-surface">JR Sport Hub</h1>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">

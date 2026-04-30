@@ -4,10 +4,11 @@ import { Activity, Sport } from '@/types/jrclub';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
 const sportImages: Record<string, string> = {
-    badminton: '/images/badminton.jpeg',
+    badminton: '/images/event-badminton.png',
     futsal: 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=900&q=80',
     soccer: 'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=900&q=80',
     basketball: '/images/basketball.jpeg',
+    padel: '/images/event-padel.png',
     tennis: 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=900&q=80',
     running: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=900&q=80',
 };
@@ -24,9 +25,15 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
         <JRClubLayout active="Activities">
             <Head title="Activities" />
 
-            {/* Section: Dark Athletic Header Band */}
-            <section className="-mt-4 bg-inverse-surface" style={{ marginLeft: 'calc(50% - 50vw)', width: '100vw' }}>
-                <div className="mx-auto max-w-md px-4 pt-5 pb-0 md:max-w-7xl md:px-6 lg:px-8">
+            {/* Section: Athletic Header Band */}
+            <section className="relative -mt-4 overflow-hidden bg-inverse-surface" style={{ marginLeft: 'calc(50% - 50vw)', width: '100vw' }}>
+                <div
+                    className="absolute inset-0 bg-cover bg-center opacity-35"
+                    style={{ backgroundImage: "url('/images/hero-bg.png')" }}
+                    aria-hidden="true"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-inverse-surface/70 via-inverse-surface/55 to-inverse-surface/70" aria-hidden="true" />
+                <div className="relative mx-auto max-w-md px-4 pt-5 pb-0 md:max-w-7xl md:px-6 lg:px-8">
                     {/* Title row */}
                     <div className="flex items-start justify-between gap-6">
                         <div>
@@ -117,7 +124,7 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
                         {/* Mobile-only: title overlay */}
                         <div className="absolute bottom-0 left-0 right-0 p-4 md:hidden">
                             <div className="mb-2 flex flex-wrap gap-1.5">
-                                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white backdrop-blur-sm">Monthly League</span>
+                                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white backdrop-blur-sm">Monthly Tournament</span>
                                 <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white backdrop-blur-sm">{featured.location.split(' ')[0]}</span>
                             </div>
                             <Link href={route('activities.show', featured.id)} className="text-2xl font-black leading-tight text-white">
@@ -131,7 +138,7 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
                         {/* Desktop-only: title + badges */}
                         <div className="hidden md:block">
                             <div className="mb-3 flex flex-wrap gap-2">
-                                <span className="rounded-full bg-primary-fixed px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Monthly League</span>
+                                <span className="rounded-full bg-primary-fixed px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Monthly Tournament</span>
                                 <span className="rounded-full bg-tertiary-fixed px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-tertiary">{featured.location.split(' ')[0]}</span>
                             </div>
                             <Link href={route('activities.show', featured.id)} className="text-3xl font-black leading-tight tracking-normal text-on-surface lg:text-4xl">

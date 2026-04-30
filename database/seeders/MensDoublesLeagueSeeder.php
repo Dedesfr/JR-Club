@@ -46,7 +46,7 @@ class MensDoublesLeagueSeeder extends Seeder
                 'sport_category_id' => $category->id,
                 'category' => 'MD',
                 'entry_type' => 'double',
-                'description' => 'Seeded ganda putra league with 16 doubles entries.',
+                'description' => 'Seeded ganda putra tournament with 16 doubles entries.',
                 'start_date' => now()->toDateString(),
                 'end_date' => now()->addWeeks(8)->toDateString(),
                 'status' => 'upcoming',

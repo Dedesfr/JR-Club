@@ -75,8 +75,8 @@ export default function Show({
     }, [visibleMatches]);
 
     return (
-        <JRClubLayout active="Leagues">
-            <Head title={`${league.name} - ${league.sport?.name || 'League'} Details`} />
+        <JRClubLayout active="Tournaments">
+            <Head title={`${league.name} - ${league.sport?.name || 'Tournament'} Details`} />
 
             <section className="-mt-4 bg-inverse-surface" style={{ marginLeft: 'calc(50% - 50vw)', width: '100vw' }}>
                 <div className="mx-auto max-w-md px-4 pt-5 pb-0 md:max-w-7xl md:px-6 lg:px-8">
@@ -84,14 +84,14 @@ export default function Show({
                         <div>
                             <Link href={route('leagues.index')} className="mb-3 inline-flex items-center gap-2 text-sm font-bold text-inverse-on-surface/60 transition-colors hover:text-inverse-on-surface">
                                 <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                                Leagues
+                                Tournaments
                             </Link>
-                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">League Details · {league.status}</p>
+                            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">Tournament Details · {league.status}</p>
                             <h1 className="mt-1 text-4xl font-black leading-none text-inverse-on-surface md:text-5xl">{league.name}</h1>
                         </div>
                         <div className="hidden items-center gap-2 self-center rounded-xl bg-white/10 px-4 py-2.5 text-sm text-inverse-on-surface/60 md:flex">
                             <span className="material-symbols-outlined text-[16px]">{league.sport?.icon || 'emoji_events'}</span>
-                            <span>{league.sport?.name || 'League'}</span>
+                            <span>{league.sport?.name || 'Tournament'}</span>
                         </div>
                     </div>
 
@@ -446,7 +446,7 @@ function getLeagueEntrants(league: League) {
 function getLeagueFormat(league: League) {
     if (league.entry_type) return `${toTitle(league.entry_type)} Entry`;
     if (league.category) return league.category;
-    return 'League Play';
+    return 'Tournament Play';
 }
 
 function getStatusCopy(status: string) {

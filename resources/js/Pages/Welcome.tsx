@@ -5,14 +5,14 @@ import { Head, Link } from '@inertiajs/react';
 export default function Welcome({ auth }: PageProps<{ laravelVersion: string; phpVersion: string }>) {
     return (
         <>
-            <Head title="JR Sports Club" />
+            <Head title="JR Sport Hub" />
             <main className="min-h-screen bg-surface text-on-surface">
                 <header className="fixed left-0 right-0 top-0 z-50 bg-white/85 shadow-[0px_12px_32px_rgba(15,23,42,0.06)] backdrop-blur-md">
                     <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center gap-3">
                             <ApplicationLogo className="h-10 w-10 rounded-full object-cover shadow-[0px_8px_16px_rgba(0,86,164,0.15)]" />
                             <div>
-                                <p className="text-base font-black tracking-normal text-on-surface">JR Sports Club</p>
+                                <p className="text-base font-black tracking-normal text-on-surface">JR Sport Hub</p>
                             </div>
                         </div>
 
@@ -50,7 +50,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                                 Play hard. Win together.
                             </h1>
                             <p className="mt-5 max-w-xl text-base leading-7 text-white/84">
-                                Corporate sports events, league standings, and registrations for JR Sports Club members across every active fixture.
+                                Corporate sports events, tournament standings, and registrations for JR Sport Hub members across every active fixture.
                             </p>
                             <div className="mt-8 flex flex-wrap gap-3">
                                 <Link href={auth.user ? route('activities.index') : route('login')} className="rounded-full bg-white px-6 py-3 text-sm font-black text-primary shadow-[0px_12px_24px_rgba(0,0,0,0.18)] transition-transform active:scale-[0.98]">
@@ -65,7 +65,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                         <div className="mb-8 grid grid-cols-2 gap-3 lg:mb-0">
                             <Stat label="Fixtures" value="Live" />
                             <Stat label="Sports" value="Multi" />
-                            <Stat label="Leagues" value="Ranked" />
+                            <Stat label="Tournaments" value="Ranked" />
                             <Stat label="Teams" value="Active" />
                         </div>
                     </div>

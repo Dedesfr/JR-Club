@@ -89,7 +89,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
     const statusDotClass = isLive ? 'bg-error animate-pulse' : isFinal ? 'bg-tertiary' : 'bg-outline';
 
     return (
-        <JRClubLayout active="Leagues">
+        <JRClubLayout active="Tournaments">
             <Head title={`${homeLabel} vs ${awayLabel}`} />
 
             {/* Section: Top Bar — shared across breakpoints */}
@@ -232,7 +232,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                     {/* Section: Match Info */}
                     <section className={`grid gap-4 rounded-xl bg-surface-container-lowest p-5 sm:grid-cols-2 ${CARD_SHADOW}`}>
                         <InfoRow icon="location_on" label="Venue" title={match.location || 'Main Court'} detail={new Date(match.scheduled_at).toLocaleString()} />
-                        <InfoRow icon="sports" label="Format" title={match.league ? 'League Match' : 'Team Match'} detail={`${match.league?.sport?.name ?? ''}${match.league?.category ? ` · ${match.league.category}` : ''}`.trim() || '—'} />
+                        <InfoRow icon="sports" label="Format" title={match.league ? 'Tournament Match' : 'Team Match'} detail={`${match.league?.sport?.name ?? ''}${match.league?.category ? ` · ${match.league.category}` : ''}`.trim() || '—'} />
                     </section>
 
                     {/* Section: Match Photos */}

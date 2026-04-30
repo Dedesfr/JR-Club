@@ -17,7 +17,7 @@ export default function Login({ status }: { status?: string; canResetPassword: b
 
     return (
         <>
-            <Head title="JR Sports Club Login" />
+            <Head title="JR Sport Hub Login" />
             <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface p-6 text-on-surface">
                 <div className="absolute right-[-20%] top-[-10%] z-0 h-96 w-96 rounded-full bg-primary-fixed opacity-30 blur-3xl" />
                 <div className="absolute bottom-[-10%] left-[-20%] z-0 h-80 w-80 rounded-full bg-secondary-fixed opacity-30 blur-3xl" />
@@ -27,7 +27,7 @@ export default function Login({ status }: { status?: string; canResetPassword: b
                         <ApplicationLogo className="h-16 w-16 rounded-2xl object-cover shadow-[0_12px_32px_-4px_rgba(25,28,30,0.12)]" />
                         <div>
                             <h1 className="text-4xl font-black tracking-tighter text-on-surface">Welcome Back</h1>
-                            <p className="mt-1 text-sm text-on-surface-variant">Sign in to access your JR Sports Club portal.</p>
+                            <p className="mt-1 text-sm text-on-surface-variant">Sign in to access your JR Sport Hub portal.</p>
                         </div>
                     </header>
 

@@ -166,14 +166,14 @@ class LeagueController extends Controller
 
         $league->update($validated);
 
-        return back()->with('success', 'League updated.');
+        return back()->with('success', 'Tournament updated.');
     }
 
     public function destroy(League $league): RedirectResponse
     {
         $league->delete();
 
-        return redirect()->route('admin.leagues.index')->with('success', 'League deleted.');
+        return redirect()->route('admin.leagues.index')->with('success', 'Tournament deleted.');
     }
 
     public function storeTeam(Request $request, League $league): RedirectResponse

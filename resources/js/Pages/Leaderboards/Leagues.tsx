@@ -24,7 +24,7 @@ function formatLabel(league: League, hasGroups: boolean, hasUpper: boolean, hasL
     if (hasUpper && hasLower) parts.push('Double elimination');
     else if (hasUpper) parts.push('Single elimination');
     else if (!hasGroups) parts.push('Round robin');
-    if (parts.length === 0) parts.push(league.sport?.name ?? 'League');
+    if (parts.length === 0) parts.push(league.sport?.name ?? 'Tournament');
     return parts.join(' + ');
 }
 
@@ -140,7 +140,7 @@ export default function Leagues({
                 </div>
                 <div className="inline-flex self-start rounded-full bg-surface-container-high p-0.5 text-xs font-bold uppercase tracking-widest">
                     <Link href={route('leaderboards.index')} className="rounded-full px-4 py-1.5 text-on-surface-variant hover:text-on-surface">Players</Link>
-                    <Link href={route('leaderboards.leagues')} className="rounded-full bg-gradient-to-br from-primary to-primary-container px-4 py-1.5 text-on-primary shadow-sm">Leagues</Link>
+                    <Link href={route('leaderboards.leagues')} className="rounded-full bg-gradient-to-br from-primary to-primary-container px-4 py-1.5 text-on-primary shadow-sm">Tournaments</Link>
                 </div>
             </section>
 
@@ -174,7 +174,7 @@ export default function Leagues({
                                     league_id: value,
                                 }, { preserveState: true });
                             }}
-                            placeholder="Select a league"
+                            placeholder="Select a tournament"
                         />
                     </div>
                 )}

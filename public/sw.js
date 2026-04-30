@@ -9,6 +9,6 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-    const data = event.data?.json() ?? { title: 'JR Sports Club', body: 'You have a new update.' };
+    const data = event.data?.json() ?? { title: 'JR Sport Hub', body: 'You have a new update.' };
     event.waitUntil(self.registration.showNotification(data.title, { body: data.body, icon: '/favicon.ico' }));
 });

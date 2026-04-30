@@ -39,17 +39,23 @@ export default function Index({
     const totalTeamCount = teams.length || allLeagues.reduce((count, league) => count + getLeagueEntrants(league), 0);
 
     return (
-        <JRClubLayout active="Leagues">
-            <Head title="Leagues" />
+        <JRClubLayout active="Tournaments">
+            <Head title="Tournaments" />
 
-            {/* Section: Dark Athletic Header Band */}
-            <section className="-mt-4 bg-inverse-surface" style={{ marginLeft: 'calc(50% - 50vw)', width: '100vw' }}>
-                <div className="mx-auto max-w-md px-4 pt-5 pb-0 md:max-w-7xl md:px-6 lg:px-8">
+            {/* Section: Athletic Header Band */}
+            <section className="relative -mt-4 overflow-hidden bg-inverse-surface" style={{ marginLeft: 'calc(50% - 50vw)', width: '100vw' }}>
+                <div
+                    className="absolute inset-0 bg-cover bg-center opacity-35"
+                    style={{ backgroundImage: "url('/images/hero-bg.png')" }}
+                    aria-hidden="true"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-inverse-surface/70 via-inverse-surface/55 to-inverse-surface/70" aria-hidden="true" />
+                <div className="relative mx-auto max-w-md px-4 pt-5 pb-0 md:max-w-7xl md:px-6 lg:px-8">
                     {/* Title row */}
                     <div className="flex items-start justify-between gap-6">
                         <div>
                             <p className="text-[0.6rem] font-bold uppercase tracking-widest text-inverse-on-surface/50">Competition Board · Season Live</p>
-                            <h1 className="mt-1 text-4xl font-black leading-none text-inverse-on-surface md:text-5xl">Leagues</h1>
+                            <h1 className="mt-1 text-4xl font-black leading-none text-inverse-on-surface md:text-5xl">Tournaments</h1>
                         </div>
                         <div className="hidden items-center gap-2 self-center rounded-xl bg-white/10 px-4 py-2.5 text-sm text-inverse-on-surface/60 md:flex">
                             <span className="material-symbols-outlined text-[16px]">search</span>
@@ -80,7 +86,7 @@ export default function Index({
                                     href={route('admin.leagues.index')}
                                     className="hidden rounded-full border border-white/20 px-5 py-2 text-sm font-bold text-inverse-on-surface/70 transition-colors hover:border-white/40 hover:text-inverse-on-surface lg:block"
                                 >
-                                    Manage Leagues
+                                    Manage Tournaments
                                 </Link>
                             </>
                         ) : null}
@@ -206,7 +212,7 @@ export default function Index({
                 <section className="mt-6">
                     <div className="mb-4 flex items-end justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <h2 className="text-lg font-black tracking-tight text-on-surface md:text-xl">Other Leagues</h2>
+                            <h2 className="text-lg font-black tracking-tight text-on-surface md:text-xl">Other Tournaments</h2>
                             <span className="inline-flex h-6 min-w-[1.75rem] items-center justify-center rounded-full bg-surface-container px-2 text-xs font-bold text-on-surface-variant">
                                 {remainingLeagues.length}
                             </span>
@@ -225,8 +231,8 @@ export default function Index({
                     <span className="material-symbols-outlined mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-low text-2xl text-on-surface-variant">
                         emoji_events
                     </span>
-                    <p className="mt-5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">No matching leagues</p>
-                    <h2 className="mx-auto mt-2 max-w-md text-2xl font-black tracking-normal text-on-surface">No leagues found for this sport and status.</h2>
+                    <p className="mt-5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">No matching tournaments</p>
+                    <h2 className="mx-auto mt-2 max-w-md text-2xl font-black tracking-normal text-on-surface">No tournaments found for this sport and status.</h2>
                     <p className="mx-auto mt-2 max-w-sm text-sm font-medium leading-6 text-on-surface-variant">Try a different sport or switch status tabs to see more competitions.</p>
                     {selectedSportId !== 'all' ? (
                         <button
@@ -357,7 +363,7 @@ function getLeagueEntrants(league: League) {
 function getLeagueFormat(league: League) {
     if (league.entry_type) return `${toTitle(league.entry_type)} Entry`;
     if (league.category) return league.category;
-    return 'League Play';
+    return 'Tournament Play';
 }
 
 function getStatusCopy(status: string) {
@@ -384,7 +390,7 @@ function getEntrantLabel(league: League) {
 function getLeagueFormatShort(league: League) {
     if (league.category) return league.category;
     if (league.entry_type) return toTitle(league.entry_type);
-    return 'League';
+    return 'Tournament';
 }
 
 function getDaysUntil(date: string) {

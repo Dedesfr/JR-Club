@@ -143,7 +143,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     };
 
     const groupedByStage = (league.matches ?? []).reduce((acc, match) => {
-        const stage = match.stage ?? 'League Match';
+        const stage = match.stage ?? 'Tournament Match';
 
         let key: string;
         if (['upper', 'lower', 'third_place', 'lower_third_place'].includes(stage)) {
@@ -175,7 +175,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
         return acc;
     }, {} as Record<string, GameMatch[]>);
 
-    const stageOrder = ['Group', 'League Match', 'Upper Bracket > Group', 'Upper Bracket > Semifinal', 'Upper Bracket > Final', 'Upper Bracket > Third Place', 'Lower Bracket > Group', 'Lower Bracket > Semifinal', 'Lower Bracket > Final', 'Lower Bracket > Third Place'];
+    const stageOrder = ['Group', 'Tournament Match', 'Upper Bracket > Group', 'Upper Bracket > Semifinal', 'Upper Bracket > Final', 'Upper Bracket > Third Place', 'Lower Bracket > Group', 'Lower Bracket > Semifinal', 'Lower Bracket > Final', 'Lower Bracket > Third Place'];
     const sortedByStage = Object.entries(groupedByStage).sort(([a], [b]) => {
         const idxA = stageOrder.indexOf(a);
         const idxB = stageOrder.indexOf(b);
