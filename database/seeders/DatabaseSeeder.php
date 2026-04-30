@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
 
         $members = collect([
             ['Budi Santoso', 'budi@jasaraharja.co.id', 'male'],
-            ['Siti Rahmawati', 'siti@jasaraharja.co.id', 'female'],
+            ['Ruri', 'ruri@jasaraharja.co.id', 'female'],
             ['Andi Wijaya', 'andi@jasaraharja.co.id', 'male'],
             ['Maya Putri', 'maya@jasaraharja.co.id', 'female'],
         ])->map(fn ($member) => User::factory()->create([
