@@ -68,6 +68,7 @@ class LeaderboardController extends Controller
 
         if ($leagueId) {
             $league = League::with([
+                'awards',
                 'teams', 
                 'matches.homeTeam', 
                 'matches.awayTeam',

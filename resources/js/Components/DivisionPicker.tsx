@@ -3,17 +3,24 @@ import DatePicker from '@/Components/DatePicker';
 import { router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function DivisionPicker({ leagueId, options, startDate, hasExistingGroups = false, hasExistingGroupMatches = false, groupLocked = false }: { leagueId: number; options: { group_count: number; group_size: number }[]; startDate?: string; hasExistingGroups?: boolean; hasExistingGroupMatches?: boolean; groupLocked?: boolean }) {
+type RoundSchedule = {
+    round: number;
+    scheduled_at: string;
+};
+
+export default function DivisionPicker({ leagueId, options, startDate, hasExistingGroups = false, hasExistingGroupMatches = false, groupLocked = false, initialGroupCount, initialInterval = 15, initialStartTime = '17:00', initialSchedule }: { leagueId: number; options: { group_count: number; group_size: number }[]; startDate?: string; hasExistingGroups?: boolean; hasExistingGroupMatches?: boolean; groupLocked?: boolean; initialGroupCount?: number; initialInterval?: number; initialStartTime?: string; initialSchedule?: RoundSchedule[] }) {
     const defaultOption = options[0];
-    const initialRounds = defaultOption ? Math.max(1, defaultOption.group_size) : 1;
+    const activeGroupCount = initialGroupCount ?? defaultOption?.group_count ?? 2;
+    const activeOption = options.find((option) => option.group_count === activeGroupCount) ?? defaultOption;
+    const initialRounds = Math.max(1, initialSchedule?.length ?? activeOption?.group_size ?? 1);
     
     const [rounds, setRounds] = useState(initialRounds);
 
     const { data, setData } = useForm({
-        group_count: defaultOption?.group_count ?? 2,
-        interval: 15,
-        start_time: '17:00',
-        schedule: buildWeeklySchedule(initialRounds, startDate),
+        group_count: activeGroupCount,
+        interval: initialInterval,
+        start_time: initialStartTime,
+        schedule: initialSchedule && initialSchedule.length > 0 ? initialSchedule : buildWeeklySchedule(initialRounds, startDate),
     });
 
     const divisionOptions = options.map((option) => ({
@@ -47,7 +54,16 @@ export default function DivisionPicker({ leagueId, options, startDate, hasExisti
             onSubmit={(event) => {
                 event.preventDefault();
 
+                const payload = {
+                    ...data,
+                    schedule: data.schedule.map((round) => ({
+                        ...round,
+                        scheduled_at: combineDateAndTime(round.scheduled_at, data.start_time),
+                    })),
+                };
+
                 if (groupLocked) {
+                    router.patch(route('admin.leagues.groups.schedule.update', leagueId), payload, { preserveScroll: true });
                     return;
                 }
 
@@ -55,19 +71,13 @@ export default function DivisionPicker({ leagueId, options, startDate, hasExisti
                     return;
                 }
 
-                router.post(route('admin.leagues.groups.store', leagueId), {
-                    ...data,
-                    schedule: data.schedule.map((round) => ({
-                        ...round,
-                        scheduled_at: combineDateAndTime(round.scheduled_at, data.start_time),
-                    })),
-                }, { preserveScroll: true });
+                router.post(route('admin.leagues.groups.store', leagueId), payload, { preserveScroll: true });
             }}
             className="flex flex-col gap-4 rounded-xl bg-surface-container-lowest p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]"
         >
             {groupLocked ? (
                 <div className="rounded-lg border border-outline-variant/20 bg-surface-container px-3 py-2 text-sm font-medium text-on-surface-variant">
-                    Groups are locked. Regeneration is disabled for this league.
+                    Groups are locked. Regeneration is disabled for this league, but you can still adjust the group match schedule here.
                 </div>
             ) : null}
 
@@ -78,6 +88,7 @@ export default function DivisionPicker({ leagueId, options, startDate, hasExisti
                         options={divisionOptions} 
                         value={String(data.group_count)} 
                         onChange={handleOptionChange} 
+                        disabled={groupLocked}
                     />
                 </label>
                 <label className="grid w-32 shrink-0 gap-2 text-sm font-medium text-on-surface">
@@ -99,8 +110,8 @@ export default function DivisionPicker({ leagueId, options, startDate, hasExisti
                         className="rounded-lg border-0 bg-surface-container-low px-3 py-2 focus:ring-2 focus:ring-primary text-sm transition-colors text-on-surface h-[42px]"
                     />
                 </label>
-                <button disabled={groupLocked} className="shrink-0 rounded-full bg-gradient-to-br from-primary to-primary-container px-6 h-[42px] text-[0.8125rem] font-bold uppercase tracking-widest text-on-primary shadow-sm hover:scale-[0.98] transition-all disabled:cursor-not-allowed disabled:opacity-50">
-                    {groupLocked ? 'Groups Locked' : 'Generate Groups'}
+                <button className="shrink-0 rounded-full bg-gradient-to-br from-primary to-primary-container px-6 h-[42px] text-[0.8125rem] font-bold uppercase tracking-widest text-on-primary shadow-sm hover:scale-[0.98] transition-all disabled:cursor-not-allowed disabled:opacity-50">
+                    {groupLocked ? 'Save Schedule' : 'Generate Groups'}
                 </button>
                 <button
                     type="button"

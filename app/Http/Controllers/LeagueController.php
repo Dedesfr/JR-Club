@@ -62,6 +62,7 @@ class LeagueController extends Controller
     {
         $league->load([
             'sport',
+            'awards',
             'teams',
             'entries.team',
             'entries.player1',

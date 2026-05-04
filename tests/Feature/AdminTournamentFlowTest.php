@@ -381,6 +381,75 @@ class AdminTournamentFlowTest extends TestCase
         $this->assertNotSame($firstAssignments, $secondAssignments);
     }
 
+    public function test_admin_can_update_group_schedule_after_groups_are_locked(): void
+    {
+        /** @var User $admin */
+        $admin = User::factory()->create(['role' => 'admin']);
+        $sport = Sport::create(['name' => 'Badminton', 'icon' => 'sports_tennis', 'max_players_per_team' => 2]);
+
+        $league = League::create([
+            'name' => 'JR Locked Schedule Cup',
+            'sport_id' => $sport->id,
+            'category' => 'MS',
+            'entry_type' => 'single',
+            'start_date' => now()->toDateString(),
+            'status' => 'upcoming',
+            'stage' => 'setup',
+            'start_stage' => 'group',
+            'participant_total' => 8,
+            'sets_to_win' => 1,
+            'points_per_set' => 21,
+            'created_by' => $admin->id,
+        ]);
+
+        foreach (range(1, 8) as $seed) {
+            $player = User::factory()->create([
+                'name' => "Locked Player {$seed}",
+                'email' => "locked{$seed}@example.com",
+                'gender' => 'male',
+            ]);
+
+            $this->actingAs($admin)->post(route('admin.leagues.entries.store', $league), [
+                'player1_id' => $player->id,
+            ])->assertRedirect();
+        }
+
+        $this->actingAs($admin)->post(route('admin.leagues.groups.store', $league), [
+            'group_count' => 2,
+            'interval' => 15,
+            'schedule' => [
+                ['round' => 1, 'scheduled_at' => '2026-05-10T17:00'],
+                ['round' => 2, 'scheduled_at' => '2026-05-17T17:00'],
+                ['round' => 3, 'scheduled_at' => '2026-05-24T17:00'],
+                ['round' => 4, 'scheduled_at' => '2026-05-31T17:00'],
+            ],
+        ])->assertRedirect();
+
+        $this->actingAs($admin)->post(route('admin.leagues.groups.lock', $league))->assertRedirect();
+
+        $this->actingAs($admin)->patch(route('admin.leagues.groups.schedule.update', $league), [
+            'interval' => 20,
+            'schedule' => [
+                ['round' => 1, 'scheduled_at' => '2026-06-01T18:30'],
+                ['round' => 2, 'scheduled_at' => '2026-06-08T18:30'],
+                ['round' => 3, 'scheduled_at' => '2026-06-15T18:30'],
+                ['round' => 4, 'scheduled_at' => '2026-06-22T18:30'],
+            ],
+        ])->assertRedirect();
+
+        $roundOneMatches = GameMatch::query()
+            ->where('league_id', $league->id)
+            ->where('stage', 'group')
+            ->where('round', 1)
+            ->orderBy('scheduled_at')
+            ->get();
+
+        $this->assertTrue($league->fresh()->group_locked);
+        $this->assertGreaterThan(1, $roundOneMatches->count());
+        $this->assertSame('2026-06-01 18:30:00', $roundOneMatches[0]->scheduled_at->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-06-01 18:50:00', $roundOneMatches[1]->scheduled_at->format('Y-m-d H:i:s'));
+    }
+
     public function test_admin_can_update_a_doubles_entry_and_replace_group_picture(): void
     {
         Storage::fake('public');

@@ -214,6 +214,23 @@ export default function Leagues({
                 </section>
             )}
 
+            {league?.awards && league.awards.length > 0 && (
+                <section className="mt-5">
+                    <div className="mb-2">
+                        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Awards · {league.awards.length}</p>
+                        <h3 className="mt-1 text-xl font-black text-on-surface">League honors</h3>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        {league.awards.map((award) => (
+                            <div key={award.id} className="rounded-xl bg-surface-container-lowest p-4 shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
+                                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-tertiary">{award.title}</p>
+                                <p className="mt-2 text-base font-black text-on-surface">{award.winner_label}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {/* Podium (completed) */}
             {showPodium && (
                 <section className="mt-5">

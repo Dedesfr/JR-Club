@@ -67,15 +67,19 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     const hasExistingGroupMatches = (league.matches ?? []).some((match) => match.stage === 'group');
     const hasExistingBracketMatches = (league.matches ?? []).some((match) => ['upper', 'lower', 'third_place', 'lower_third_place'].includes(match.stage ?? ''));
     const formatLabel = league.sport_category?.name ?? (league.category ? (categoryLabels[league.category] ?? league.category) : 'Team based');
-    const bracketSeedSize = startsFromBracket ? (league.participant_total || league.entries?.length || 0) : (league.advance_upper_count ?? 0);
+    const bracketGroupCount = Math.max(1, league.group_count ?? league.groups?.length ?? 0);
+    const upperBracketEntryCount = startsFromBracket ? (league.participant_total || league.entries?.length || 0) : bracketGroupCount * (league.advance_upper_count ?? 0);
+    const lowerBracketEntryCount = startsFromBracket ? 0 : bracketGroupCount * (league.advance_lower_count ?? 0);
+    const bracketSeedSize = upperBracketEntryCount;
     const bracketForm = useForm({
         advance_upper_count: startsFromBracket ? String(bracketSeedSize) : (league.advance_upper_count?.toString() ?? '0'),
         advance_lower_count: startsFromBracket ? '0' : (league.advance_lower_count?.toString() ?? '0'),
         interval: 15,
+        start_time: '17:00',
         schedule: Array.from({
             length: Math.max(
-                Math.ceil(Math.log2(Math.max(1, bracketSeedSize))),
-                Math.ceil(Math.log2(Math.max(1, startsFromBracket ? 0 : (league.advance_lower_count ?? 0))))
+                Math.ceil(Math.log2(Math.max(1, upperBracketEntryCount))),
+                Math.ceil(Math.log2(Math.max(1, lowerBracketEntryCount)))
             ) + 1
         }).map((_, i) => ({
             round: i + 1,
@@ -83,9 +87,11 @@ export default function Show({ league, users, teams, divisionOptions, standings,
         })),
     });
 
-    const calculateBracketRounds = (upper: number, lower: number) => {
-        const upperRounds = Math.ceil(Math.log2(Math.max(1, upper)));
-        const lowerRounds = Math.ceil(Math.log2(Math.max(1, lower)));
+    const calculateBracketRounds = (upperPerGroup: number, lowerPerGroup: number) => {
+        const upperEntrants = startsFromBracket ? upperPerGroup : bracketGroupCount * upperPerGroup;
+        const lowerEntrants = startsFromBracket ? lowerPerGroup : bracketGroupCount * lowerPerGroup;
+        const upperRounds = Math.ceil(Math.log2(Math.max(1, upperEntrants)));
+        const lowerRounds = Math.ceil(Math.log2(Math.max(1, lowerEntrants)));
         const maxMainRounds = Math.max(upperRounds, lowerRounds);
         return maxMainRounds > 0 ? maxMainRounds + 1 : 0; // +1 for the third place match round
     };
@@ -125,6 +131,24 @@ export default function Show({ league, users, teams, divisionOptions, standings,
             newSchedule[index].scheduled_at = dateStr;
             bracketForm.setData('schedule', newSchedule);
         }
+    };
+
+    const bracketRoundLabel = (roundIndex: number, totalRounds: number) => {
+        if (roundIndex === totalRounds - 1) {
+            return 'Third Place';
+        }
+
+        const mainRounds = totalRounds - 1;
+
+        if (roundIndex === mainRounds - 1) {
+            return 'Final';
+        }
+
+        if (roundIndex === mainRounds - 2) {
+            return 'Semifinal';
+        }
+
+        return `Round ${roundIndex + 1}`;
     };
 
     const groupedByStage = (league.matches ?? []).reduce((acc, match) => {
@@ -232,6 +256,15 @@ export default function Show({ league, users, teams, divisionOptions, standings,
         return `${date.toLocaleDateString([], { dateStyle: 'short' })}, ${time}`;
     };
 
+    const getPlayerNames = (match: GameMatch, side: 'home' | 'away'): string | null => {
+        const entry = side === 'home' ? match.home_entry : match.away_entry;
+        if (entry?.players?.length) {
+            return entry.players.map((p) => p.name).join(', ');
+        }
+        const names = [entry?.player1?.name, entry?.player2?.name].filter(Boolean);
+        return names.length > 0 ? names.join(', ') : null;
+    };
+
     const groupMatchesByDate = (matches: GameMatch[]) => {
         return matches.reduce((acc, match) => {
             const date = scheduledDateKey(match.scheduled_at);
@@ -250,6 +283,43 @@ export default function Show({ league, users, teams, divisionOptions, standings,
             return (parseDateKey(dateA)?.getTime() ?? 0) - (parseDateKey(dateB)?.getTime() ?? 0);
         });
     };
+
+    const groupMatches = (league.matches ?? []).filter((match) => match.stage === 'group' && match.round != null);
+    const groupMatchesByRound = groupMatches.reduce((acc, match) => {
+        const round = match.round as number;
+        if (!acc[round]) {
+            acc[round] = [];
+        }
+        acc[round].push(match);
+        return acc;
+    }, {} as Record<number, GameMatch[]>);
+    const initialGroupRounds = Math.max(league.group_size ?? 0, ...Object.keys(groupMatchesByRound).map(Number), 1);
+    const initialGroupSchedule = Array.from({ length: initialGroupRounds }).map((_, index) => {
+        const round = index + 1;
+        const firstMatch = (groupMatchesByRound[round] ?? [])
+            .slice()
+            .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
+
+        return {
+            round,
+            scheduled_at: firstMatch?.scheduled_at?.slice(0, 10) ?? league.start_date,
+        };
+    });
+    const initialGroupStartTime = groupMatches
+        .slice()
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0]
+        ?.scheduled_at?.slice(11, 16) ?? '17:00';
+    const initialGroupInterval = Object.values(groupMatchesByRound)
+        .map((matches) => matches.slice().sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()))
+        .find((matches) => matches.length > 1)
+        ?.slice(0, 2)
+        .reduce((interval, match, index, matches) => {
+            if (index === 0 || matches.length < 2) {
+                return interval;
+            }
+
+            return Math.max(0, Math.round((new Date(match.scheduled_at).getTime() - new Date(matches[0].scheduled_at).getTime()) / 60000));
+        }, 15) ?? 15;
 
     return (
         <AdminLayout title={league.name}>
@@ -322,7 +392,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                 <EmptyState text="This league starts from the bracket, so group generation is skipped. Complete participants, then seed brackets from the Bracket tab." />
                             ) : (
                                 <>
-                                    {divisionOptions.length > 0 ? <DivisionPicker leagueId={league.id} options={divisionOptions} startDate={league.start_date} hasExistingGroups={hasExistingGroups} hasExistingGroupMatches={hasExistingGroupMatches} groupLocked={league.group_locked ?? false} /> : null}
+                                    {divisionOptions.length > 0 ? <DivisionPicker leagueId={league.id} options={divisionOptions} startDate={league.start_date} hasExistingGroups={hasExistingGroups} hasExistingGroupMatches={hasExistingGroupMatches} groupLocked={league.group_locked ?? false} initialGroupCount={league.group_count ?? undefined} initialInterval={initialGroupInterval} initialStartTime={initialGroupStartTime} initialSchedule={initialGroupSchedule} /> : null}
                                     {standings.length > 0 ? <GroupTable leagueId={league.id} standings={standings} /> : <EmptyState text="Generate groups after the entry list reaches the participant total." />}
                                 </>
                             )}
@@ -340,6 +410,13 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                             return;
                                         }
 
+                                        bracketForm.transform((data) => ({
+                                            ...data,
+                                            schedule: data.schedule.map((round) => ({
+                                                ...round,
+                                                scheduled_at: `${round.scheduled_at}T${data.start_time || '00:00'}`,
+                                            })),
+                                        }));
                                         bracketForm.post(route('admin.leagues.brackets.store', league.id), { preserveScroll: true });
                                     }} className="flex flex-col gap-4 rounded-xl bg-surface-container-lowest p-6 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
                                         <div className="flex flex-col md:flex-row gap-4 md:items-end">
@@ -348,6 +425,9 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                             </Field>
                                             <Field label="Lower advances">
                                                 <input type="number" min={0} value={bracketForm.data.advance_lower_count} onChange={(event) => handleBracketAdvanceChange('advance_lower_count', event.target.value)} className="w-full md:w-32 bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface text-sm" />
+                                            </Field>
+                                            <Field label="Start time">
+                                                <input type="time" value={bracketForm.data.start_time} onChange={(event) => bracketForm.setData('start_time', event.target.value)} className="w-full md:w-28 bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface text-sm" />
                                             </Field>
                                             <Field label="Interval (min)">
                                                 <input type="number" min={0} value={bracketForm.data.interval} onChange={(event) => bracketForm.setData('interval', Number(event.target.value))} className="w-full md:w-24 bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface text-sm" />
@@ -364,12 +444,11 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                                     {Array.from({ length: bracketRoundsCount }).map((_, i) => (
                                                         <label key={i} className="grid gap-1">
                                                             <span className="text-xs font-medium text-on-surface">
-                                                                {i === bracketRoundsCount - 2 ? 'Final' : i === bracketRoundsCount - 1 ? 'Third Place' : `Round ${i + 1}`}
-                                                            </span>
+                                                                 {bracketRoundLabel(i, bracketRoundsCount)}
+                                                             </span>
                                                             <DatePicker
                                                                 value={bracketForm.data.schedule[i]?.scheduled_at || ''}
                                                                 onChange={(val) => updateBracketRoundSchedule(i, val)}
-                                                                enableTime={true}
                                                             />
                                                         </label>
                                                     ))}
@@ -479,6 +558,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                                                     {/* Home Player */}
                                                                     <div className="flex-1 text-right pr-3">
                                                                         <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.home_label ?? 'TBC'}</span>
+                                                                        {getPlayerNames(match, 'home') && <span className="text-[0.625rem] text-on-surface-variant/70 leading-tight block">{getPlayerNames(match, 'home')}</span>}
                                                                     </div>
 
                                                                     {/* Score - Compact inline */}
@@ -491,6 +571,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                                                     {/* Away Player */}
                                                                     <div className="flex-1 text-left pl-3">
                                                                         <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.away_label ?? 'TBC'}</span>
+                                                                        {getPlayerNames(match, 'away') && <span className="text-[0.625rem] text-on-surface-variant/70 leading-tight block">{getPlayerNames(match, 'away')}</span>}
                                                                     </div>
 
                                                                     {/* Sets - inline */}
@@ -545,10 +626,16 @@ export default function Show({ league, users, teams, divisionOptions, standings,
 
                                                                     {/* Middle: Matchup + Score */}
                                                                     <div className="flex items-center justify-between gap-2 mb-3">
-                                                                        <div className="flex-1 text-right">
-                                                                            <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.home_label ?? 'TBC'}</span>
-                                                                            <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.away_label ?? 'TBC'}</span>
-                                                                        </div>
+                                                                         <div className="flex-1 text-right">
+                                                                             <div>
+                                                                                 <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.home_label ?? 'TBC'}</span>
+                                                                                 {getPlayerNames(match, 'home') && <span className="text-[0.625rem] text-on-surface-variant/70 leading-tight block">{getPlayerNames(match, 'home')}</span>}
+                                                                             </div>
+                                                                             <div className="mt-1">
+                                                                                 <span className={`font-semibold text-sm leading-tight block ${isUpcoming ? 'text-on-surface-variant' : 'text-on-surface'}`}>{match.away_label ?? 'TBC'}</span>
+                                                                                 {getPlayerNames(match, 'away') && <span className="text-[0.625rem] text-on-surface-variant/70 leading-tight block">{getPlayerNames(match, 'away')}</span>}
+                                                                             </div>
+                                                                         </div>
                                                                         <div className={`flex items-center gap-1.5 px-2 py-1 rounded ${isLive ? 'bg-primary text-on-primary' : isUpcoming ? 'bg-surface-container-low border border-outline-variant/20 text-on-surface-variant' : 'bg-surface-container text-on-surface'}`}>
                                                                             <span className="text-xl font-black tracking-[-0.02em] leading-none">{isUpcoming ? '-' : match.home_score}</span>
                                                                             <span className={`font-bold text-sm leading-none ${isLive ? 'text-on-primary/60' : 'text-outline-variant'}`}>-</span>
@@ -567,8 +654,8 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                                                         </div>
                                                                     )}
 
-                                                                    {/* Bottom: Action */}
-                                                                    <div className="flex items-center justify-center pt-2 border-t border-outline-variant/10">
+                                                                     {/* Bottom: Action */}
+                                                                     <div className="flex items-center justify-center pt-2 border-t border-outline-variant/10">
                                                                         {usesTournamentEntries ? (
                                                                             <SetScoreEntry matchId={match.id} label="Record Set" homeLabel={match.home_label} awayLabel={match.away_label} />
                                                                         ) : (

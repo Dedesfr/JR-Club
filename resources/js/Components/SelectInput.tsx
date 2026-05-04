@@ -17,13 +17,13 @@ export const selectInputStyles: StylesConfig<SelectOption, false> = {
     }),
     menu: (base) => ({
         ...base,
-        zIndex: 30,
+        zIndex: 9999,
         borderRadius: '12px',
         overflow: 'hidden',
     }),
     menuPortal: (base) => ({
         ...base,
-        zIndex: 30,
+        zIndex: 9999,
     }),
 };
 
@@ -33,17 +33,20 @@ export default function SelectInput({
     onChange,
     placeholder = 'Select option',
     isClearable = false,
+    disabled = false,
 }: {
     options: SelectOption[];
     value: string | number | null | undefined;
     onChange: (value: string) => void;
     placeholder?: string;
     isClearable?: boolean;
+    disabled?: boolean;
 }) {
     const selected = options.find((option) => option.value === String(value ?? '')) ?? null;
 
     return (
         <ReactSelect<SelectOption, false>
+            isDisabled={disabled}
             isClearable={isClearable}
             options={options}
             value={selected}

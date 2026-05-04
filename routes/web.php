@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/leagues/{league}/entries/{entry}', [AdminLeagueEntryController::class, 'destroy'])->name('leagues.entries.destroy');
         Route::post('/leagues/{league}/groups', [AdminLeagueGroupController::class, 'store'])->name('leagues.groups.store');
         Route::post('/leagues/{league}/groups/lock', [AdminLeagueGroupController::class, 'lock'])->name('leagues.groups.lock');
+        Route::patch('/leagues/{league}/groups/schedule', [AdminLeagueGroupController::class, 'updateSchedule'])->name('leagues.groups.schedule.update');
         Route::patch('/leagues/{league}/groups/{groupEntry}', [AdminLeagueGroupController::class, 'update'])->name('leagues.groups.update');
         Route::post('/leagues/{league}/brackets', [AdminLeagueBracketController::class, 'store'])->name('leagues.brackets.store');
         Route::post('/leagues/{league}/bracket/adjust', [AdminLeagueBracketController::class, 'adjust'])->name('leagues.brackets.adjust');

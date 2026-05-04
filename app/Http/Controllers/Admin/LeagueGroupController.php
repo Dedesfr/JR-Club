@@ -62,6 +62,25 @@ class LeagueGroupController extends Controller
         return back()->with('success', 'Groups locked.');
     }
 
+    public function updateSchedule(Request $request, League $league, LeagueFormatService $leagueFormatService): RedirectResponse
+    {
+        $validated = $request->validate([
+            'interval' => ['required', 'integer', 'min:0'],
+            'schedule' => ['required', 'array', 'min:1'],
+            'schedule.*.round' => ['required', 'integer', 'min:1'],
+            'schedule.*.scheduled_at' => ['required', 'date'],
+        ]);
+
+        if (! $league->matches()->where('stage', 'group')->exists()) {
+            throw ValidationException::withMessages(['schedule' => 'Generate group matches before updating their schedule.']);
+        }
+
+        $scheduleMap = collect($validated['schedule'])->keyBy('round')->map->scheduled_at;
+        $leagueFormatService->updateGroupMatchSchedule($league->fresh(), $scheduleMap, (int) $validated['interval']);
+
+        return back()->with('success', 'Group match schedule updated.');
+    }
+
     public function update(Request $request, League $league, LeagueGroupEntry $groupEntry): RedirectResponse
     {
         abort_unless($groupEntry->group->league_id === $league->id, 404);
