@@ -13,9 +13,16 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return Inertia::render('Admin/Users/Index', ['users' => User::orderBy('name')->paginate(10)]);
+        $search = $request->string('search')->trim();
+
+        return Inertia::render('Admin/Users/Index', [
+            'users' => User::when($search, fn ($q) => $q->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%");
+            }))->orderBy('name')->paginate(10)->withQueryString(),
+            'search' => $search->toString(),
+        ]);
     }
 
     public function create(): Response

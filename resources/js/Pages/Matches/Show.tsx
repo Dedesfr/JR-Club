@@ -392,7 +392,9 @@ function InfoRow({ icon, label, title, detail }: { icon: string; label: string; 
 }
 
 function RosterBlock({ label, entry, subs }: { label: string; entry?: GameMatch['home_entry']; subs: NonNullable<GameMatch['substitutions']> }) {
-    const players = [entry?.player1, entry?.player2].filter(Boolean) as { id: number; name: string }[];
+    const players = ((entry?.players ?? []).length > 0
+        ? entry?.players
+        : [entry?.player1, entry?.player2].filter(Boolean)) as { id: number; name: string }[];
     return (
         <div>
             <p className="mb-3 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">{label}</p>
@@ -402,7 +404,7 @@ function RosterBlock({ label, entry, subs }: { label: string; entry?: GameMatch[
                 ))}
                 {subs.map((sub) => {
                     const subPlayer = entry?.substitutes?.find((p) => p.id === sub.substitute_id);
-                    const original = [entry?.player1, entry?.player2].find((p) => p?.id === sub.original_player_id);
+                    const original = players.find((p) => p.id === sub.original_player_id);
                     if (!subPlayer) return null;
                     return (
                         <PlayerRow

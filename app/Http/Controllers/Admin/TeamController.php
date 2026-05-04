@@ -12,10 +12,17 @@ use Inertia\Response;
 
 class TeamController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->string('search')->trim();
+
         return Inertia::render('Admin/Teams/Index', [
-            'teams' => Team::with('sport')->withCount('members')->orderBy('name')->paginate(10),
+            'teams' => Team::with('sport')->withCount('members')
+                ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                ->orderBy('name')
+                ->paginate(10)
+                ->withQueryString(),
+            'search' => $search->toString(),
         ]);
     }
 

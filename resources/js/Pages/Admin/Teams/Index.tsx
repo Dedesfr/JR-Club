@@ -2,8 +2,16 @@ import Pagination, { PaginatedResponse } from '@/Components/Pagination';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Team } from '@/types/jrclub';
+import { useCallback, useState } from 'react';
 
-export default function Index({ teams }: { teams: PaginatedResponse<Team & { members_count: number }> }) {
+export default function Index({ teams, search: initialSearch }: { teams: PaginatedResponse<Team & { members_count: number }>; search: string }) {
+    const [search, setSearch] = useState(initialSearch);
+
+    const handleSearch = useCallback((value: string) => {
+        setSearch(value);
+        router.get(route('admin.teams.index'), { search: value }, { preserveState: true, replace: true });
+    }, []);
+
     return (
         <AdminLayout
             title="Teams"
@@ -17,6 +25,15 @@ export default function Index({ teams }: { teams: PaginatedResponse<Team & { mem
             }
         >
             <Head title="Teams" />
+            <div className="mb-4">
+                <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    placeholder="Search teams…"
+                    className="w-full rounded-xl border border-outline-variant/30 bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+            </div>
             <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">

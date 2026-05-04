@@ -22,12 +22,21 @@ export default function SubstitutionModal({ match, onClose }: { match: GameMatch
     ];
 
     const selectedEntry = entries.find(e => e.id.toString() === form.data.entry_id);
+    const selectedEntryPlayers: { id: number; name: string }[] = (() => {
+        if (!selectedEntry) {
+            return [];
+        }
+
+        if ((selectedEntry.players ?? []).length > 0) {
+            return selectedEntry.players ?? [];
+        }
+
+        return [selectedEntry.player1, selectedEntry.player2].filter((player): player is { id: number; name: string } => Boolean(player));
+    })();
 
     const originalPlayerOptions = selectedEntry 
-        ? [
-            ...(selectedEntry.player1 ? [{ value: selectedEntry.player1.id.toString(), label: selectedEntry.player1.name }] : []),
-            ...(selectedEntry.player2 ? [{ value: selectedEntry.player2.id.toString(), label: selectedEntry.player2.name }] : []),
-        ] : [];
+        ? selectedEntryPlayers.map((player) => ({ value: player.id.toString(), label: player.name }))
+        : [];
 
     const substituteOptions = selectedEntry && selectedEntry.substitutes
         ? selectedEntry.substitutes.map(sub => ({ value: sub.id.toString(), label: sub.name }))

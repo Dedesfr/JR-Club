@@ -83,14 +83,14 @@ export default function ParticipantPicker({
 
         const cat = league.category;
         if (cat === 'MS' || cat === 'MD') {
-            pool = pool.filter((u) => u.gender === 'male');
+            pool = pool.filter((u) => u.gender === 'male' || u.gender == null);
         } else if (cat === 'WS' || cat === 'WD') {
-            pool = pool.filter((u) => u.gender === 'female');
+            pool = pool.filter((u) => u.gender === 'female' || u.gender == null);
         } else if (cat === 'XD') {
             const otherSlot = slotIndex === 0 ? form.data.player_ids[1] : form.data.player_ids[0];
             const otherPlayer = otherSlot ? activeUsers.find((u) => String(u.id) === otherSlot) : null;
             if (otherPlayer?.gender) {
-                pool = pool.filter((u) => u.gender && u.gender !== otherPlayer.gender);
+                pool = pool.filter((u) => !u.gender || u.gender !== otherPlayer.gender);
             }
         }
 
