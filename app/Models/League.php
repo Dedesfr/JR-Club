@@ -21,6 +21,7 @@ class League extends Model
         'category',
         'entry_type',
         'description',
+        'documentation_url',
         'start_date',
         'end_date',
         'status',
@@ -29,6 +30,7 @@ class League extends Model
         'participant_total',
         'group_count',
         'group_size',
+        'group_locked',
         'sets_to_win',
         'points_per_set',
         'advance_upper_count',
@@ -48,6 +50,7 @@ class League extends Model
             'participant_total' => 'integer',
             'group_count' => 'integer',
             'group_size' => 'integer',
+            'group_locked' => 'boolean',
             'sets_to_win' => 'integer',
             'points_per_set' => 'integer',
             'advance_upper_count' => 'integer',
@@ -95,6 +98,11 @@ class League extends Model
     public function groups()
     {
         return $this->hasMany(LeagueGroup::class);
+    }
+
+    public function awards()
+    {
+        return $this->hasMany(LeagueAward::class)->orderBy('sort_order')->orderBy('id');
     }
 
     public function upperChampion()

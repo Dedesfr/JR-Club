@@ -32,6 +32,13 @@ export type Activity = {
     participants_count?: number;
 };
 
+export type LeagueAward = {
+    id: number;
+    title: string;
+    winner_label: string;
+    sort_order?: number;
+};
+
 export type LeagueEntry = {
     id: number;
     label: string;
@@ -43,6 +50,7 @@ export type LeagueEntry = {
     player2?: { id: number; name: string; gender?: string | null } | null;
     substitute?: { id: number; name: string; gender?: string | null } | null;
     substitutes?: { id: number; name: string; gender?: string | null }[];
+    players?: { id: number; name: string; gender?: string | null }[];
 };
 
 export type MatchSet = {
@@ -71,6 +79,7 @@ export type LeagueStandingGroup = {
 export type Team = {
     id: number;
     name: string;
+    logo_path?: string | null;
     sport: Sport;
     members?: { id: number; name: string; email?: string; pivot?: { role: string } }[];
     members_count?: number;
@@ -81,6 +90,7 @@ export type League = {
     name: string;
     banner_url?: string | null;
     description?: string;
+    documentation_url?: string | null;
     status: string;
     stage?: string;
     start_stage?: 'group' | 'bracket';
@@ -92,11 +102,13 @@ export type League = {
     participant_total?: number | null;
     group_count?: number | null;
     group_size?: number | null;
+    group_locked?: boolean;
     sets_to_win?: number;
     points_per_set?: number;
     advance_upper_count?: number;
     advance_lower_count?: number;
     sport: Sport;
+    awards?: LeagueAward[];
     sport_category?: SportCategory | null;
     teams?: Team[];
     entries?: LeagueEntry[];

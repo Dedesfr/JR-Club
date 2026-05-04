@@ -19,7 +19,6 @@ export default function Create({ sports }: { sports: Sport[] }) {
         sport_category_id: initialCategory?.id ? String(initialCategory.id) : '',
         description: '',
         start_date: '',
-        end_date: '',
         status: 'upcoming',
         start_stage: 'group',
         participant_total: '8',
@@ -99,9 +98,6 @@ export default function Create({ sports }: { sports: Sport[] }) {
                     <div className="p-6 grid gap-6 md:grid-cols-3">
                         <Field label="Start date">
                             <DatePicker value={form.data.start_date} onChange={(value) => form.setData('start_date', value)} />
-                        </Field>
-                        <Field label="End date">
-                            <DatePicker value={form.data.end_date} onChange={(value) => form.setData('end_date', value)} />
                         </Field>
                         <Field label="Participant total">
                             <input type="number" min={2} value={form.data.participant_total} onChange={(event) => form.setData('participant_total', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" />

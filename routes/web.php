@@ -72,6 +72,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/leagues/{league}', [AdminLeagueController::class, 'show'])->name('leagues.show');
         Route::patch('/leagues/{league}', [AdminLeagueController::class, 'update'])->name('leagues.update');
         Route::delete('/leagues/{league}', [AdminLeagueController::class, 'destroy'])->name('leagues.destroy');
+        Route::post('/leagues/{league}/awards', [AdminLeagueController::class, 'storeAward'])->name('leagues.awards.store');
+        Route::delete('/leagues/{league}/awards/{award}', [AdminLeagueController::class, 'destroyAward'])->name('leagues.awards.destroy');
         Route::post('/leagues/{league}/teams', [AdminLeagueController::class, 'storeTeam'])->name('leagues.teams.store');
         Route::delete('/leagues/{league}/teams/{team}', [AdminLeagueController::class, 'destroyTeam'])->name('leagues.teams.destroy');
         
@@ -83,6 +85,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/leagues/{league}/entries/{entry}', [AdminLeagueEntryController::class, 'update'])->name('leagues.entries.update');
         Route::delete('/leagues/{league}/entries/{entry}', [AdminLeagueEntryController::class, 'destroy'])->name('leagues.entries.destroy');
         Route::post('/leagues/{league}/groups', [AdminLeagueGroupController::class, 'store'])->name('leagues.groups.store');
+        Route::post('/leagues/{league}/groups/lock', [AdminLeagueGroupController::class, 'lock'])->name('leagues.groups.lock');
         Route::patch('/leagues/{league}/groups/{groupEntry}', [AdminLeagueGroupController::class, 'update'])->name('leagues.groups.update');
         Route::post('/leagues/{league}/brackets', [AdminLeagueBracketController::class, 'store'])->name('leagues.brackets.store');
         Route::post('/leagues/{league}/bracket/adjust', [AdminLeagueBracketController::class, 'adjust'])->name('leagues.brackets.adjust');
@@ -107,6 +110,8 @@ Route::middleware('auth')->group(function () {
         Route::patch('/activities/{activity}', [AdminActivityController::class, 'update'])->name('activities.update');
 
         Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+        Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
         Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
         Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
 

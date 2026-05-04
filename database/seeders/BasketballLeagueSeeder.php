@@ -7,26 +7,19 @@ use App\Models\Sport;
 use App\Models\SportCategory;
 use App\Models\Team;
 use App\Models\User;
+use Database\Seeders\Concerns\UsesSeededRoster;
 use Illuminate\Database\Seeder;
 
 class BasketballLeagueSeeder extends Seeder
 {
+    use UsesSeededRoster;
+
     public function run(): void
     {
-        $admin = User::query()
-            ->where('role', 'admin')
-            ->firstOrCreate(
-                ['email' => 'admin@jasaraharja.co.id'],
-                [
-                    'name' => 'JR Club Admin',
-                    'password' => 'password',
-                    'role' => 'admin',
-                    'gender' => 'male',
-                ],
-            );
+        $admin = $this->seededAdmin();
 
-        $basketball = Sport::query()->firstOrCreate(
-            ['name' => 'Basketball'],
+        $basketball = $this->seededSport(
+            'Basketball',
             [
                 'icon' => 'sports_basketball',
                 'max_players_per_team' => 5,
@@ -44,9 +37,7 @@ class BasketballLeagueSeeder extends Seeder
             category: $threeVsThree,
             name: 'JR Basketball 3V3 Challenge',
             description: 'Fast-paced half-court basketball tournament for 3-player teams.',
-            teamNames: ['Divisi Asuransi', 'Divisi Pelayanan', 'Divisi Human Capital (HC)', 'Divisi Umum'],
             playersPerTeam: 3,
-            emailPrefix: 'basketball-3v3',
         );
     }
 
@@ -65,7 +56,7 @@ class BasketballLeagueSeeder extends Seeder
         );
     }
 
-    private function seedLeague(User $admin, Sport $sport, SportCategory $category, string $name, string $description, array $teamNames, int $playersPerTeam, string $emailPrefix): void
+    private function seedLeague(User $admin, Sport $sport, SportCategory $category, string $name, string $description, int $playersPerTeam): void
     {
         $league = League::query()->updateOrCreate(
             ['name' => $name],
@@ -80,7 +71,7 @@ class BasketballLeagueSeeder extends Seeder
                 'status' => 'upcoming',
                 'stage' => 'setup',
                 'start_stage' => 'group',
-                'participant_total' => count($teamNames),
+                'participant_total' => 4,
                 'sets_to_win' => 1,
                 'points_per_set' => 21,
                 'advance_upper_count' => 0,
@@ -94,25 +85,29 @@ class BasketballLeagueSeeder extends Seeder
         $league->teams()->detach();
         $league->entries()->delete();
 
-        $teams = collect($teamNames)->map(function (string $teamName, int $teamIndex) use ($admin, $sport, $playersPerTeam, $emailPrefix) {
-            $team = Team::query()->where('name', $teamName)->firstOrCreate(
-                ['name' => $teamName],
-                ['created_by' => $admin->id],
+        $sourceTeams = $this->seededBadmintonTeams(4);
+
+        if ($sourceTeams->count() < 4) {
+            throw new \RuntimeException('Expected at least 4 seeded badminton teams for basketball seeding.');
+        }
+
+        $teams = $sourceTeams->map(function (Team $sourceTeam) use ($admin, $sport, $playersPerTeam) {
+            $team = Team::query()->updateOrCreate(
+                ['name' => $sourceTeam->name, 'sport_id' => $sport->id],
+                [
+                    'created_by' => $admin->id,
+                    'logo_path' => $sourceTeam->logo_path,
+                ],
             );
 
-            $players = collect(range(1, $playersPerTeam))->map(function (int $playerNumber) use ($teamIndex, $teamName, $emailPrefix) {
-                $globalNumber = ($teamIndex * 10) + $playerNumber;
+            $players = $sourceTeam->members
+                ->filter(fn ($member) => $member->pivot?->role !== 'substitute')
+                ->take($playersPerTeam)
+                ->values();
 
-                return User::query()->updateOrCreate(
-                    ['email' => sprintf('%s-%02d@jasaraharja.co.id', $emailPrefix, $globalNumber)],
-                    [
-                        'name' => $teamName.' Player '.$playerNumber,
-                        'password' => 'password',
-                        'role' => 'member',
-                        'gender' => $playerNumber % 2 === 0 ? 'female' : 'male',
-                    ],
-                );
-            });
+            if ($players->count() < $playersPerTeam) {
+                throw new \RuntimeException("Team {$sourceTeam->name} does not have enough seeded members for basketball seeding.");
+            }
 
             $team->members()->sync($players->mapWithKeys(fn (User $player, int $index) => [
                 $player->id => [

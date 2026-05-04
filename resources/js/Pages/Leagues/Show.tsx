@@ -1,12 +1,24 @@
 import BracketTree from '@/Components/BracketTree';
 import JRClubLayout from '@/Layouts/JRClubLayout';
-import { GameMatch, League, LeagueGroupStanding, LeagueStandingGroup, Standing } from '@/types/jrclub';
+import { formatJakartaDate, formatJakartaDateTime, getJakartaDateKey } from '@/lib/datetime';
+import { GameMatch, League, LeagueEntry, LeagueGroupStanding, LeagueStandingGroup, Standing, Team } from '@/types/jrclub';
 import { Head, Link } from '@inertiajs/react';
 import React, { useMemo, useState } from 'react';
 
 function fallbackIcon(id?: number): string {
     if (!id) return `/images/icon-1.jpeg`;
     return `/images/icon-${((id - 1) % 7) + 1}.jpeg`;
+}
+
+function resolveEntryImage(entry?: LeagueEntry | null): string | undefined {
+    if (!entry) return undefined;
+    if (entry.group_picture_path) return `/storage/${entry.group_picture_path}`;
+    if (entry.team?.logo_path) return entry.team.logo_path;
+    return undefined;
+}
+
+function resolveTeamImage(team?: Team | null): string | undefined {
+    return team?.logo_path || undefined;
 }
 
 const sportImages: Record<string, string> = {
@@ -33,6 +45,12 @@ export default function Show({
     const startDate = formatDate(league.start_date);
     const endDate = league.end_date ? formatDate(league.end_date) : 'TBD';
     const entrants = getLeagueEntrants(league);
+    const startsFromBracket = (league.start_stage ?? 'group') === 'bracket';
+    const hasUpperBracket = upperBracket.length > 0;
+    const hasLowerBracket = lowerBracket.length > 0;
+    const hasBracketSection = startsFromBracket || hasUpperBracket || hasLowerBracket;
+    const showTeamParticipants = (league.teams?.length ?? 0) > 0 && (league.entry_type === 'team' || (league.entries?.length ?? 0) === 0);
+    const showEntryParticipants = (league.entries?.length ?? 0) > 0 && league.entry_type !== 'team';
 
     const scheduleOptions = useMemo(() => {
         const dates = allMatches
@@ -42,7 +60,7 @@ export default function Show({
                 const value = toDateValue(date);
                 return {
                     value,
-                    label: new Date(date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' }),
+                    label: formatJakartaDate(date, { day: '2-digit' }),
                 };
             });
 
@@ -116,7 +134,7 @@ export default function Show({
                         <DetailTab label="Overview" active />
                         <DetailTab label="Schedule" />
                         <DetailTab label="Standings" />
-                        {(upperBracket.length > 0 || lowerBracket.length > 0) ? <DetailTab label="Brackets" /> : null}
+                        {hasBracketSection ? <DetailTab label="Brackets" /> : null}
                     </div>
                 </div>
             </section>
@@ -161,6 +179,20 @@ export default function Show({
                 </div>
             </section>
 
+            {league.awards && league.awards.length > 0 ? (
+                <section className="mt-6">
+                    <SectionHeader eyebrow={`Awards · ${league.awards.length}`} title="League honors" />
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        {league.awards.map((award) => (
+                            <div key={award.id} className="rounded-xl bg-surface-container-lowest p-4 shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
+                                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-tertiary">{award.title}</p>
+                                <p className="mt-2 text-base font-black text-on-surface">{award.winner_label}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            ) : null}
+
             {scheduleOptions.length > 0 ? (
                 <section className="mt-6">
                     <SectionHeader eyebrow="Schedule" title="Match board" />
@@ -196,46 +228,49 @@ export default function Show({
                 </section>
             ) : null}
 
-            <section className="mt-6">
-                <SectionHeader eyebrow="Current Standings" title="Competition table" action={<Link href={route('leaderboards.index')} className="text-sm font-bold text-primary">View full leaderboard</Link>} />
-                {standings.length === 0 ? (
-                    <EmptyPanel message="No standings available yet." />
-                ) : league.category ? (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {(standings as LeagueStandingGroup[]).map((group) => (
-                            <GroupStanding key={group.group} group={group} advanceCount={league.advance_upper_count ?? 0} />
-                        ))}
-                    </div>
-                ) : (
-                    <TeamStandings standings={standings as Standing[]} />
-                )}
-            </section>
+            {!startsFromBracket ? (
+                <section className="mt-6">
+                    <SectionHeader eyebrow="Current Standings" title="Competition table" action={<Link href={route('leaderboards.index')} className="text-sm font-bold text-primary">View full leaderboard</Link>} />
+                    {standings.length === 0 ? (
+                        <EmptyPanel message="No standings available yet." />
+                    ) : league.category ? (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            {(standings as LeagueStandingGroup[]).map((group) => (
+                                <GroupStanding key={group.group} group={group} advanceCount={league.advance_upper_count ?? 0} />
+                            ))}
+                        </div>
+                    ) : (
+                        <TeamStandings standings={standings as Standing[]} />
+                    )}
+                </section>
+            ) : null}
 
-            {(upperBracket.length > 0 || lowerBracket.length > 0) ? (
+            {hasBracketSection ? (
                 <section className="mt-6 space-y-4">
                     <SectionHeader eyebrow="Brackets" title="Tournament path" />
-                    {upperBracket.length > 0 ? <BracketTree league={league} title="Upper Bracket" rounds={upperBracket} thirdPlaceMatch={league.third_place_match} champion={league.upper_champion} readOnly /> : null}
-                    {lowerBracket.length > 0 ? <BracketTree league={league} title="Lower Bracket" rounds={lowerBracket} thirdPlaceMatch={league.lower_third_place_match} champion={league.lower_champion} readOnly /> : null}
+                    {hasUpperBracket ? <BracketTree league={league} title={hasLowerBracket ? 'Upper Bracket' : 'Bracket'} rounds={upperBracket} thirdPlaceMatch={league.third_place_match} champion={league.upper_champion} readOnly /> : null}
+                    {hasLowerBracket ? <BracketTree league={league} title={hasUpperBracket ? 'Lower Bracket' : 'Bracket'} rounds={lowerBracket} thirdPlaceMatch={league.lower_third_place_match} champion={league.lower_champion} readOnly /> : null}
+                    {!hasUpperBracket && !hasLowerBracket ? <EmptyPanel message="Bracket slots will appear after the tournament bracket is seeded." /> : null}
                 </section>
             ) : null}
 
-            {league.teams && league.teams.length > 0 ? (
+            {showTeamParticipants ? (
                 <section className="mt-6 pb-8">
-                    <SectionHeader eyebrow={`Teams · ${league.teams.length}`} title="Participating teams" />
+                    <SectionHeader eyebrow={`Teams · ${league.teams?.length ?? 0}`} title="Participating teams" />
                     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                        {league.teams.map((team) => (
-                            <ParticipantCard key={team.id} id={team.id} label={team.name} />
+                        {league.teams?.map((team) => (
+                            <ParticipantCard key={team.id} id={team.id} label={team.name} imageSrc={resolveTeamImage(team)} />
                         ))}
                     </div>
                 </section>
             ) : null}
 
-            {league.entries && league.entries.length > 0 ? (
+            {showEntryParticipants ? (
                 <section className="mt-6 pb-8">
-                    <SectionHeader eyebrow={`Entries · ${league.entries.length}`} title="Participating entries" />
+                    <SectionHeader eyebrow={`Entries · ${league.entries?.length ?? 0}`} title="Participating entries" />
                     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                        {league.entries.map((entry) => (
-                            <ParticipantCard key={entry.id} id={entry.id} label={entry.label} imagePath={entry.group_picture_path} />
+                        {league.entries?.map((entry) => (
+                            <ParticipantCard key={entry.id} id={entry.id} label={entry.label} imageSrc={resolveEntryImage(entry)} />
                         ))}
                     </div>
                 </section>
@@ -290,7 +325,7 @@ function MatchCard({ match }: { match: GameMatch }) {
                 <span className={`rounded-full px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.04em] ${getMatchStatusBadge(match.status)}`}>{match.status}</span>
             </div>
             <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
-                <MatchSide label={match.home_label ?? 'TBC'} imagePath={match.home_entry?.group_picture_path} id={match.home_entry?.id} align="right" highlight={match.status === 'completed' && match.home_score > match.away_score} />
+                <MatchSide label={match.home_label ?? 'TBC'} imageSrc={resolveEntryImage(match.home_entry)} id={match.home_entry?.id} align="right" highlight={match.status === 'completed' && match.home_score > match.away_score} />
                 {match.status === 'completed' ? (
                     <div className="flex items-center gap-1.5 rounded-full bg-inverse-surface px-3 py-1 text-inverse-on-surface">
                         <span className={`text-sm font-black tabular-nums ${match.home_score > match.away_score ? '' : 'opacity-60'}`}>{match.home_score}</span>
@@ -300,17 +335,17 @@ function MatchCard({ match }: { match: GameMatch }) {
                 ) : (
                     <span className="rounded-full bg-inverse-surface px-3 py-1 text-xs font-black text-inverse-on-surface">VS</span>
                 )}
-                <MatchSide label={match.away_label ?? 'TBC'} imagePath={match.away_entry?.group_picture_path} id={match.away_entry?.id} highlight={match.status === 'completed' && match.away_score > match.home_score} />
+                <MatchSide label={match.away_label ?? 'TBC'} imageSrc={resolveEntryImage(match.away_entry)} id={match.away_entry?.id} highlight={match.status === 'completed' && match.away_score > match.home_score} />
             </div>
         </Link>
     );
 }
 
-function MatchSide({ label, imagePath, id, align = 'left', highlight = false }: { label: string; imagePath?: string | null; id?: number; align?: 'left' | 'right'; highlight?: boolean }) {
+function MatchSide({ label, imageSrc, id, align = 'left', highlight = false }: { label: string; imageSrc?: string; id?: number; align?: 'left' | 'right'; highlight?: boolean }) {
     return (
         <div className={`flex min-w-0 items-center gap-2 sm:gap-3 ${align === 'right' ? 'flex-row-reverse text-right' : ''}`}>
             <img
-                src={imagePath ? `/storage/${imagePath}` : fallbackIcon(id)}
+                src={imageSrc ?? fallbackIcon(id)}
                 alt={label}
                 className="h-10 w-10 shrink-0 rounded-full object-cover shadow-sm bg-surface-container-high sm:h-11 sm:w-11"
             />
@@ -337,7 +372,7 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
                     <div key={row.team.id} className={`flex items-center border-b border-outline-variant/10 px-3 py-2.5 text-sm last:border-b-0 ${isLeader ? 'border-l-2 border-l-primary bg-primary/5' : ''}`}>
                         <div className={`w-5 shrink-0 text-center ${isLeader ? 'font-black text-primary' : 'font-medium text-on-surface-variant'}`}>{index + 1}</div>
                         <div className="flex min-w-0 flex-grow items-center gap-2 pl-2">
-                            <img src={fallbackIcon(row.team.id)} alt={row.team.name} className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover shadow-sm" />
+                            <img src={resolveTeamImage(row.team) ?? fallbackIcon(row.team.id)} alt={row.team.name} className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover shadow-sm" />
                             <span className={`min-w-0 break-words leading-tight [overflow-wrap:anywhere] ${isLeader ? 'font-black text-on-surface' : 'font-semibold text-on-surface'}`}>{row.team.name}</span>
                         </div>
                         <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.played}</div>
@@ -382,7 +417,7 @@ function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; ad
                             <div className={`w-5 shrink-0 text-center ${advances ? 'font-black text-primary' : 'font-medium text-on-surface-variant'}`}>{index + 1}</div>
                             <div className="flex min-w-0 flex-grow items-center gap-2 pl-2">
                                 <img
-                                    src={row.entry.group_picture_path ? `/storage/${row.entry.group_picture_path}` : fallbackIcon(row.id)}
+                                    src={resolveEntryImage(row.entry) ?? fallbackIcon(row.id)}
                                     alt={row.entry.label}
                                     className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover shadow-sm"
                                 />
@@ -401,11 +436,11 @@ function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; ad
     );
 }
 
-function ParticipantCard({ label, imagePath, id }: { label: string; imagePath?: string | null; id?: number }) {
+function ParticipantCard({ label, imageSrc, id }: { label: string; imageSrc?: string; id?: number }) {
     return (
         <div className="flex items-center gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
             <img
-                src={imagePath ? `/storage/${imagePath}` : fallbackIcon(id)}
+                src={imageSrc ?? fallbackIcon(id)}
                 alt={label}
                 className="h-11 w-11 shrink-0 rounded-full object-cover bg-surface-container-high"
             />
@@ -440,6 +475,10 @@ function EmptyPanel({ message }: { message: string }) {
 }
 
 function getLeagueEntrants(league: League) {
+    if ((league.start_stage ?? 'group') === 'bracket' && league.participant_total) {
+        return league.participant_total;
+    }
+
     return league.teams?.length ?? league.entries?.length ?? league.participant_total ?? 0;
 }
 
@@ -474,18 +513,16 @@ function getSportImage(name?: string) {
 }
 
 function formatDate(date: string) {
-    return new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return formatJakartaDate(date);
 }
 
 function formatMatchDate(dateString: string) {
-    const date = new Date(dateString);
-    return `${date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} · ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    return formatJakartaDateTime(dateString).replace(' at ', ' · ');
 }
 
 function toDateValue(dateString?: string | null) {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return getJakartaDateKey(dateString);
 }
 
 function toTitle(value: string) {

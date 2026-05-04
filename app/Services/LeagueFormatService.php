@@ -324,7 +324,7 @@ class LeagueFormatService
         $this->recomputeGroupPoints($league);
 
         return $league->groups()
-            ->with(['groupEntries.entry.player1', 'groupEntries.entry.player2', 'groupEntries.entry.substitutes', 'matches.sets'])
+            ->with(['groupEntries.entry.team', 'groupEntries.entry.player1', 'groupEntries.entry.player2', 'groupEntries.entry.substitutes', 'matches.sets'])
             ->orderBy('position')
             ->get()
             ->map(function (LeagueGroup $group) {

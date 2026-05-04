@@ -14,7 +14,9 @@ class TeamController extends Controller
 {
     public function index(): Response
     {
-        return Inertia::render('Admin/Teams/Index', ['teams' => Team::with('sport')->withCount('members')->orderBy('name')->paginate(10)]);
+        return Inertia::render('Admin/Teams/Index', [
+            'teams' => Team::with('sport')->withCount('members')->orderBy('name')->paginate(10),
+        ]);
     }
 
     public function create(): Response

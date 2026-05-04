@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import ReactSelect, { MultiValue, SingleValue, StylesConfig } from 'react-select';
-import { League } from '@/types/jrclub';
+import { League, Team } from '@/types/jrclub';
 
 type UserOption = {
     id: number;
@@ -64,37 +64,75 @@ const selectStyles: StylesConfig<SelectOption, boolean> = {
 export default function EntryPicker({
     leagueId,
     users,
+    teams,
     category,
     entryType,
 }: {
     leagueId: number;
     users: UserOption[];
+    teams?: Team[];
     category: NonNullable<League['category']>;
     entryType?: League['entry_type'];
 }) {
     const allowsGroupPicture = ['MD', 'WD', 'XD'].includes(category);
     const form = useForm({ group_name: '', player1_id: '', player2_id: '', substitute_ids: [] as string[], group_picture: null as File | null });
-    const selectedPlayer1 = users.find((user) => String(user.id) === form.data.player1_id);
-    const player1Users = useMemo(() => filterUsersByCategory(users, category, 'player1'), [users, category]);
-    const player2Users = useMemo(() => filterUsersByCategory(users, category, 'player2', selectedPlayer1), [users, category, selectedPlayer1]);
+    const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+
+    const selectedTeam = teams?.find((t) => String(t.id) === selectedTeamId) ?? null;
+
+    const activeUsers = useMemo(() => {
+        if (!selectedTeam?.members) return users;
+        const memberIds = new Set(selectedTeam.members.map((m) => String(m.id)));
+        return users.filter((u) => memberIds.has(String(u.id)));
+    }, [users, selectedTeam]);
+
+    const selectedPlayer1 = activeUsers.find((user) => String(user.id) === form.data.player1_id);
+    const player1Users = useMemo(() => filterUsersByCategory(activeUsers, category, 'player1'), [activeUsers, category]);
+    const player2Users = useMemo(() => filterUsersByCategory(activeUsers, category, 'player2', selectedPlayer1), [activeUsers, category, selectedPlayer1]);
     const substituteUsers = useMemo(() => {
         const selectedPlayerIds = [form.data.player1_id, form.data.player2_id].filter(Boolean);
+        return filterUsersByCategory(activeUsers, category, 'substitute')
+            .filter((user) => !selectedPlayerIds.includes(String(user.id)));
+    }, [activeUsers, category, form.data.player1_id, form.data.player2_id]);
 
-        return filterUsersByCategory(users, category, 'substitute')
-            .filter((user) => ! selectedPlayerIds.includes(String(user.id)));
-    }, [users, category, form.data.player1_id, form.data.player2_id]);
+    const handleTeamChange = (value: string) => {
+        setSelectedTeamId(value);
+        const team = teams?.find((t) => String(t.id) === value) ?? null;
+        form.setData((data) => ({
+            ...data,
+            group_name: team?.name ?? '',
+            player1_id: '',
+            player2_id: '',
+            substitute_ids: [],
+        }));
+    };
 
     const submit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         form.post(route('admin.leagues.entries.store', leagueId), {
             preserveScroll: true,
-            onSuccess: () => form.reset('group_name', 'player1_id', 'player2_id', 'substitute_ids', 'group_picture'),
+            onSuccess: () => { form.reset('group_name', 'player1_id', 'player2_id', 'substitute_ids', 'group_picture'); setSelectedTeamId(''); },
         });
     };
+
+    const teamSelectOptions = (teams ?? []).map((t) => ({ value: String(t.id), label: t.name }));
 
     return (
         <form onSubmit={submit} className="rounded-xl bg-surface-container-lowest p-5 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
             <div className="grid gap-4 md:grid-cols-4 md:items-end">
+                {teams && teams.length > 0 ? (
+                    <label className="block md:col-span-4">
+                        <span className="block mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Team</span>
+                        <ReactSelect<SelectOption, false>
+                            isClearable
+                            options={teamSelectOptions}
+                            value={teamSelectOptions.find((o) => o.value === selectedTeamId) ?? null}
+                            onChange={(selected: SingleValue<SelectOption>) => handleTeamChange(selected?.value ?? '')}
+                            placeholder="Select team to filter players"
+                            styles={selectStyles as StylesConfig<SelectOption, false>}
+                        />
+                    </label>
+                ) : null}
                 {entryType === 'double' ? (
                     <label className="block md:col-span-4">
                         <span className="block mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Group name</span>

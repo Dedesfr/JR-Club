@@ -320,6 +320,67 @@ class AdminTournamentFlowTest extends TestCase
         $this->assertNull($firstRoundMatch->away_entry_id);
     }
 
+    public function test_regenerating_groups_reshuffles_group_assignments(): void
+    {
+        /** @var User $admin */
+        $admin = User::factory()->create(['role' => 'admin', 'gender' => 'male']);
+        $sport = Sport::create(['name' => 'Badminton', 'icon' => 'sports_tennis', 'max_players_per_team' => 2]);
+
+        $league = League::create([
+            'name' => 'JR Shuffle Cup',
+            'sport_id' => $sport->id,
+            'category' => 'MS',
+            'entry_type' => 'single',
+            'start_date' => now()->toDateString(),
+            'status' => 'upcoming',
+            'stage' => 'setup',
+            'start_stage' => 'group',
+            'participant_total' => 4,
+            'sets_to_win' => 1,
+            'points_per_set' => 21,
+            'created_by' => $admin->id,
+        ]);
+
+        foreach (range(1, 4) as $seed) {
+            $player = User::factory()->create([
+                'name' => "Shuffle Player {$seed}",
+                'email' => "shuffle{$seed}@example.com",
+                'gender' => 'male',
+            ]);
+
+            $this->actingAs($admin)->post(route('admin.leagues.entries.store', $league), [
+                'player1_id' => $player->id,
+            ])->assertRedirect();
+        }
+
+        $payload = [
+            'group_count' => 2,
+            'interval' => 15,
+        ];
+
+        $this->actingAs($admin)->post(route('admin.leagues.groups.store', $league), $payload)->assertRedirect();
+
+        $firstAssignments = $league->fresh()->groups()
+            ->with('entries')
+            ->orderBy('position')
+            ->get()
+            ->map(fn ($group) => $group->entries->pluck('id')->sort()->values()->all())
+            ->values()
+            ->all();
+
+        $this->actingAs($admin)->post(route('admin.leagues.groups.store', $league), $payload)->assertRedirect();
+
+        $secondAssignments = $league->fresh()->groups()
+            ->with('entries')
+            ->orderBy('position')
+            ->get()
+            ->map(fn ($group) => $group->entries->pluck('id')->sort()->values()->all())
+            ->values()
+            ->all();
+
+        $this->assertNotSame($firstAssignments, $secondAssignments);
+    }
+
     public function test_admin_can_update_a_doubles_entry_and_replace_group_picture(): void
     {
         Storage::fake('public');

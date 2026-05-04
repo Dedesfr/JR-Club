@@ -1,4 +1,5 @@
 import JRClubLayout from '@/Layouts/JRClubLayout';
+import { formatJakartaDateTime, formatJakartaTime, isSameJakartaDay } from '@/lib/datetime';
 import { PageProps } from '@/types';
 import { Activity } from '@/types/jrclub';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -12,11 +13,10 @@ export default function Show({ activity }: { activity: Activity }) {
     const isFull = activity.status === 'full' || spotsLeft === 0;
     const fillPercent = totalSlots > 0 ? Math.min(100, Math.round((slotsFilled / totalSlots) * 100)) : 0;
 
-    const date = new Date(activity.scheduled_at);
-    const isToday = date.toDateString() === new Date().toDateString();
+    const isToday = isSameJakartaDay(activity.scheduled_at, new Date());
     const displayDate = isToday
-        ? `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-        : `${date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        ? `Today, ${formatJakartaTime(activity.scheduled_at)}`
+        : formatJakartaDateTime(activity.scheduled_at).replace(' at ', ', ');
 
     const handleJoinLeave = () => {
         if (isParticipating) {

@@ -1,4 +1,5 @@
 import JRClubLayout from '@/Layouts/JRClubLayout';
+import { formatJakartaDate } from '@/lib/datetime';
 import { Activity, Team } from '@/types/jrclub';
 import { Head, Link, router } from '@inertiajs/react';
 
@@ -162,5 +163,5 @@ function Metric({ label, value, variant = 'avatars' }: { label: string; value: n
 }
 
 function formatDate(date: string) {
-    return new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    return formatJakartaDate(date, { year: 'numeric' });
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\LeagueAward;
 use App\Models\League;
 use App\Models\Sport;
 use App\Models\SportCategory;
@@ -72,11 +73,13 @@ class LeagueController extends Controller
         $league->load([
             'sport',
             'sportCategory',
+            'awards',
             'teams.members',
             'entries.player1',
             'entries.player2',
             'entries.substitute',
             'entries.substitutes',
+            'entries.players',
             'entries.team.members',
             'groups.groupEntries.entry.player1',
             'groups.groupEntries.entry.player2',
@@ -130,7 +133,7 @@ class LeagueController extends Controller
             'users' => User::query()->orderBy('name')->get(['id', 'name', 'email', 'gender', 'role']),
             'teams' => Team::query()
                 ->where('sport_id', $league->sport_id)
-                ->withCount('members')
+                ->with('members')
                 ->orderBy('name')
                 ->get(['id', 'name', 'sport_id']),
             'divisionOptions' => $league->participant_total ? app(LeagueFormatService::class)->divisionOptions($league->participant_total) : [],
@@ -145,6 +148,7 @@ class LeagueController extends Controller
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'documentation_url' => ['nullable', 'url', 'max:2048'],
             'start_date' => ['sometimes', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'status' => ['sometimes', 'in:upcoming,active,completed'],
@@ -176,6 +180,31 @@ class LeagueController extends Controller
         return redirect()->route('admin.leagues.index')->with('success', 'Tournament deleted.');
     }
 
+    public function storeAward(Request $request, League $league): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'winner_label' => ['required', 'string', 'max:255'],
+        ]);
+
+        $league->awards()->create([
+            'title' => $validated['title'],
+            'winner_label' => $validated['winner_label'],
+            'sort_order' => ((int) $league->awards()->max('sort_order')) + 1,
+        ]);
+
+        return back()->with('success', 'Award added.');
+    }
+
+    public function destroyAward(League $league, LeagueAward $award): RedirectResponse
+    {
+        abort_unless($award->league_id === $league->id, 404);
+
+        $award->delete();
+
+        return back()->with('success', 'Award removed.');
+    }
+
     public function storeTeam(Request $request, League $league): RedirectResponse
     {
         $validated = $request->validate([
@@ -188,7 +217,21 @@ class LeagueController extends Controller
         ]);
 
         if (! empty($validated['team_id'])) {
-            $team = Team::query()->findOrFail($validated['team_id']);
+            $team = Team::query()->with('members')->findOrFail($validated['team_id']);
+
+            $playerIds = collect($validated['player_ids'] ?? [])->filter()->values();
+            $requiredPlayers = $league->sportCategory?->player_count;
+
+            if ($playerIds->isNotEmpty()) {
+                if ($requiredPlayers !== null && $playerIds->count() !== $requiredPlayers) {
+                    return back()->withErrors(['player_ids' => "Select exactly {$requiredPlayers} players."]);
+                }
+
+                $memberIds = $team->members->pluck('id');
+                if ($playerIds->diff($memberIds)->isNotEmpty()) {
+                    return back()->withErrors(['player_ids' => 'All selected players must be members of the team.']);
+                }
+            }
         } else {
             $playerIds = collect($validated['player_ids'] ?? [])->filter()->values();
             $requiredPlayers = $league->sportCategory?->player_count;
@@ -234,14 +277,26 @@ class LeagueController extends Controller
         }
 
         $league->teams()->syncWithoutDetaching([$team->id => ['registered_at' => now()]]);
-        $league->entries()->updateOrCreate(
+
+        $playerIds = collect($validated['player_ids'] ?? [])->filter()->values();
+        $player1Id = $playerIds->first()
+            ?? $team->members()->wherePivot('role', '!=', 'substitute')->orderBy('users.id')->value('users.id')
+            ?? $request->user()->id;
+
+        $entry = $league->entries()->updateOrCreate(
             ['team_id' => $team->id],
             [
                 'group_name' => $team->name,
-                'player1_id' => $team->members()->wherePivot('role', '!=', 'substitute')->orderBy('users.id')->value('users.id') ?? $request->user()->id,
+                'player1_id' => $player1Id,
                 'seed' => (int) $league->entries()->max('seed') + 1,
             ],
         );
+
+        if ($playerIds->isNotEmpty()) {
+            $entry->players()->sync(
+                $playerIds->mapWithKeys(fn (int $id, int $index) => [$id => ['sort_order' => $index]])->all()
+            );
+        }
 
         return back()->with('success', 'Team registered.');
     }

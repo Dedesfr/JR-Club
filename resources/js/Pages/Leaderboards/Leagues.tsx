@@ -1,7 +1,7 @@
 import BracketTree from '@/Components/BracketTree';
 import SelectInput from '@/Components/SelectInput';
 import JRClubLayout from '@/Layouts/JRClubLayout';
-import { GameMatch, League, LeagueEntry, LeagueGroupStanding, LeagueStandingGroup, Sport, Standing } from '@/types/jrclub';
+import { GameMatch, League, LeagueEntry, LeagueGroupStanding, LeagueStandingGroup, Sport, Standing, Team } from '@/types/jrclub';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -9,6 +9,16 @@ type LeagueBrief = { id: number; name: string };
 
 function fallbackIcon(id: number): string {
     return `/images/icon-${((id - 1) % 7) + 1}.jpeg`;
+}
+
+function resolveEntryImage(entry?: LeagueEntry | null, fallbackId?: number): string {
+    if (entry?.group_picture_path) return `/storage/${entry.group_picture_path}`;
+    if (entry?.team?.logo_path) return entry.team.logo_path;
+    return fallbackIcon(fallbackId ?? entry?.id ?? 0);
+}
+
+function resolveTeamImage(team?: Team | null, fallbackId?: number): string {
+    return team?.logo_path || fallbackIcon(fallbackId ?? team?.id ?? 0);
 }
 
 function formatStatus(status?: string): { label: string; tone: 'completed' | 'active' | 'upcoming' } {
@@ -50,6 +60,7 @@ export default function Leagues({
     const isGroupStandings = standings.some((row) => 'group' in row);
     const hasUpperBracket = !!(upperBracket && upperBracket.length > 0);
     const hasLowerBracket = !!(lowerBracket && lowerBracket.length > 0);
+    const isBracketOnly = league?.start_stage === 'bracket';
     const status = formatStatus(league?.status);
     const isCompleted = status.tone === 'completed';
 
@@ -61,7 +72,7 @@ export default function Leagues({
     // Podium derivation (finalists + 3rd place)
     type Podiumist = { label: string; imageUrl: string };
     const entryIcon = (entry?: LeagueEntry | null, fallbackId?: number): string =>
-        entry?.group_picture_path ? `/storage/${entry.group_picture_path}` : fallbackIcon(fallbackId ?? entry?.id ?? 0);
+        resolveEntryImage(entry, fallbackId);
 
     let upperWinner: Podiumist | null = null;
     let upperRunnerUp: Podiumist | null = null;
@@ -69,7 +80,7 @@ export default function Leagues({
     let lowerWinner: Podiumist | null = null;
 
     if (league) {
-        if (isGroupStandings) {
+        if (isGroupStandings || isBracketOnly) {
             if (league.upper_champion) {
                 upperWinner = { label: league.upper_champion.label, imageUrl: entryIcon(league.upper_champion) };
                 if (hasUpperBracket) {
@@ -104,14 +115,14 @@ export default function Leagues({
             }
         } else {
             const teamStandings = standings as Standing[];
-            const toPodiumist = (row: Standing): Podiumist => ({ label: row.team.name, imageUrl: fallbackIcon(row.team.id) });
+            const toPodiumist = (row: Standing): Podiumist => ({ label: row.team.name, imageUrl: resolveTeamImage(row.team, row.team.id) });
             if (teamStandings.length > 0 && teamStandings[0].played > 0) upperWinner = toPodiumist(teamStandings[0]);
             if (teamStandings.length > 1 && teamStandings[1].played > 0) upperRunnerUp = toPodiumist(teamStandings[1]);
             if (teamStandings.length > 2 && teamStandings[2].played > 0) thirdPlace = toPodiumist(teamStandings[2]);
         }
     }
 
-    const showPodium = isCompleted && !!(upperWinner || upperRunnerUp);
+    const showPodium = (isCompleted && !!(upperWinner || upperRunnerUp)) || (isBracketOnly && hasUpperBracket);
 
     // Current leader (non-completed state)
     let currentLeader: { label: string; points: number } | null = null;
@@ -266,8 +277,8 @@ export default function Leagues({
                 </section>
             )}
 
-            {/* Standings */}
-            <section className="mb-8 mt-6">
+            {/* Standings — hidden for bracket-only leagues */}
+            {!isBracketOnly && <section className="mb-8 mt-6">
                 <div className="mb-3 flex items-end justify-between">
                     <h3 className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Standings</h3>
                     <div className="hidden gap-3 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant sm:flex">
@@ -294,7 +305,7 @@ export default function Leagues({
                         <TeamStandings standings={standings as Standing[]} />
                     </div>
                 )}
-            </section>
+            </section>}
 
             {/* Bracket (tabbed, collapsible) */}
             {league && (hasUpperBracket || hasLowerBracket) && (
@@ -439,7 +450,7 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
                     >
                         <div className={`w-6 text-center ${isLeader ? 'font-black text-primary' : 'font-medium text-on-surface-variant'}`}>{index + 1}</div>
                         <div className="flex flex-grow items-center gap-2 pl-2 min-w-0">
-                            <img src={fallbackIcon(row.team.id)} alt={row.team.name} className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover" />
+                            <img src={resolveTeamImage(row.team, row.team.id)} alt={row.team.name} className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover" />
                             <span className={`truncate ${isLeader ? 'font-black text-on-surface' : 'font-semibold text-on-surface'}`}>{row.team.name}</span>
                         </div>
                         <div className="w-7 text-center text-on-surface-variant">{row.played}</div>
@@ -486,7 +497,7 @@ function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; ad
                             <div className={`w-5 shrink-0 text-center ${advances ? 'font-black text-primary' : 'font-medium text-on-surface-variant'}`}>{index + 1}</div>
                             <div className="flex min-w-0 flex-grow items-center gap-2 pl-2">
                                 <img
-                                    src={row.entry.group_picture_path ? `/storage/${row.entry.group_picture_path}` : fallbackIcon(row.id)}
+                                    src={resolveEntryImage(row.entry, row.id)}
                                     alt={row.entry.label}
                                     className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover shadow-sm"
                                 />

@@ -21,6 +21,10 @@ export const selectInputStyles: StylesConfig<SelectOption, false> = {
         borderRadius: '12px',
         overflow: 'hidden',
     }),
+    menuPortal: (base) => ({
+        ...base,
+        zIndex: 30,
+    }),
 };
 
 export default function SelectInput({
@@ -46,6 +50,8 @@ export default function SelectInput({
             onChange={(option: SingleValue<SelectOption>) => onChange(option?.value ?? '')}
             placeholder={placeholder}
             styles={selectInputStyles}
+            menuPortalTarget={typeof document === 'undefined' ? undefined : document.body}
+            menuPosition="fixed"
         />
     );
 }

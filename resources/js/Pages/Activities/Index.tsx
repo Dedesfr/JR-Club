@@ -1,4 +1,5 @@
 import JRClubLayout from '@/Layouts/JRClubLayout';
+import { formatJakartaDate, formatJakartaDateTime } from '@/lib/datetime';
 import { PageProps } from '@/types';
 import { Activity, Sport } from '@/types/jrclub';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -41,7 +42,7 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
             <section className="relative -mt-4 overflow-hidden bg-inverse-surface" style={{ marginLeft: 'calc(50% - 50vw)', width: '100vw' }}>
                 <div
                     className="absolute inset-0 bg-cover bg-center opacity-35"
-                    style={{ backgroundImage: "url('/images/hero-bg.png')" }}
+                    style={{ backgroundImage: "url('/images/hero-bg.jpeg')" }}
                     aria-hidden="true"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-inverse-surface/70 via-inverse-surface/55 to-inverse-surface/70" aria-hidden="true" />
@@ -363,12 +364,11 @@ function getSportImage(name: string) {
 }
 
 function formatDateTime(value: string) {
-    const date = new Date(value);
-    return `${date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    return formatJakartaDateTime(value);
 }
 
 function formatShortDate(value: string) {
-    return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return formatJakartaDate(value);
 }
 
 function getWeekNumber(date: Date) {

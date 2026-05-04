@@ -53,6 +53,14 @@ class LeagueEntry extends Model
             ->withTimestamps();
     }
 
+    public function players()
+    {
+        return $this->belongsToMany(User::class, 'league_entry_players')
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order')
+            ->withTimestamps();
+    }
+
     public function groups()
     {
         return $this->belongsToMany(LeagueGroup::class, 'league_group_entries')

@@ -27,19 +27,6 @@ class DatabaseSeeder extends Seeder
             'gender' => 'male',
         ]);
 
-        $members = collect([
-            ['Budi Santoso', 'budi@jasaraharja.co.id', 'male'],
-            ['Ruri', 'ruri@jasaraharja.co.id', 'female'],
-            ['Andi Wijaya', 'andi@jasaraharja.co.id', 'male'],
-            ['Maya Putri', 'maya@jasaraharja.co.id', 'female'],
-        ])->map(fn ($member) => User::factory()->create([
-            'name' => $member[0],
-            'email' => $member[1],
-            'password' => 'password',
-            'role' => 'member',
-            'gender' => $member[2],
-        ]));
-
         $sports = collect([
             ['Padel', 'sports_tennis', 2, 'Fast doubles sessions after work.'],
             ['Basketball', 'sports_basketball', 5, 'Indoor half-court and tournament games.'],
@@ -55,6 +42,13 @@ class DatabaseSeeder extends Seeder
 
         $this->seedSportCategories($sports);
 
+        $this->call(TeamSeeder::class);
+
+        $members = User::query()
+            ->where('role', 'member')
+            ->orderBy('id')
+            ->get();
+
         Activity::create([
             'sport_id' => $sports->firstWhere('name', 'Badminton')->id,
             'created_by' => $admin->id,
@@ -63,7 +57,7 @@ class DatabaseSeeder extends Seeder
             'location' => 'Grand Sport Centre, Kuningan',
             'scheduled_at' => now()->next(Carbon::THURSDAY)->setTime(17, 0),
             'max_participants' => 12,
-        ])->participants()->attach($members->pluck('id')->mapWithKeys(fn ($id) => [$id => ['joined_at' => now()]])->all());
+        ])->participants()->attach($members->take(12)->pluck('id')->mapWithKeys(fn ($id) => [$id => ['joined_at' => now()]])->all());
 
         Activity::create([
             'sport_id' => $sports->firstWhere('name', 'Padel')->id,
@@ -73,14 +67,12 @@ class DatabaseSeeder extends Seeder
             'location' => 'Castle Padel Court',
             'scheduled_at' => now()->next(Carbon::WEDNESDAY)->setTime(18, 0),
             'max_participants' => 6,
-        ])->participants()->attach($members->take(2)->pluck('id')->mapWithKeys(fn ($id) => [$id => ['joined_at' => now()]])->all());
+        ])->participants()->attach($members->take(6)->pluck('id')->mapWithKeys(fn ($id) => [$id => ['joined_at' => now()]])->all());
 
-        $this->call(TeamSeeder::class);
         $this->call(UpcomingBadmintonChampionshipSeeder::class);
         $this->call(CompletedMensDoublesLeagueSeeder::class);
         $this->call(GroupStageMensDoublesLeagueSeeder::class);
-        $this->call(BasketballLeagueSeeder::class);
-        $this->call(UpcomingBadmintonChampionshipSeeder::class);
+        $this->call(CompletedBasketballLeagueSeeder::class);
     }
 
     private function seedSportCategories($sports): void

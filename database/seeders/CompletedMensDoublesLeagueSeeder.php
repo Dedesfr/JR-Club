@@ -7,30 +7,22 @@ use App\Models\League;
 use App\Models\MatchSet;
 use App\Models\Sport;
 use App\Models\SportCategory;
-use App\Models\User;
 use App\Services\BracketService;
 use App\Services\LeagueFormatService;
+use Database\Seeders\Concerns\UsesSeededRoster;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 
 class CompletedMensDoublesLeagueSeeder extends Seeder
 {
+    use UsesSeededRoster;
+
     public function run(): void
     {
-        $admin = User::query()
-            ->where('role', 'admin')
-            ->firstOrCreate(
-                ['email' => 'admin@jasaraharja.co.id'],
-                [
-                    'name' => 'JR Club Admin',
-                    'password' => 'password',
-                    'role' => 'admin',
-                    'gender' => 'male',
-                ],
-            );
+        $admin = $this->seededAdmin();
 
-        $badminton = Sport::query()->firstOrCreate(
-            ['name' => 'Badminton'],
+        $badminton = $this->seededSport(
+            'Badminton',
             [
                 'icon' => 'sports_tennis',
                 'max_players_per_team' => 2,
@@ -84,32 +76,17 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
             'lower_third_place_match_id' => null,
         ]);
 
-        $playerNames = $this->playerNames();
-        $groupNames = $this->entryGroupNames();
-
-        $players = collect(range(1, 32))->map(function (int $number) use ($playerNames) {
-            $paddedNumber = str_pad((string) $number, 2, '0', STR_PAD_LEFT);
-
-            return User::query()->updateOrCreate(
-                ['email' => "md-player-{$paddedNumber}@jasaraharja.co.id"],
-                [
-                    'name' => $playerNames[$number - 1],
-                    'password' => 'password',
-                    'role' => 'member',
-                    'gender' => 'male',
-                ],
-            );
-        });
-
-        $players->chunk(2)->values()->each(function (Collection $pair, int $index) use ($groupNames, $league) {
-            $seed = $index + 1;
-
-            $league->entries()->create([
-                'group_name' => $groupNames[$index],
-                'player1_id' => $pair->values()[0]->id,
-                'player2_id' => $pair->values()[1]->id,
-                'seed' => $seed,
+        $this->mensDoublesEntriesFromSeededTeams()->each(function (array $entry) use ($league) {
+            $leagueEntry = $league->entries()->create([
+                'team_id' => $entry['team']->id,
+                'group_name' => $entry['team']->name,
+                'player1_id' => $entry['player1_id'],
+                'player2_id' => $entry['player2_id'],
+                'substitute_id' => $entry['substitute_id'],
+                'seed' => $entry['seed'],
             ]);
+
+            $leagueEntry->substitutes()->sync($entry['substitute_ids']);
         });
 
         $formatService = app(LeagueFormatService::class);
@@ -196,69 +173,9 @@ class CompletedMensDoublesLeagueSeeder extends Seeder
         }
     }
 
-    private function playerNames(): array
-    {
-        return [
-            'Adi Saputra',
-            'Bima Pratama',
-            'Cahyo Nugroho',
-            'Dimas Setiawan',
-            'Eko Prabowo',
-            'Fajar Ramadhan',
-            'Gilang Maulana',
-            'Hendra Wijaya',
-            'Ilham Hidayat',
-            'Joko Susanto',
-            'Kurniawan Putra',
-            'Lukman Hakim',
-            'Muhammad Rizki',
-            'Nanda Prakoso',
-            'Oki Permana',
-            'Pandu Mahesa',
-            'Raka Saputro',
-            'Rizal Firmansyah',
-            'Surya Darmawan',
-            'Teguh Prasetyo',
-            'Umar Farhan',
-            'Vino Aditya',
-            'Wahyu Kurnia',
-            'Yoga Pranata',
-            'Yusuf Maulana',
-            'Zaki Ramadhan',
-            'Bagas Pamungkas',
-            'Daffa Alfarizi',
-            'Fikri Ramadhan',
-            'Haikal Akbar',
-            'Iqbal Maulana',
-            'Rangga Saputra',
-        ];
-    }
-
-    private function entryGroupNames(): array
-    {
-        return [
-            'Garuda Perkasa',
-            'Rajawali Selatan',
-            'Komodo Jaya',
-            'Cendrawasih Prima',
-            'Elang Nusantara',
-            'Merapi Smash',
-            'Rinjani Putra',
-            'Bromo Kilat',
-            'Mandalika Rally',
-            'Papandayan Force',
-            'Andalas Power',
-            'Mataram United',
-            'Sriwijaya Drive',
-            'Mahameru Fighters',
-            'Sagara Juara',
-            'Jayawijaya Squad',
-        ];
-    }
-
     private function renameGroups(League $league): void
     {
-        $groupNames = ['Grup Garuda', 'Grup Rajawali'];
+        $groupNames = ['Group A', 'Group B'];
 
         $league->groups()
             ->orderBy('position')

@@ -1,8 +1,9 @@
+import Pagination, { PaginatedResponse } from '@/Components/Pagination';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Team } from '@/types/jrclub';
 
-export default function Index({ teams }: { teams: { data: (Team & { members_count: number })[] } }) {
+export default function Index({ teams }: { teams: PaginatedResponse<Team & { members_count: number }> }) {
     return (
         <AdminLayout
             title="Teams"
@@ -16,10 +17,10 @@ export default function Index({ teams }: { teams: { data: (Team & { members_coun
             }
         >
             <Head title="Teams" />
-            <div className="bg-surface-container-lowest rounded-xl shadow-[0px_12px_32px_rgba(15,23,42,0.04)] overflow-hidden">
+            <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-surface-container-low/50 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant border-b border-outline-variant/20">
+                        <thead className="border-b border-outline-variant/20 bg-surface-container-low/50 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">
                             <tr>
                                 <th className="px-6 py-4">Team</th>
                                 <th className="px-6 py-4">Sport</th>
@@ -36,9 +37,9 @@ export default function Index({ teams }: { teams: { data: (Team & { members_coun
                                 </tr>
                             ) : (
                                 teams.data.map((team) => (
-                                    <tr key={team.id} className="hover:bg-surface-container-low/30 transition-colors group">
+                                    <tr key={team.id} className="group transition-colors hover:bg-surface-container-low/30">
                                         <td className="px-6 py-4">
-                                            <Link href={route('admin.teams.edit', team.id)} className="font-bold text-on-surface group-hover:text-primary transition-colors">
+                                            <Link href={route('admin.teams.edit', team.id)} className="font-bold text-on-surface transition-colors group-hover:text-primary">
                                                 {team.name}
                                             </Link>
                                         </td>
@@ -55,7 +56,7 @@ export default function Index({ teams }: { teams: { data: (Team & { members_coun
                                                             router.delete(route('admin.teams.destroy', team.id));
                                                         }
                                                     }}
-                                                    className="rounded-full bg-error/10 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-error hover:bg-error hover:text-white transition-colors"
+                                                    className="rounded-full bg-error/10 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-error transition-colors hover:bg-error hover:text-white"
                                                 >
                                                     Delete
                                                 </button>
@@ -68,6 +69,7 @@ export default function Index({ teams }: { teams: { data: (Team & { members_coun
                     </table>
                 </div>
             </div>
+            <Pagination items={teams} />
         </AdminLayout>
     );
 }

@@ -3,6 +3,7 @@ import { GameMatch, MatchSet } from '@/types/jrclub';
 import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import JRClubLayout from '@/Layouts/JRClubLayout';
+import { formatJakartaDateTime, formatJakartaTime } from '@/lib/datetime';
 
 const CARD_SHADOW = 'shadow-[0_12px_32px_rgba(15,23,42,0.04)]';
 
@@ -79,7 +80,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
     });
     timeline.push({
         key: 'start',
-        time: new Date(match.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        time: formatJakartaTime(match.scheduled_at),
         title: 'Match scheduled',
         detail: match.location || 'Main Court',
         icon: 'schedule',
@@ -133,7 +134,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                                 Set {Math.min(currentSetNumber, totalSetSlots)} of {totalSetSlots} · First to {pointsPerSet}
                             </span>
                             <span className="hidden sm:inline">
-                                {match.location || 'Main Court'} · {new Date(match.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {match.location || 'Main Court'} · {formatJakartaTime(match.scheduled_at)}
                             </span>
                         </div>
 
@@ -231,29 +232,10 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
 
                     {/* Section: Match Info */}
                     <section className={`grid gap-4 rounded-xl bg-surface-container-lowest p-5 sm:grid-cols-2 ${CARD_SHADOW}`}>
-                        <InfoRow icon="location_on" label="Venue" title={match.location || 'Main Court'} detail={new Date(match.scheduled_at).toLocaleString()} />
+                        <InfoRow icon="location_on" label="Venue" title={match.location || 'Main Court'} detail={formatJakartaDateTime(match.scheduled_at)} />
                         <InfoRow icon="sports" label="Format" title={match.league ? 'Tournament Match' : 'Team Match'} detail={`${match.league?.sport?.name ?? ''}${match.league?.category ? ` · ${match.league.category}` : ''}`.trim() || '—'} />
                     </section>
 
-                    {/* Section: Match Photos */}
-                    {match.documents && match.documents.length > 0 && (
-                        <section className="flex flex-col gap-3">
-                            <h2 className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface">Match Photos</h2>
-                            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-4">
-                                {match.documents.map((doc) => (
-                                    <a
-                                        key={doc.id}
-                                        href={`/storage/${doc.path}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="group relative block aspect-square overflow-hidden rounded-lg bg-surface-container-low transition hover:ring-2 hover:ring-primary"
-                                    >
-                                        <img src={`/storage/${doc.path}`} alt={doc.original_name} className="h-full w-full object-cover transition group-hover:scale-105" />
-                                    </a>
-                                ))}
-                            </div>
-                        </section>
-                    )}
                 </div>
 
                 {/* Section: Sidebar */}
@@ -269,24 +251,40 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                         </section>
                     )}
 
-                    {/* Section: Play-by-Play */}
+                    {/* Section: Moments */}
                     <section className={`rounded-xl bg-surface-container-lowest p-5 ${CARD_SHADOW}`}>
-                        <div className="mb-4 flex items-baseline justify-between">
-                            <h2 className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface">Play-by-Play</h2>
-                            <p className="text-[0.6875rem] font-medium text-on-surface-variant">{isLive ? 'Live' : isFinal ? 'Final' : 'Pending'}</p>
-                        </div>
-                        <ol className="relative space-y-4 border-l-2 border-surface-container-high pl-4">
-                            {timeline.map((item) => (
-                                <li key={item.key} className="relative">
-                                    <span className={`absolute -left-[21px] top-0.5 grid h-4 w-4 place-items-center rounded-full ${item.emphasis ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest border-2 border-surface-container-high text-on-surface-variant'}`}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: 10 }}>{item.icon}</span>
-                                    </span>
-                                    <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">{item.time}</p>
-                                    <p className="text-sm font-bold tracking-tight text-on-surface">{item.title}</p>
-                                    <p className="text-[0.75rem] text-on-surface-variant">{item.detail}</p>
-                                </li>
-                            ))}
-                        </ol>
+                        <h2 className="mb-4 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface">Moments</h2>
+
+                        {match.league?.documentation_url ? (
+                            <a
+                                href={match.league.documentation_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mb-4 flex items-center gap-2.5 rounded-lg border border-outline-variant/20 bg-surface-container-low px-3 py-2.5 text-sm font-bold text-primary transition hover:bg-surface-container"
+                            >
+                                <span className="material-symbols-outlined text-base shrink-0">folder_open</span>
+                                <span className="truncate">View Documentation</span>
+                                <span className="material-symbols-outlined text-base shrink-0 ml-auto">open_in_new</span>
+                            </a>
+                        ) : null}
+
+                        {match.documents && match.documents.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-2">
+                                {match.documents.map((doc) => (
+                                    <a
+                                        key={doc.id}
+                                        href={`/storage/${doc.path}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="group relative block aspect-square overflow-hidden rounded-lg bg-surface-container-low transition hover:ring-2 hover:ring-primary"
+                                    >
+                                        <img src={`/storage/${doc.path}`} alt={doc.original_name} className="h-full w-full object-cover transition group-hover:scale-105" />
+                                    </a>
+                                ))}
+                            </div>
+                        ) : !match.league?.documentation_url ? (
+                            <p className="text-[0.75rem] text-on-surface-variant">No photos yet.</p>
+                        ) : null}
                     </section>
                 </aside>
             </main>

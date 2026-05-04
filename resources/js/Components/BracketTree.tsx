@@ -90,6 +90,16 @@ export default function BracketTree({
 
     const bracketRounds = toBracketRounds(rounds, handleMatchClick, adjustMode);
 
+    const finalMatch = rounds[rounds.length - 1]?.[0];
+    let runnerUpLabel: string | null = null;
+    if (finalMatch && champion) {
+        if (finalMatch.home_entry?.id === champion.id) {
+            runnerUpLabel = finalMatch.away_label ?? null;
+        } else if (finalMatch.away_entry?.id === champion.id) {
+            runnerUpLabel = finalMatch.home_label ?? null;
+        }
+    }
+
     return (
         <section className="overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3 bg-primary px-4 py-3 text-on-primary">
@@ -132,6 +142,12 @@ export default function BracketTree({
                         <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">Champion</p>
                         <p className="min-h-7 text-center text-base font-black text-on-surface">{champion?.label ?? 'TBC'}</p>
                     </div>
+                    {champion && (
+                        <div className="flex-1 grid gap-2 rounded-lg border border-outline bg-surface-container-lowest p-3 shadow-[0px_8px_20px_rgba(15,23,42,0.06)]">
+                            <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">Runner-up</p>
+                            <p className="min-h-7 text-center text-base font-black text-on-surface">{runnerUpLabel ?? 'TBC'}</p>
+                        </div>
+                    )}
 
                     {thirdPlaceMatch && (
                         <div
