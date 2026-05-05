@@ -18,7 +18,7 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
 
                         <nav className="flex items-center gap-2">
                             {auth.user ? (
-                                <Link href={route('activities.index')} className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-2.5 text-sm font-bold text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)] transition-transform active:scale-[0.98]">
+                                <Link href={route('leagues.index')} className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-2.5 text-sm font-bold text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)] transition-transform active:scale-[0.98]">
                                     Open Club
                                 </Link>
                             ) : (
@@ -53,8 +53,8 @@ export default function Welcome({ auth }: PageProps<{ laravelVersion: string; ph
                                 Corporate sports events, tournament standings, and registrations for JR Sport Hub members across every active fixture.
                             </p>
                             <div className="mt-8 flex flex-wrap gap-3">
-                                <Link href={auth.user ? route('activities.index') : route('login')} className="rounded-full bg-white px-6 py-3 text-sm font-black text-primary shadow-[0px_12px_24px_rgba(0,0,0,0.18)] transition-transform active:scale-[0.98]">
-                                    Browse Activities
+                                <Link href={auth.user ? route('leagues.index') : route('login')} className="rounded-full bg-white px-6 py-3 text-sm font-black text-primary shadow-[0px_12px_24px_rgba(0,0,0,0.18)] transition-transform active:scale-[0.98]">
+                                    Browse Tournaments
                                 </Link>
                                 <Link href={auth.user ? route('leaderboards.index') : route('register')} className="rounded-full bg-white/15 px-6 py-3 text-sm font-bold text-white backdrop-blur-md transition-colors hover:bg-white/20">
                                     View Rankings

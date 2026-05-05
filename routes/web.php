@@ -29,10 +29,10 @@ use Illuminate\Support\Facades\URL;
 // }
 
 
-Route::redirect('/', '/activities');
+Route::redirect('/', '/leagues');
 
 Route::get('/dashboard', function () {
-    return redirect()->route('activities.index');
+    return redirect()->route('leagues.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/leagues/{league}', [AdminLeagueController::class, 'show'])->name('leagues.show');
         Route::patch('/leagues/{league}', [AdminLeagueController::class, 'update'])->name('leagues.update');
         Route::delete('/leagues/{league}', [AdminLeagueController::class, 'destroy'])->name('leagues.destroy');
+        Route::post('/leagues/{league}/banner', [AdminLeagueController::class, 'uploadBanner'])->name('leagues.banner.store');
         Route::post('/leagues/{league}/awards', [AdminLeagueController::class, 'storeAward'])->name('leagues.awards.store');
         Route::delete('/leagues/{league}/awards/{award}', [AdminLeagueController::class, 'destroyAward'])->name('leagues.awards.destroy');
         Route::post('/leagues/{league}/teams', [AdminLeagueController::class, 'storeTeam'])->name('leagues.teams.store');

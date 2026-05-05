@@ -13,7 +13,21 @@ const startStageOptions: SelectOption[] = [
 export default function Create({ sports }: { sports: Sport[] }) {
     const initialSport = sports[0];
     const initialCategory = initialSport?.categories?.[0];
-    const form = useForm({
+    const form = useForm<{
+        name: string;
+        sport_id: number | string;
+        sport_category_id: string;
+        description: string;
+        start_date: string;
+        status: string;
+        start_stage: string;
+        participant_total: string;
+        sets_to_win: string;
+        points_per_set: string;
+        advance_upper_count: string;
+        advance_lower_count: string;
+        banner: File | null;
+    }>({
         name: '',
         sport_id: initialSport?.id ?? '',
         sport_category_id: initialCategory?.id ? String(initialCategory.id) : '',
@@ -26,6 +40,7 @@ export default function Create({ sports }: { sports: Sport[] }) {
         points_per_set: '21',
         advance_upper_count: '1',
         advance_lower_count: '1',
+        banner: null,
     });
     const sportOptions = sports.map((sport) => ({ value: String(sport.id), label: sport.name }));
     const selectedSport = useMemo(() => sports.find((sport) => sport.id === Number(form.data.sport_id)), [sports, form.data.sport_id]);
@@ -57,7 +72,7 @@ export default function Create({ sports }: { sports: Sport[] }) {
         >
             <Head title="Create Tournament" />
             
-            <form id="create-league-form" onSubmit={(event) => { event.preventDefault(); form.post(route('admin.leagues.store')); }} className="space-y-6">
+            <form id="create-league-form" onSubmit={(event) => { event.preventDefault(); form.post(route('admin.leagues.store'), { forceFormData: true }); }} className="space-y-6">
                 
                 {/* Section 1: General Info */}
                 <div className="bg-surface-container-lowest rounded-xl shadow-[0px_12px_32px_rgba(15,23,42,0.04)] overflow-hidden">
@@ -86,6 +101,19 @@ export default function Create({ sports }: { sports: Sport[] }) {
                         </Field>
                         <Field label="Description" full>
                             <textarea value={form.data.description} onChange={(event) => form.setData('description', event.target.value)} className="w-full min-h-[120px] bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface resize-y" placeholder="Tournament details and rules..." />
+                        </Field>
+                        <Field label="Banner image" full>
+                            <div className="flex flex-col gap-3">
+                                {form.data.banner ? (
+                                    <img src={URL.createObjectURL(form.data.banner)} alt="Banner preview" className="h-32 w-full rounded-lg object-cover" />
+                                ) : null}
+                                <label className="flex cursor-pointer items-center gap-3 rounded-t-md border-b-2 border-outline-variant/20 bg-surface-container-low px-4 py-3 transition-colors hover:bg-surface-container">
+                                    <span className="material-symbols-outlined text-[20px] text-on-surface-variant">upload</span>
+                                    <span className="text-sm text-on-surface-variant">{form.data.banner ? form.data.banner.name : 'Choose image file (max 5 MB)'}</span>
+                                    <input type="file" accept="image/*" className="sr-only" onChange={(event) => form.setData('banner', event.target.files?.[0] ?? null)} />
+                                </label>
+                                {form.errors.banner ? <span className="text-xs font-medium text-error">{form.errors.banner}</span> : null}
+                            </div>
                         </Field>
                     </div>
                 </div>

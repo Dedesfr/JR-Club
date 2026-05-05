@@ -40,6 +40,7 @@ class League extends Model
         'third_place_match_id',
         'lower_third_place_match_id',
         'created_by',
+        'banner_path',
     ];
 
     protected function casts(): array
@@ -137,6 +138,10 @@ class League extends Model
 
     public function getBannerUrlAttribute(): ?string
     {
+        if ($this->banner_path) {
+            return $this->banner_path;
+        }
+
         return match ($this->name) {
             'JR Men Double Championship' => '/images/badminton-men-double.png',
             'JR Women Double Championship' => '/images/badminton-woman-double.png',

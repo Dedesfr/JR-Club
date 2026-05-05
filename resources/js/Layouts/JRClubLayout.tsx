@@ -4,8 +4,8 @@ import { PropsWithChildren, useEffect, useState } from 'react';
 import { PageProps } from '@/types';
 
 const navItems = [
-    ['Activities', 'Events', 'explore', 'activities.index'],
     ['Tournaments', 'Tournaments', 'emoji_events', 'leagues.index'],
+    ['Activities', 'Events', 'explore', 'activities.index'],
     ['Rankings', 'Standings', 'leaderboard', 'leaderboards.index'],
     ['Profile', 'Profile', 'person', 'profile.show'],
 ];

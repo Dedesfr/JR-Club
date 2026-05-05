@@ -52,6 +52,8 @@ export default function Show({ league, users, teams, divisionOptions, standings,
         advance_lower_count: league.advance_lower_count?.toString() ?? '0',
     });
 
+    const bannerForm = useForm<{ banner: File | null }>({ banner: null });
+
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [editEntry, setEditEntry] = useState<LeagueEntry | null>(null);
     const [subModalMatch, setSubModalMatch] = useState<GameMatch | null>(null);
@@ -365,6 +367,37 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                             </form>
 
                             <AwardsManager leagueId={league.id} awards={league.awards ?? []} form={awardForm} />
+
+                            <form
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    bannerForm.post(route('admin.leagues.banner.store', league.id), { forceFormData: true, onSuccess: () => bannerForm.reset() });
+                                }}
+                                className="rounded-xl bg-surface-container-lowest p-6 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]"
+                            >
+                                <p className="mb-4 text-[0.75rem] font-bold uppercase tracking-[0.05em] text-primary">Banner Image</p>
+                                {league.banner_url ? (
+                                    <img src={league.banner_url} alt="Current banner" className="mb-4 h-36 w-full rounded-lg object-cover" />
+                                ) : null}
+                                <div className="flex flex-col gap-3">
+                                    {bannerForm.data.banner ? (
+                                        <img src={URL.createObjectURL(bannerForm.data.banner)} alt="Preview" className="h-36 w-full rounded-lg object-cover" />
+                                    ) : null}
+                                    <label className="flex cursor-pointer items-center gap-3 rounded-t-md border-b-2 border-outline-variant/20 bg-surface-container-low px-4 py-3 transition-colors hover:bg-surface-container">
+                                        <span className="material-symbols-outlined text-[20px] text-on-surface-variant">upload</span>
+                                        <span className="text-sm text-on-surface-variant">{bannerForm.data.banner ? bannerForm.data.banner.name : 'Choose image file (max 5 MB)'}</span>
+                                        <input type="file" accept="image/*" className="sr-only" onChange={(event) => bannerForm.setData('banner', event.target.files?.[0] ?? null)} />
+                                    </label>
+                                    {bannerForm.errors.banner ? <span className="text-xs font-medium text-error">{bannerForm.errors.banner}</span> : null}
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={!bannerForm.data.banner || bannerForm.processing}
+                                    className="mt-4 rounded-full bg-gradient-to-br from-primary to-primary-container px-6 py-2 text-[0.875rem] font-bold text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)] transition-all hover:scale-[0.98] disabled:opacity-50"
+                                >
+                                    Upload Banner
+                                </button>
+                            </form>
                         </div>
                     ) : null}
 

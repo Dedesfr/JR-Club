@@ -27,7 +27,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('activities.index', absolute: false));
+        $response->assertRedirect(route('leagues.index', absolute: false));
     }
 
     public function test_admin_users_are_redirected_to_the_admin_dashboard_after_login(): void

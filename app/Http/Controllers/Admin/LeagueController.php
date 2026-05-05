@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\LeagueFormatService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,9 +52,16 @@ class LeagueController extends Controller
             'points_per_set' => ['required', 'integer', 'min:1'],
             'advance_upper_count' => ['required', 'integer', 'min:0'],
             'advance_lower_count' => ['required', 'integer', 'min:0'],
+            'banner' => ['nullable', 'image', 'max:5120'],
         ]);
 
         $sportCategory = $this->sportCategory($validated);
+
+        $bannerPath = null;
+        if ($request->hasFile('banner')) {
+            $path = $request->file('banner')->store('league-banners', 'public');
+            $bannerPath = '/storage/' . $path;
+        }
 
         $league = League::create(array_merge($validated, [
             'created_by' => $request->user()->id,
@@ -63,6 +71,7 @@ class LeagueController extends Controller
             'category' => $sportCategory?->code ?? ($validated['category'] ?? null),
             'entry_type' => $sportCategory?->entry_type ?? $this->entryType($validated['category'] ?? null),
             'stage' => 'setup',
+            'banner_path' => $bannerPath,
         ]));
 
         return redirect()->route('admin.leagues.show', $league);
@@ -189,6 +198,20 @@ class LeagueController extends Controller
         $league->delete();
 
         return redirect()->route('admin.leagues.index')->with('success', 'Tournament deleted.');
+    }
+
+    public function uploadBanner(Request $request, League $league): RedirectResponse
+    {
+        $request->validate(['banner' => ['required', 'image', 'max:5120']]);
+
+        if ($league->banner_path && str_starts_with($league->banner_path, '/storage/')) {
+            Storage::disk('public')->delete(ltrim(str_replace('/storage/', '', $league->banner_path), '/'));
+        }
+
+        $path = $request->file('banner')->store('league-banners', 'public');
+        $league->update(['banner_path' => '/storage/' . $path]);
+
+        return redirect()->route('admin.leagues.show', $league)->with('success', 'Banner uploaded.');
     }
 
     public function storeAward(Request $request, League $league): RedirectResponse

@@ -32,7 +32,7 @@ export default function AdminLayout({ children, title, actions }: PropsWithChild
                         </div>
                     </div>
                 </div>
-                <Link href={route('activities.index')} className="rounded-full bg-surface-container-low px-3 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                <Link href={route('leagues.index')} className="rounded-full bg-surface-container-low px-3 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
                     App
                 </Link>
             </header>
@@ -57,7 +57,7 @@ export default function AdminLayout({ children, title, actions }: PropsWithChild
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Link href={route('activities.index')} className="hidden rounded-full bg-surface-container-low px-3 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant md:block">
+                            <Link href={route('leagues.index')} className="hidden rounded-full bg-surface-container-low px-3 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant md:block">
                                 App
                             </Link>
                             <button onClick={() => setSidebarOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-low hover:bg-surface-container md:hidden">
