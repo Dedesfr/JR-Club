@@ -17,6 +17,7 @@ class LeagueController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = $request->user();
         $statusFilter = $request->string('status')->toString();
 
         if (! in_array($statusFilter, ['upcoming', 'active', 'completed'], true)) {
@@ -53,7 +54,7 @@ class LeagueController extends Controller
             'activeLeague' => $activeLeague,
             'sports' => Sport::orderBy('name')->get(),
             'teams' => Team::with('sport')->orderBy('name')->get(),
-            'canManage' => $request->user()->can('admin'),
+            'canManage' => $user?->can('admin') ?? false,
             'statusFilter' => $statusFilter,
         ]);
     }

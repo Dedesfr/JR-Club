@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Sport;
 use App\Models\Team;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -15,19 +14,20 @@ class TeamController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = $request->user();
+
         return Inertia::render('Teams/Index', [
-            'teams' => Team::with(['sport', 'members:id,name,email'])->withCount('members')->latest()->get(),
+            'teams' => Team::with(['sport', 'members:id,name'])->withCount('members')->latest()->get(),
             'sports' => Sport::orderBy('name')->get(),
-            'users' => User::orderBy('name')->get(['id', 'name', 'email']),
-            'myTeams' => $request->user()->teams()->with('sport')->get(),
-            'canManage' => $request->user()->can('admin'),
+            'myTeams' => $user ? $user->teams()->with('sport')->get() : [],
+            'canManage' => $user?->can('admin') ?? false,
         ]);
     }
 
     public function show(Team $team): Response
     {
         return Inertia::render('Teams/Show', [
-            'team' => $team->load(['sport', 'members:id,name,email']),
+            'team' => $team->load(['sport', 'members:id,name']),
         ]);
     }
 

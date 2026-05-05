@@ -17,7 +17,9 @@ const sportImages: Record<string, string> = {
 const sportOrder = ['Badminton', 'Basketball', 'Padel', 'Mini Soccer', 'Other'] as const;
 
 export default function Index({ sports, activities, selectedSport, canManage }: { sports: Sport[]; activities: Activity[]; selectedSport?: string; canManage: boolean }) {
-    const user = usePage<PageProps>().props.auth.user;
+    const page = usePage<PageProps>();
+    const user = page.props.auth.user;
+    const loginHref = route('login', { redirect: normalizeRelativeUrl(page.url) });
     const orderedSports = [...sports].sort((left, right) => {
         const leftIndex = sportOrder.indexOf(left.name as (typeof sportOrder)[number]);
         const rightIndex = sportOrder.indexOf(right.name as (typeof sportOrder)[number]);
@@ -175,7 +177,7 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
                             </div>
                             <div className="px-3 text-center">
                                 <p className="text-[0.6rem] font-bold uppercase tracking-wider text-on-surface-variant">Status</p>
-                                <p className="mt-1 text-lg font-black text-on-surface">{isParticipating(featured, user.id) ? 'Joined' : getStatusText(featured)}</p>
+                                <p className="mt-1 text-lg font-black text-on-surface">{isParticipating(featured, user?.id) ? 'Joined' : getStatusText(featured)}</p>
                             </div>
                         </div>
 
@@ -209,7 +211,7 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
                     </div>
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {remaining.map((activity) => (
-                            <CompactEventCard key={activity.id} activity={activity} userId={user.id} onJoin={() => join(activity)} />
+                            <CompactEventCard key={activity.id} activity={activity} userId={user?.id} loginHref={loginHref} onJoin={() => join(activity)} />
                         ))}
                     </div>
                 </section>
@@ -243,13 +245,14 @@ export default function Index({ sports, activities, selectedSport, canManage }: 
     );
 }
 
-function CompactEventCard({ activity, userId, onJoin }: { activity: Activity; userId: number; onJoin: () => void }) {
+function CompactEventCard({ activity, userId, loginHref, onJoin }: { activity: Activity; userId?: number; loginHref: string; onJoin: () => void }) {
     const participants = getParticipants(activity);
     const isFull = activity.status === 'full' || participants >= activity.max_participants;
     const joined = isParticipating(activity, userId);
     const isDone = activity.status === 'completed' || activity.status === 'cancelled';
     const isOpen = !isDone && !isFull;
     const fillPct = getFillPercent(activity);
+    const requiresLogin = !userId && isOpen;
 
     return (
         <article className={`group flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_16px_rgba(15,23,42,0.04)] transition-all active:scale-[0.98] hover:shadow-[0px_12px_32px_rgba(15,23,42,0.08)] ${isDone ? 'opacity-75' : ''}`}>
@@ -309,20 +312,26 @@ function CompactEventCard({ activity, userId, onJoin }: { activity: Activity; us
                             style={{ width: `${fillPct}%` }}
                         />
                     </div>
-                    <button
-                        type="button"
-                        disabled={isFull || joined || isDone}
-                        onClick={onJoin}
-                        className={`flex-none rounded-full px-4 py-2 text-xs font-bold transition-colors ${
-                            joined
-                                ? 'bg-primary-fixed text-primary'
-                                : isFull || isDone
-                                  ? 'bg-surface-container-high text-on-surface-variant'
-                                  : 'bg-surface-container-low text-on-surface hover:bg-primary hover:text-on-primary'
-                        }`}
-                    >
-                        {joined ? 'Joined' : isFull ? 'Full' : isDone ? 'Done' : 'Join'}
-                    </button>
+                    {requiresLogin ? (
+                        <Link href={loginHref} className="flex-none rounded-full bg-surface-container-low px-4 py-2 text-xs font-bold text-on-surface transition-colors hover:bg-primary hover:text-on-primary">
+                            Sign In to Join
+                        </Link>
+                    ) : (
+                        <button
+                            type="button"
+                            disabled={isFull || joined || isDone}
+                            onClick={onJoin}
+                            className={`flex-none rounded-full px-4 py-2 text-xs font-bold transition-colors ${
+                                joined
+                                    ? 'bg-primary-fixed text-primary'
+                                    : isFull || isDone
+                                      ? 'bg-surface-container-high text-on-surface-variant'
+                                      : 'bg-surface-container-low text-on-surface hover:bg-primary hover:text-on-primary'
+                            }`}
+                        >
+                            {joined ? 'Joined' : isFull ? 'Full' : isDone ? 'Done' : 'Join'}
+                        </button>
+                    )}
                 </div>
             </div>
         </article>
@@ -348,7 +357,11 @@ function getFillPercent(activity: Activity) {
     return activity.max_participants > 0 ? Math.min(100, Math.round((getParticipants(activity) / activity.max_participants) * 100)) : 0;
 }
 
-function isParticipating(activity: Activity, userId: number) {
+function isParticipating(activity: Activity, userId?: number) {
+    if (!userId) {
+        return false;
+    }
+
     return (activity.participants ?? []).some((person) => person.id === userId);
 }
 
@@ -375,4 +388,8 @@ function getWeekNumber(date: Date) {
     const firstDay = new Date(date.getFullYear(), 0, 1);
     const dayOffset = (date.getTime() - firstDay.getTime()) / 86400000;
     return Math.ceil((dayOffset + firstDay.getDay() + 1) / 7);
+}
+
+function normalizeRelativeUrl(url: string) {
+    return url.startsWith('/') ? url : `/${url}`;
 }

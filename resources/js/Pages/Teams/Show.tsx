@@ -30,7 +30,7 @@ export default function Show({ team }: { team: Team }) {
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-container font-bold text-on-primary">{member.name.charAt(0)}</div>
                             <div>
                                 <h3 className="font-bold tracking-tight text-on-surface">{member.name}</h3>
-                                <p className="text-sm text-on-surface-variant">{member.email}</p>
+                                <p className="text-sm text-on-surface-variant">Team member</p>
                             </div>
                         </div>
                         <span className={`rounded px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] ${member.pivot?.role === 'captain' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface'}`}>{member.pivot?.role ?? 'member'}</span>

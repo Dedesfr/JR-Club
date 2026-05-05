@@ -3,11 +3,12 @@ import InputError from '@/Components/InputError';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
-export default function Login({ status }: { status?: string; canResetPassword: boolean }) {
+export default function Login({ status, redirect = '' }: { status?: string; canResetPassword: boolean; redirect?: string }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
         remember: false,
+        redirect,
     });
 
     const submit: FormEventHandler = (event) => {

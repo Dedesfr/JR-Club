@@ -5,8 +5,10 @@ import { Activity } from '@/types/jrclub';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
 export default function Show({ activity }: { activity: Activity }) {
-    const user = usePage<PageProps>().props.auth.user;
-    const isParticipating = (activity.participants ?? []).some((p) => p.id === user.id);
+    const page = usePage<PageProps>();
+    const user = page.props.auth.user;
+    const loginHref = route('login', { redirect: normalizeRelativeUrl(page.url) });
+    const isParticipating = (activity.participants ?? []).some((p) => p.id === user?.id);
     const slotsFilled = activity.participants?.length ?? activity.participants_count ?? 0;
     const totalSlots = activity.max_participants;
     const spotsLeft = Math.max(0, totalSlots - slotsFilled);
@@ -21,7 +23,7 @@ export default function Show({ activity }: { activity: Activity }) {
     const handleJoinLeave = () => {
         if (isParticipating) {
             router.delete(route('activities.leave', activity.id), { preserveScroll: true });
-        } else if (!isFull) {
+        } else if (!isFull && user) {
             router.post(route('activities.join', activity.id), {}, { preserveScroll: true });
         }
     };
@@ -109,24 +111,38 @@ export default function Show({ activity }: { activity: Activity }) {
 
             {activity.status !== 'completed' && activity.status !== 'cancelled' ? (
                 <section className="sticky bottom-24 z-40 mt-6 rounded-full bg-white/85 p-2 shadow-[0px_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-md md:bottom-6">
-                    <button
-                        onClick={handleJoinLeave}
-                        disabled={isFull && !isParticipating}
-                        className={`flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-sm font-bold uppercase tracking-[0.05em] transition-transform active:scale-[0.98] ${
-                            isParticipating
-                                ? 'bg-surface-container-high text-error'
-                                : isFull
-                                  ? 'cursor-not-allowed bg-surface-container-high text-on-surface-variant opacity-60'
-                                  : 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)]'
-                        }`}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">{isParticipating ? 'logout' : 'how_to_reg'}</span>
-                        {isParticipating ? 'Leave Activity' : isFull ? 'Activity Full' : 'Join Activity'}
-                    </button>
+                    {!user && !isFull ? (
+                        <Link
+                            href={loginHref}
+                            className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-br from-primary to-primary-container px-6 py-4 text-sm font-bold uppercase tracking-[0.05em] text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)] transition-transform active:scale-[0.98]"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">login</span>
+                            Sign In to Join
+                        </Link>
+                    ) : (
+                        <button
+                            onClick={handleJoinLeave}
+                            disabled={isFull && !isParticipating}
+                            className={`flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-sm font-bold uppercase tracking-[0.05em] transition-transform active:scale-[0.98] ${
+                                isParticipating
+                                    ? 'bg-surface-container-high text-error'
+                                    : isFull
+                                      ? 'cursor-not-allowed bg-surface-container-high text-on-surface-variant opacity-60'
+                                      : 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)]'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[18px]">{isParticipating ? 'logout' : 'how_to_reg'}</span>
+                            {isParticipating ? 'Leave Activity' : isFull ? 'Activity Full' : 'Join Activity'}
+                        </button>
+                    )}
                 </section>
             ) : null}
         </JRClubLayout>
     );
+}
+
+function normalizeRelativeUrl(url: string) {
+    return url.startsWith('/') ? url : `/${url}`;
 }
 
 function InfoBlock({ icon, label, value }: { icon: string; label: string; value: string }) {

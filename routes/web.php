@@ -35,28 +35,32 @@ Route::get('/dashboard', function () {
     return redirect()->route('leagues.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::resource('activities', ActivityController::class)->only(['index', 'show']);
+Route::resource('teams', TeamController::class)->only(['index', 'show']);
+Route::resource('leagues', LeagueController::class)->only(['index', 'show']);
+Route::get('/matches/{match}', [MatchController::class, 'show'])->name('matches.show');
+Route::get('/leaderboards', [LeaderboardController::class, 'index'])->name('leaderboards.index');
+Route::get('/leaderboards/leagues', [LeaderboardController::class, 'leagues'])->name('leaderboards.leagues');
+Route::get('/members/{user}', [ProfileShowController::class, 'public'])->name('profile.public');
+
 Route::middleware('auth')->group(function () {
-    Route::resource('activities', ActivityController::class);
+    Route::resource('activities', ActivityController::class)->only(['store', 'update', 'destroy']);
     Route::post('/activities/{activity}/join', [ActivityController::class, 'join'])->name('activities.join');
     Route::delete('/activities/{activity}/leave', [ActivityController::class, 'leave'])->name('activities.leave');
 
-    Route::resource('teams', TeamController::class);
+    Route::resource('teams', TeamController::class)->only(['store', 'update', 'destroy']);
     Route::post('/teams/{team}/members', [TeamController::class, 'addMember'])->name('teams.members.store');
     Route::delete('/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('teams.members.destroy');
 
-    Route::resource('leagues', LeagueController::class);
+    Route::resource('leagues', LeagueController::class)->only(['store', 'update', 'destroy']);
     Route::post('/leagues/{league}/teams', [LeagueController::class, 'registerTeam'])->name('leagues.teams.store');
     Route::post('/leagues/{league}/matches', [LeagueController::class, 'scheduleMatch'])->name('leagues.matches.store');
 
-    Route::get('/matches/{match}', [MatchController::class, 'show'])->name('matches.show');
     Route::post('/matches/{match}/start', [MatchController::class, 'start'])->name('matches.start');
     Route::patch('/matches/{match}/score', [MatchController::class, 'updateScore'])->name('matches.score');
     Route::post('/matches/{match}/end', [MatchController::class, 'end'])->name('matches.end');
 
-    Route::get('/leaderboards', [LeaderboardController::class, 'index'])->name('leaderboards.index');
-    Route::get('/leaderboards/leagues', [LeaderboardController::class, 'leagues'])->name('leaderboards.leagues');
     Route::get('/profile/show', [ProfileShowController::class, 'me'])->name('profile.show');
-    Route::get('/members/{user}', [ProfileShowController::class, 'public'])->name('profile.public');
     Route::post('/push-subscription', [PushSubscriptionController::class, 'store'])->name('push-subscription.store');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

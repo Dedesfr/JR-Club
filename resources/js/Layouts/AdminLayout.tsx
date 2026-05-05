@@ -14,6 +14,7 @@ const links = [
 
 export default function AdminLayout({ children, title, actions }: PropsWithChildren<{ title: string; actions?: React.ReactNode }>) {
     const { auth } = usePage<PageProps>().props;
+    const user = auth.user!;
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
@@ -82,8 +83,8 @@ export default function AdminLayout({ children, title, actions }: PropsWithChild
 
                     <div className="mt-auto rounded-xl bg-surface-container-low p-4 text-sm">
                         <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Signed in as</p>
-                        <p className="mt-1 font-bold text-on-surface">{auth.user.name}</p>
-                        <p className="text-xs uppercase tracking-widest text-on-surface-variant">{auth.user.role}</p>
+                        <p className="mt-1 font-bold text-on-surface">{user.name}</p>
+                        <p className="text-xs uppercase tracking-widest text-on-surface-variant">{user.role}</p>
                     </div>
                 </aside>
 

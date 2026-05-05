@@ -16,10 +16,11 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
+            'redirect' => $request->string('redirect')->toString(),
             'status' => session('status'),
         ]);
     }
@@ -33,10 +34,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $redirect = $request->string('redirect')->toString();
+        $fallback = $request->user()->isAdmin()
+            ? route('admin.dashboard', absolute: false)
+            : route('leagues.index', absolute: false);
+
         return redirect()->intended(
-            $request->user()->isAdmin()
-                ? route('admin.dashboard', absolute: false)
-                : route('leagues.index', absolute: false)
+            str_starts_with($redirect, '/') ? $redirect : $fallback
         );
     }
 

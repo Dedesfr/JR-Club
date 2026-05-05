@@ -15,6 +15,7 @@ class ActivityController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = $request->user();
         $sport = $request->string('sport')->toString();
 
         $activities = Activity::query()
@@ -28,14 +29,14 @@ class ActivityController extends Controller
             'sports' => Sport::orderBy('name')->get(),
             'activities' => $activities,
             'selectedSport' => $sport,
-            'canManage' => $request->user()->can('admin'),
+            'canManage' => $user?->can('admin') ?? false,
         ]);
     }
 
     public function show(Activity $activity): Response
     {
         return Inertia::render('Activities/Show', [
-            'activity' => $activity->load(['sport', 'participants:id,name,email']),
+            'activity' => $activity->load(['sport', 'participants:id,name']),
         ]);
     }
 
