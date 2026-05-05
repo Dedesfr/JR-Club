@@ -23,6 +23,13 @@ function resolveIconPath(icon?: string | null): string {
     return `/storage/${icon}`;
 }
 
+function resolveEntryImage(entry?: GameMatch['home_entry']): string | undefined {
+    if (!entry) return undefined;
+    if (entry.group_picture_path) return resolveIconPath(entry.group_picture_path);
+    if (entry.team?.logo_path) return resolveIconPath(entry.team.logo_path);
+    return undefined;
+}
+
 export default function Show({ match, canManage }: { match: GameMatch; canManage: boolean }) {
     const [score, setScore] = useState({ home: match.home_score, away: match.away_score, status: match.status });
     const homeLabel = match.home_label ?? match.home_team?.name ?? 'TBC';
@@ -146,7 +153,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                                 dimmed={awayLeading}
                                 align="right"
                                 serving={isLive && homeLeading}
-                                icon={match.home_entry?.group_picture_path ? resolveIconPath(match.home_entry.group_picture_path) : undefined}
+                                icon={resolveEntryImage(match.home_entry)}
                             />
 
                             <div className="flex flex-col items-center gap-2">
@@ -163,7 +170,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                                 dimmed={homeLeading}
                                 align="left"
                                 serving={isLive && awayLeading}
-                                icon={match.away_entry?.group_picture_path ? resolveIconPath(match.away_entry.group_picture_path) : undefined}
+                                icon={resolveEntryImage(match.away_entry)}
                             />
                         </div>
 
@@ -395,12 +402,14 @@ function RosterBlock({ label, entry, subs }: { label: string; entry?: GameMatch[
     const players = ((entry?.players ?? []).length > 0
         ? entry?.players
         : [entry?.player1, entry?.player2].filter(Boolean)) as { id: number; name: string }[];
+    const entryIcon = resolveEntryImage(entry);
+
     return (
         <div>
             <p className="mb-3 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">{label}</p>
             <ul className="space-y-2">
                 {players.map((p, i) => (
-                    <PlayerRow key={p.id} name={p.name} role={`Player ${i + 1}`} icon={getFallbackIcon(p.name + p.id)} />
+                    <PlayerRow key={p.id} name={p.name} role={`Player ${i + 1}`} icon={entryIcon} />
                 ))}
                 {subs.map((sub) => {
                     const subPlayer = entry?.substitutes?.find((p) => p.id === sub.substitute_id);
@@ -412,7 +421,7 @@ function RosterBlock({ label, entry, subs }: { label: string; entry?: GameMatch[
                             name={subPlayer.name}
                             role={`Sub · in for ${original?.name ?? 'player'}`}
                             highlight
-                            icon={getFallbackIcon(subPlayer.name + subPlayer.id)}
+                            icon={entryIcon}
                         />
                     );
                 })}
