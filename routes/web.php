@@ -108,8 +108,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('/sports/{sport}/categories/{category}', [AdminSportController::class, 'destroyCategory'])->name('sports.categories.destroy');
 
         Route::get('/activities', [AdminActivityController::class, 'index'])->name('activities.index');
+        Route::get('/activities/create', [AdminActivityController::class, 'create'])->name('activities.create');
+        Route::post('/activities', [AdminActivityController::class, 'store'])->name('activities.store');
         Route::get('/activities/{activity}/edit', [AdminActivityController::class, 'edit'])->name('activities.edit');
         Route::patch('/activities/{activity}', [AdminActivityController::class, 'update'])->name('activities.update');
+        Route::delete('/activities/{activity}', [AdminActivityController::class, 'destroy'])->name('activities.destroy');
+        Route::post('/activities/{activity}/participants', [AdminActivityController::class, 'addParticipant'])->name('activities.participants.store');
+        Route::delete('/activities/{activity}/participants/{user}', [AdminActivityController::class, 'removeParticipant'])->name('activities.participants.destroy');
 
         Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
