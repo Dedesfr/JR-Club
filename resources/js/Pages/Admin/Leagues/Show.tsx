@@ -10,7 +10,7 @@ import PhotoUploader from '@/Components/PhotoUploader';
 import ParticipantImportDialog from '@/Components/ParticipantImportDialog';
 import EntryEditModal from '@/Components/EntryEditModal';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { formatJakartaTime, getJakartaDateKey } from '@/lib/datetime';
+import { formatJakartaDate, formatJakartaTime, getJakartaDateKey, JAKARTA_TIME_ZONE } from '@/lib/datetime';
 import { GameMatch, League, LeagueAward, LeagueEntry, LeagueStandingGroup, Team } from '@/types/jrclub';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
@@ -35,6 +35,34 @@ const startStageOptions = [
     { value: 'group', label: 'Group Stage' },
     { value: 'bracket', label: 'Bracket' },
 ];
+
+const getTodayJakartaDateKey = () => getJakartaDateKey(new Date());
+
+const addDaysToDateKey = (dateKey: string, days: number) => {
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    date.setDate(date.getDate() + days);
+
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd}`;
+};
+
+const getJakartaTimeInputValue = (value: string | Date) => {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: JAKARTA_TIME_ZONE,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    }).formatToParts(new Date(value));
+
+    const hour = parts.find((part) => part.type === 'hour')?.value ?? '00';
+    const minute = parts.find((part) => part.type === 'minute')?.value ?? '00';
+
+    return `${hour}:${minute}`;
+};
 
 export default function Show({ league, users, teams, divisionOptions, standings, upperBracket, lowerBracket }: { league: League; users: UserOption[]; teams: Team[]; divisionOptions: { group_count: number; group_size: number }[]; standings: LeagueStandingGroup[]; upperBracket: GameMatch[][]; lowerBracket: GameMatch[][] }) {
     const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('Overview');
@@ -85,7 +113,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
             ) + 1
         }).map((_, i) => ({
             round: i + 1,
-            scheduled_at: new Date().toISOString().split('T')[0],
+            scheduled_at: getTodayJakartaDateKey(),
         })),
     });
 
@@ -117,7 +145,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
             while (currentSchedule.length < newRounds) {
                 currentSchedule.push({
                     round: currentSchedule.length + 1,
-                    scheduled_at: new Date().toISOString().split('T')[0]
+                    scheduled_at: getTodayJakartaDateKey()
                 });
             }
         } else if (currentSchedule.length > newRounds) {
@@ -255,7 +283,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
             return 'TBA';
         }
 
-        return `${date.toLocaleDateString([], { dateStyle: 'short' })}, ${time}`;
+        return `${formatJakartaDate(dateKey, { year: 'numeric', month: '2-digit', day: '2-digit' })}, ${time}`;
     };
 
     const getPlayerNames = (match: GameMatch, side: 'home' | 'away'): string | null => {
@@ -304,13 +332,13 @@ export default function Show({ league, users, teams, divisionOptions, standings,
 
         return {
             round,
-            scheduled_at: firstMatch?.scheduled_at?.slice(0, 10) ?? league.start_date,
+            scheduled_at: firstMatch?.scheduled_at ? getJakartaDateKey(firstMatch.scheduled_at) : league.start_date,
         };
     });
-    const initialGroupStartTime = groupMatches
+    const firstScheduledGroupMatch = groupMatches
         .slice()
-        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0]
-        ?.scheduled_at?.slice(11, 16) ?? '17:00';
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
+    const initialGroupStartTime = firstScheduledGroupMatch?.scheduled_at ? getJakartaTimeInputValue(firstScheduledGroupMatch.scheduled_at) : '17:00';
     const initialGroupInterval = Object.values(groupMatchesByRound)
         .map((matches) => matches.slice().sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()))
         .find((matches) => matches.length > 1)
@@ -544,18 +572,15 @@ export default function Show({ league, users, teams, divisionOptions, standings,
 
                                             const formatDateHeader = (date: string) => {
                                                 if (date === 'TBA') return { label: 'TBA', isPrimary: false };
-                                                const d = parseDateKey(date);
-                                                if (!d) return { label: date, isPrimary: false };
-                                                const today = new Date();
-                                                const tomorrow = new Date(today);
-                                                tomorrow.setDate(tomorrow.getDate() + 1);
-                                                
-                                                if (d.toDateString() === today.toDateString()) {
-                                                    return { label: `Today, ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`, isPrimary: true };
-                                                } else if (d.toDateString() === tomorrow.toDateString()) {
-                                                    return { label: `Tomorrow, ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`, isPrimary: false };
+                                                const todayKey = getTodayJakartaDateKey();
+                                                const tomorrowKey = addDaysToDateKey(todayKey, 1);
+
+                                                if (date === todayKey) {
+                                                    return { label: `Today, ${formatJakartaDate(date, { month: 'short', day: 'numeric' }, 'en-US')}`, isPrimary: true };
+                                                } else if (date === tomorrowKey) {
+                                                    return { label: `Tomorrow, ${formatJakartaDate(date, { month: 'short', day: 'numeric' }, 'en-US')}`, isPrimary: false };
                                                 }
-                                                return { label: d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }), isPrimary: false };
+                                                return { label: formatJakartaDate(date, { weekday: 'long', month: 'short', day: 'numeric' }, 'en-US'), isPrimary: false };
                                             };
 
                                             const dateInfo = formatDateHeader(dateKey);

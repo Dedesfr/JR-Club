@@ -1,4 +1,5 @@
 import JRClubLayout from '@/Layouts/JRClubLayout';
+import { formatJakartaDate, getJakartaDateKey } from '@/lib/datetime';
 import { League, Sport, Team } from '@/types/jrclub';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
@@ -405,13 +406,20 @@ function getLeagueFormatShort(league: League) {
 }
 
 function getDaysUntil(date: string) {
-    const diff = new Date(date).getTime() - new Date().getTime();
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    const parseDateKey = (dateKey: string) => {
+        const [year, month, day] = dateKey.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
+
+    const target = parseDateKey(date);
+    const today = parseDateKey(getJakartaDateKey(new Date()));
+    const days = Math.round((target.getTime() - today.getTime()) / 86400000);
+
     return days > 0 ? `in ${days}d` : days === 0 ? 'today' : 'started';
 }
 
 function formatDate(date: string) {
-    return new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return formatJakartaDate(date);
 }
 
 function toTitle(value: string) {

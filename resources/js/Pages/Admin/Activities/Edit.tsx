@@ -1,6 +1,7 @@
 import DatePicker from '@/Components/DatePicker';
 import SelectInput from '@/Components/SelectInput';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { formatJakartaTime, getJakartaDateKey } from '@/lib/datetime';
 import { Activity, Sport } from '@/types/jrclub';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
@@ -12,7 +13,7 @@ export default function Edit({ activity, sports, users }: { activity: Activity &
         title: activity.title,
         description: activity.description ?? '',
         location: activity.location,
-        scheduled_at: activity.scheduled_at.slice(0, 16),
+        scheduled_at: `${getJakartaDateKey(activity.scheduled_at)}T${formatJakartaTime(activity.scheduled_at)}`,
         max_participants: activity.max_participants?.toString() ?? '10',
         status: activity.status,
         sport_id: activity.sport.id,

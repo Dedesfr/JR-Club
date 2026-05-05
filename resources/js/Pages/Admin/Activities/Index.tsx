@@ -1,5 +1,6 @@
 import Pagination, { PaginatedResponse } from '@/Components/Pagination';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { formatJakartaDate, formatJakartaTime } from '@/lib/datetime';
 import { Activity } from '@/types/jrclub';
 import { Head, Link, router } from '@inertiajs/react';
 
@@ -46,7 +47,7 @@ export default function Index({ activities }: { activities: PaginatedResponse<Ac
                                         </td>
                                         <td className="px-6 py-4 text-on-surface-variant">{activity.sport?.name}</td>
                                         <td className="px-6 py-4 text-on-surface-variant">
-                                            {new Date(activity.scheduled_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                            {`${formatJakartaDate(activity.scheduled_at, { year: 'numeric', month: 'short', day: 'numeric' }, 'id-ID')} ${formatJakartaTime(activity.scheduled_at, 'id-ID')}`}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="rounded-full bg-surface-container-low px-2.5 py-1 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
