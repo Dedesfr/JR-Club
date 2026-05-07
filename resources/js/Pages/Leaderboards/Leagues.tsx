@@ -129,11 +129,11 @@ export default function Leagues({
     if (!showPodium) {
         if (isGroupStandings) {
             const all = (standings as LeagueStandingGroup[]).flatMap((g) => g.entries);
-            const topRow = all.filter((r) => (r.played ?? 0) > 0).sort((a, b) => ((b.won ?? 0) * 2 + (b.lost ?? 0)) - ((a.won ?? 0) * 2 + (a.lost ?? 0)))[0];
-            if (topRow) currentLeader = { label: topRow.entry.label, points: (topRow.won ?? 0) * 2 + (topRow.lost ?? 0) };
+            const topRow = all.filter((r) => (r.played ?? 0) > 0).sort(compareGroupStandingRows)[0];
+            if (topRow) currentLeader = { label: topRow.entry.label, points: topRow.points ?? 0 };
         } else {
             const top = (standings as Standing[])[0];
-            if (top && top.played > 0) currentLeader = { label: top.team.name, points: (top.won ?? 0) * 2 + (top.lost ?? 0) };
+            if (top && top.played > 0) currentLeader = { label: top.team.name, points: top.points ?? 0 };
         }
     }
 
@@ -474,7 +474,7 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
                         <div className="w-7 text-center text-on-surface-variant">{row.won}</div>
                         <div className="w-7 text-center text-on-surface-variant">{row.drawn}</div>
                         <div className="w-7 text-center text-on-surface-variant">{row.lost}</div>
-                        <div className={`w-10 text-right ${isLeader ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{(row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
+                        <div className={`w-10 text-right ${isLeader ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{row.points ?? 0}</div>
                     </div>
                 );
             })}
@@ -483,6 +483,8 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
 }
 
 function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; advanceCount: number }) {
+    const sortedEntries = [...group.entries].sort(compareGroupStandingRows);
+
     return (
         <div className="flex h-full flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_4px_12px_-6px_rgba(25,28,30,0.08)]">
             <div className="flex items-center justify-between border-b border-outline-variant/30 bg-surface-container-low px-4 py-2.5">
@@ -500,7 +502,7 @@ function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; ad
                 <div className="w-9 shrink-0 text-center" title="Accumulated Score">Scr</div>
                 <div className="w-9 shrink-0 text-right font-black text-on-surface" title="Points">Pts</div>
             </div>
-            {group.entries.map((row: LeagueGroupStanding, index) => {
+            {sortedEntries.map((row: LeagueGroupStanding, index) => {
                 const advances = advanceCount > 0 && index < advanceCount;
                 const isCutRow = advanceCount > 0 && index === advanceCount;
                 return (
@@ -524,11 +526,24 @@ function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; ad
                             <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.won ?? 0}</div>
                             <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.lost ?? 0}</div>
                             <div className="w-9 shrink-0 text-center text-on-surface-variant">{row.score ?? 0}</div>
-                            <div className={`w-9 shrink-0 text-right ${advances ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{(row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
+                            <div className={`w-9 shrink-0 text-right ${advances ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{row.points ?? 0}</div>
                         </div>
                     </div>
                 );
             })}
         </div>
     );
+}
+
+function compareGroupStandingRows(a: LeagueGroupStanding, b: LeagueGroupStanding) {
+    const pointDiff = (b.points ?? 0) - (a.points ?? 0);
+    if (pointDiff !== 0) return pointDiff;
+
+    const scoreDiff = (b.score ?? 0) - (a.score ?? 0);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const winDiff = (b.won ?? 0) - (a.won ?? 0);
+    if (winDiff !== 0) return winDiff;
+
+    return a.entry.label.localeCompare(b.entry.label);
 }

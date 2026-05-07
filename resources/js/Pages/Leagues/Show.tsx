@@ -387,6 +387,8 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
 }
 
 function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; advanceCount: number }) {
+    const sortedEntries = [...group.entries].sort(compareGroupStandingRows);
+
     return (
         <div className="flex h-full flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
             <div className="flex items-center justify-between border-b border-outline-variant/30 bg-surface-container-low px-4 py-2.5">
@@ -402,7 +404,7 @@ function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; ad
                 <div className="w-9 shrink-0 text-center" title="Accumulated Score">Scr</div>
                 <div className="w-9 shrink-0 text-right font-black text-on-surface" title="Points">Pts</div>
             </div>
-            {group.entries.map((row: LeagueGroupStanding, index) => {
+            {sortedEntries.map((row: LeagueGroupStanding, index) => {
                 const advances = advanceCount > 0 && index < advanceCount;
                 const isCutRow = advanceCount > 0 && index === advanceCount;
 
@@ -527,4 +529,17 @@ function toDateValue(dateString?: string | null) {
 
 function toTitle(value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function compareGroupStandingRows(a: LeagueGroupStanding, b: LeagueGroupStanding) {
+    const pointDiff = (b.points ?? 0) - (a.points ?? 0);
+    if (pointDiff !== 0) return pointDiff;
+
+    const scoreDiff = (b.score ?? 0) - (a.score ?? 0);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const winDiff = (b.won ?? 0) - (a.won ?? 0);
+    if (winDiff !== 0) return winDiff;
+
+    return a.entry.label.localeCompare(b.entry.label);
 }
