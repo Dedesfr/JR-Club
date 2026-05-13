@@ -1,8 +1,8 @@
 ---
-agent: build
+name: proposal
 description: Create a new change proposal with spec deltas
 ---
-<!-- prompter-managed-start -->
+
 <!-- PROMPTER:START -->
 **Guardrails**
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
@@ -25,4 +25,4 @@ description: Create a new change proposal with spec deltas
 - Search existing requirements with `rg -n "Requirement:|Scenario:" prompter/specs` before writing new ones.
 - Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so proposals align with current implementation realities.
 <!-- PROMPTER:END -->
-<!-- prompter-managed-end -->
+

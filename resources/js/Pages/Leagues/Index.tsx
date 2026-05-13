@@ -19,7 +19,6 @@ const sportImages: Record<string, string> = {
 export default function Index({
     leagues,
     allLeagues,
-    activeLeague,
     sports,
     teams,
     canManage,
@@ -27,7 +26,6 @@ export default function Index({
 }: {
     leagues: League[];
     allLeagues: League[];
-    activeLeague?: League;
     sports: Sport[];
     teams: Team[];
     canManage: boolean;
@@ -45,8 +43,6 @@ export default function Index({
     });
     const [selectedSportId, setSelectedSportId] = useState<string>('all');
     const visibleLeagues = selectedSportId === 'all' ? leagues : leagues.filter((league) => String(league.sport.id) === selectedSportId);
-    const featuredLeague = (selectedSportId === 'all' ? activeLeague : visibleLeagues[0]) ?? visibleLeagues[0];
-    const remainingLeagues = visibleLeagues.filter((league) => league.id !== featuredLeague?.id);
     const activeCount = allLeagues.filter((league) => league.status === 'active').length;
     const totalTeamCount = teams.length || allLeagues.reduce((count, league) => count + getLeagueEntrants(league), 0);
 
@@ -147,91 +143,19 @@ export default function Index({
             </section>
 
             {/* Section: Featured League Card */}
-            {featuredLeague ? (
-                <section className="mt-5 overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_2px_12px_rgba(15,23,42,0.08),0px_0px_0px_1px_rgba(15,23,42,0.04)] md:grid md:grid-cols-[20rem_minmax(0,1fr)]">
-                    {/* Cover image */}
-                    <div className="relative min-h-56 overflow-hidden md:min-h-72">
-                        <img src={featuredLeague.banner_url || getSportImage(featuredLeague.sport.name)} alt="" className="h-full w-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/70 via-inverse-surface/20 to-transparent md:bg-gradient-to-r md:from-inverse-surface/20 md:via-transparent md:to-surface-container-lowest" />
-                        {/* Status pill */}
-                        <StatusPill status={featuredLeague.status} className="absolute left-4 top-4" />
-                        {/* Mobile-only: title overlay on image */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4 md:hidden">
-                            <div className="mb-2 flex flex-wrap gap-1.5">
-                                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white backdrop-blur-sm">{featuredLeague.sport.name}</span>
-                                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white backdrop-blur-sm">{getLeagueFormat(featuredLeague)}</span>
-                            </div>
-                            <Link href={route('leagues.show', featuredLeague.id)} className="text-2xl font-black leading-tight text-white">
-                                {featuredLeague.name}
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* Card content */}
-                    <div className="flex flex-col justify-center p-5 md:p-8">
-                        {/* Desktop-only: title + badges */}
-                        <div className="hidden md:block">
-                            <div className="mb-3 flex flex-wrap gap-2">
-                                <span className="rounded-full bg-primary-fixed px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">{featuredLeague.sport.name}</span>
-                                <span className="rounded-full bg-tertiary-fixed px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-tertiary">{getLeagueFormat(featuredLeague)}</span>
-                            </div>
-                            <Link href={route('leagues.show', featuredLeague.id)} className="text-3xl font-black leading-tight tracking-normal text-on-surface lg:text-4xl">
-                                {featuredLeague.name}
-                            </Link>
-                        </div>
-
-                        <p className="mt-3 max-w-lg text-sm font-medium leading-6 text-on-surface-variant">
-                            {featuredLeague.description || getStatusCopy(featuredLeague.status)}
-                        </p>
-
-                        {/* Metrics block */}
-                        <div className="mt-5 grid grid-cols-3 divide-x divide-surface-container rounded-xl bg-surface-container-low py-4">
-                            <div className="px-3 text-center">
-                                <p className="text-[0.6rem] font-bold uppercase tracking-wider text-on-surface-variant">Entrants</p>
-                                <p className="mt-1 text-2xl font-black text-on-surface md:text-3xl">{getLeagueEntrants(featuredLeague)}</p>
-                            </div>
-                            <div className="px-3 text-center">
-                                <p className="text-[0.6rem] font-bold uppercase tracking-wider text-on-surface-variant">Groups</p>
-                                <p className="mt-1 text-2xl font-black text-on-surface md:text-3xl">{featuredLeague.group_count ?? featuredLeague.groups?.length ?? '-'}</p>
-                            </div>
-                            <div className="px-3 text-center">
-                                <p className="text-[0.6rem] font-bold uppercase tracking-wider text-on-surface-variant">Status</p>
-                                <p className="mt-1 text-lg font-black text-on-surface">{toTitle(featuredLeague.status)}</p>
-                            </div>
-                        </div>
-
-                        {/* CTAs */}
-                        <div className="mt-5 flex flex-wrap gap-3">
-                            <Link
-                                href={route('leagues.show', featuredLeague.id)}
-                                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-3 text-sm font-bold text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)] transition-transform active:scale-[0.98]"
-                            >
-                                Open Standings
-                                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                            </Link>
-                            {canManage ? (
-                                <Link href={route('admin.leagues.index')} className="rounded-full bg-surface-container-low px-5 py-3 text-sm font-bold text-on-surface transition-colors hover:bg-surface-container lg:hidden">
-                                    Manage
-                                </Link>
-                            ) : null}
-                        </div>
-                    </div>
-                </section>
-            ) : null}
-
-            {/* Section: Remaining league cards */}
-            {remainingLeagues.length > 0 ? (
+            {/* Section: League cards */}
+            {visibleLeagues.length > 0 ? (
                 <section className="mt-6">
                     <div className="mb-4 flex items-end justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <h2 className="text-lg font-black tracking-tight text-on-surface md:text-xl">Other Tournaments</h2>
+                            <h2 className="text-lg font-black tracking-tight text-on-surface md:text-xl">Tournaments</h2>
                             <span className="inline-flex h-6 min-w-[1.75rem] items-center justify-center rounded-full bg-surface-container px-2 text-xs font-bold text-on-surface-variant">
-                                {remainingLeagues.length}
+                                {visibleLeagues.length}
                             </span>
                         </div>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {remainingLeagues.map((league) => (
+                        {visibleLeagues.map((league) => (
                             <CompactLeagueCard key={league.id} league={league} />
                         ))}
                     </div>

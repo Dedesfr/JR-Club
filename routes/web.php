@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\ActivityController as AdminActivityController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LeagueBracketController as AdminLeagueBracketController;
@@ -31,9 +32,7 @@ use Illuminate\Support\Facades\URL;
 
 Route::redirect('/', '/leagues');
 
-Route::get('/dashboard', function () {
-    return redirect()->route('leagues.index');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::resource('activities', ActivityController::class)->only(['index', 'show']);
 Route::resource('teams', TeamController::class)->only(['index', 'show']);
@@ -102,6 +101,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/matches/{match}/documents/{document}', [AdminLeagueMatchController::class, 'destroyDocument'])->name('matches.documents.destroy');
         
         Route::post('/matches/{match}/sets', [AdminLeagueMatchController::class, 'store'])->name('matches.sets.store');
+        Route::patch('/matches/{match}/sets/{set}', [AdminLeagueMatchController::class, 'updateSet'])->name('matches.sets.update');
+        Route::delete('/matches/{match}/sets/{set}', [AdminLeagueMatchController::class, 'destroySet'])->name('matches.sets.destroy');
+        Route::post('/matches/{match}/lock', [AdminLeagueMatchController::class, 'lock'])->name('matches.lock');
+        Route::post('/matches/{match}/unlock', [AdminLeagueMatchController::class, 'unlock'])->name('matches.unlock');
         Route::post('/matches/{match}/complete', [AdminLeagueMatchController::class, 'complete'])->name('matches.complete');
 
         Route::get('/sports', [AdminSportController::class, 'index'])->name('sports.index');

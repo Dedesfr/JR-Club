@@ -1,8 +1,8 @@
 ---
-agent: build
+name: archive
 description: Archive a completed change and update specs
 ---
-<!-- prompter-managed-start -->
+
 <!-- PROMPTER:START -->
 **Guardrails**
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
@@ -24,4 +24,4 @@ description: Archive a completed change and update specs
 - Use `prompter list` to confirm change IDs before archiving.
 - Inspect refreshed specs with `prompter list --specs` and address any validation issues before handing off.
 <!-- PROMPTER:END -->
-<!-- prompter-managed-end -->
+

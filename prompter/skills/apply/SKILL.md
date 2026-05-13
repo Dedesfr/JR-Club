@@ -1,4 +1,8 @@
-<!-- prompter-managed-start -->
+---
+name: apply
+description: Implement and apply an approved change proposal
+---
+
 <!-- PROMPTER:START -->
 **Guardrails**
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
@@ -16,4 +20,4 @@ Track these steps as TODOs and complete them one by one.
 **Reference**
 - Use `prompter show <id> --json --deltas-only` if you need additional context from the proposal while implementing.
 <!-- PROMPTER:END -->
-<!-- prompter-managed-end -->
+

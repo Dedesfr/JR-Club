@@ -69,6 +69,7 @@ export type LeagueGroupStanding = {
     won?: number;
     lost?: number;
     score?: number;
+    score_difference?: number;
 };
 
 export type LeagueStandingGroup = {
@@ -148,6 +149,7 @@ export type MatchDocument = {
 export type GameMatch = {
     id: number;
     status: string;
+    locked?: boolean;
     stage?: string | null;
     round?: number | null;
     group?: {
@@ -181,4 +183,5 @@ export type Standing = {
     goals_for: number;
     goals_against: number;
     points: number;
+    score_difference?: number;
 };

@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { GameMatch, MatchSet } from '@/types/jrclub';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import JRClubLayout from '@/Layouts/JRClubLayout';
 import { formatJakartaDateTime, formatJakartaTime } from '@/lib/datetime';
@@ -184,28 +184,59 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
 
                     {/* Section: Admin Controls — separated from scoreboard */}
                     {canManage && (
-                        <section className={`flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface-container-lowest p-4 ${CARD_SHADOW}`}>
-                            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Match Controls</p>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <button
-                                    onClick={() => router.post(route('matches.start', match.id))}
-                                    disabled={isLive || isFinal}
-                                    className="inline-flex items-center gap-1.5 rounded bg-gradient-to-br from-primary to-primary-container px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-primary shadow-[0_8px_16px_rgba(0,86,164,0.15)] transition hover:shadow-[0_12px_24px_rgba(0,86,164,0.25)] disabled:opacity-40 disabled:shadow-none"
-                                >
-                                    <span className="material-symbols-outlined text-base">play_arrow</span>
-                                    Start
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        if (confirm('End this match? This cannot be undone.')) router.post(route('matches.end', match.id));
-                                    }}
-                                    disabled={isFinal}
-                                    className="inline-flex items-center gap-1.5 rounded bg-surface-container-high px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface transition hover:bg-surface-container-highest disabled:opacity-40"
-                                >
-                                    <span className="material-symbols-outlined text-base">stop_circle</span>
-                                    End Match
-                                </button>
+                        <section className={`flex flex-col gap-3 rounded-xl bg-surface-container-lowest p-4 ${CARD_SHADOW}`}>
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                    <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Match Controls</p>
+                                    {match.locked && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-error/10 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-error">
+                                            <span className="material-symbols-outlined text-[12px]">lock</span>
+                                            Locked
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <button
+                                        onClick={() => router.post(route('matches.start', match.id))}
+                                        disabled={isLive || isFinal}
+                                        className="inline-flex items-center gap-1.5 rounded bg-gradient-to-br from-primary to-primary-container px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-primary shadow-[0_8px_16px_rgba(0,86,164,0.15)] transition hover:shadow-[0_12px_24px_rgba(0,86,164,0.25)] disabled:opacity-40 disabled:shadow-none"
+                                    >
+                                        <span className="material-symbols-outlined text-base">play_arrow</span>
+                                        Start
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (confirm('End this match? This cannot be undone.')) router.post(route('matches.end', match.id));
+                                        }}
+                                        disabled={isFinal}
+                                        className="inline-flex items-center gap-1.5 rounded bg-surface-container-high px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface transition hover:bg-surface-container-highest disabled:opacity-40"
+                                    >
+                                        <span className="material-symbols-outlined text-base">stop_circle</span>
+                                        End Match
+                                    </button>
+                                    {match.locked ? (
+                                        <button
+                                            onClick={() => router.post(route('admin.matches.unlock', match.id), {}, { preserveScroll: true })}
+                                            className="inline-flex items-center gap-1.5 rounded bg-surface-container-high px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface transition hover:bg-surface-container-highest"
+                                        >
+                                            <span className="material-symbols-outlined text-base">lock_open</span>
+                                            Unlock
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => router.post(route('admin.matches.lock', match.id), {}, { preserveScroll: true })}
+                                            disabled={!isLive && !isFinal}
+                                            className="inline-flex items-center gap-1.5 rounded bg-surface-container-high px-4 py-2 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface transition hover:bg-surface-container-highest disabled:opacity-40"
+                                        >
+                                            <span className="material-symbols-outlined text-base">lock</span>
+                                            Lock
+                                        </button>
+                                    )}
+                                </div>
                             </div>
+                            {!match.locked && !isFinal && (
+                                <RecordSetForm matchId={match.id} homeLabel={homeLabel} awayLabel={awayLabel} />
+                            )}
                         </section>
                     )}
 
@@ -231,6 +262,9 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                                         state={played ? 'final' : isCurrent ? 'live' : 'pending'}
                                         homePoints={played?.home_points ?? (isCurrent ? score.home : null)}
                                         awayPoints={played?.away_points ?? (isCurrent ? score.away : null)}
+                                        set={played}
+                                        matchId={match.id}
+                                        canManage={canManage && !match.locked}
                                     />
                                 );
                             })}
@@ -347,7 +381,10 @@ function ScoreStepper({ label, value, onInc, onDec, align = 'start' }: { label: 
     );
 }
 
-function SetCard({ setNumber, homeLabel, awayLabel, state, homePoints, awayPoints }: { setNumber: number; homeLabel: string; awayLabel: string; state: 'final' | 'live' | 'pending'; homePoints: number | null; awayPoints: number | null }) {
+function SetCard({ setNumber, homeLabel, awayLabel, state, homePoints, awayPoints, set, matchId, canManage }: { setNumber: number; homeLabel: string; awayLabel: string; state: 'final' | 'live' | 'pending'; homePoints: number | null; awayPoints: number | null; set?: MatchSet; matchId?: number; canManage?: boolean }) {
+    const [editing, setEditing] = useState(false);
+    const form = useForm({ home_points: String(set?.home_points ?? ''), away_points: String(set?.away_points ?? '') });
+
     const base = 'rounded-lg p-4 transition';
     if (state === 'pending') {
         return (
@@ -363,11 +400,69 @@ function SetCard({ setNumber, homeLabel, awayLabel, state, homePoints, awayPoint
     }
     const isLive = state === 'live';
     const homeWon = (homePoints ?? 0) > (awayPoints ?? 0);
+
+    if (editing && set && matchId) {
+        return (
+            <div className={`${base} bg-surface-container-low ring-2 ring-primary`}>
+                <p className="mb-3 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Edit Set {setNumber}</p>
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        form.patch(route('admin.matches.sets.update', { match: matchId, set: set.id }), {
+                            preserveScroll: true,
+                            onSuccess: () => setEditing(false),
+                        });
+                    }}
+                    className="grid gap-2"
+                >
+                    <div className="grid grid-cols-2 gap-2">
+                        <div>
+                            <p className="mb-1 text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">{homeLabel}</p>
+                            <input type="number" min={0} value={form.data.home_points} onChange={(e) => form.setData('home_points', e.target.value)} className="w-full rounded-lg border-0 bg-surface-container px-2 py-2 text-sm font-bold" />
+                        </div>
+                        <div>
+                            <p className="mb-1 text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">{awayLabel}</p>
+                            <input type="number" min={0} value={form.data.away_points} onChange={(e) => form.setData('away_points', e.target.value)} className="w-full rounded-lg border-0 bg-surface-container px-2 py-2 text-sm font-bold" />
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <button type="submit" disabled={form.processing} className="flex-1 rounded-full bg-gradient-to-br from-primary to-primary-container py-2 text-[0.6875rem] font-bold text-on-primary disabled:opacity-40">Save</button>
+                        <button type="button" onClick={() => setEditing(false)} className="flex-1 rounded-full bg-surface-container-high py-2 text-[0.6875rem] font-bold text-on-surface">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        );
+    }
+
     return (
         <div className={`${base} ${isLive ? 'bg-surface-container-lowest ring-2 ring-primary' : 'bg-surface-container-low'}`}>
-            <p className={`text-[0.6875rem] font-bold uppercase tracking-[0.05em] ${isLive ? 'text-primary' : 'text-on-surface-variant'}`}>
-                {isLive ? <><span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-error align-middle" />Set {setNumber} · Live</> : `Set ${setNumber} · Final`}
-            </p>
+            <div className="flex items-start justify-between">
+                <p className={`text-[0.6875rem] font-bold uppercase tracking-[0.05em] ${isLive ? 'text-primary' : 'text-on-surface-variant'}`}>
+                    {isLive ? <><span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-error align-middle" />Set {setNumber} · Live</> : `Set ${setNumber} · Final`}
+                </p>
+                {canManage && set && matchId && (
+                    <div className="flex gap-1">
+                        <button
+                            onClick={() => setEditing(true)}
+                            className="grid h-6 w-6 place-items-center rounded text-on-surface-variant transition hover:bg-surface-container-high hover:text-on-surface"
+                            aria-label="Edit set"
+                        >
+                            <span className="material-symbols-outlined text-[14px]">edit</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (confirm(`Delete set ${setNumber}?`)) {
+                                    router.delete(route('admin.matches.sets.destroy', { match: matchId, set: set.id }), { preserveScroll: true });
+                                }
+                            }}
+                            className="grid h-6 w-6 place-items-center rounded text-on-surface-variant transition hover:bg-error/10 hover:text-error"
+                            aria-label="Delete set"
+                        >
+                            <span className="material-symbols-outlined text-[14px]">delete</span>
+                        </button>
+                    </div>
+                )}
+            </div>
             <div className="mt-2 flex items-end justify-between gap-2">
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-[0.6875rem] font-medium uppercase tracking-[0.05em] text-on-surface-variant">{homeLabel}</p>
@@ -444,5 +539,40 @@ function PlayerRow({ name, role, highlight = false, icon }: { name: string; role
                 <p className={`truncate text-[0.6875rem] font-bold uppercase tracking-[0.05em] ${highlight ? 'text-on-tertiary-container' : 'text-on-surface-variant'}`}>{role}</p>
             </div>
         </li>
+    );
+}
+
+function RecordSetForm({ matchId, homeLabel, awayLabel }: { matchId: number; homeLabel: string; awayLabel: string }) {
+    const form = useForm({ home_points: '', away_points: '' });
+
+    return (
+        <form
+            onSubmit={(e) => {
+                e.preventDefault();
+                form.post(route('admin.matches.sets.store', matchId), {
+                    preserveScroll: true,
+                    onSuccess: () => form.reset(),
+                });
+            }}
+            className="border-t border-surface-container-high pt-3"
+        >
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Record Set</p>
+            <div className="flex flex-wrap items-end gap-2">
+                <div className="flex-1 min-w-[5rem]">
+                    <label className="mb-1 block text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">{homeLabel}</label>
+                    <input type="number" min={0} value={form.data.home_points} onChange={(e) => form.setData('home_points', e.target.value)} className="w-full rounded-lg border-0 bg-surface-container px-3 py-2 text-sm font-bold" placeholder="0" />
+                </div>
+                <div className="flex-1 min-w-[5rem]">
+                    <label className="mb-1 block text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">{awayLabel}</label>
+                    <input type="number" min={0} value={form.data.away_points} onChange={(e) => form.setData('away_points', e.target.value)} className="w-full rounded-lg border-0 bg-surface-container px-3 py-2 text-sm font-bold" placeholder="0" />
+                </div>
+                <button type="submit" disabled={form.processing} className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-2 text-[0.6875rem] font-bold text-on-primary disabled:opacity-40">
+                    Save Set
+                </button>
+            </div>
+            {form.errors.home_points && <p className="mt-1 text-[0.75rem] text-error">{form.errors.home_points}</p>}
+            {form.errors.away_points && <p className="mt-1 text-[0.75rem] text-error">{form.errors.away_points}</p>}
+            {(form.errors as any).locked && <p className="mt-1 text-[0.75rem] text-error">{(form.errors as any).locked}</p>}
+        </form>
     );
 }

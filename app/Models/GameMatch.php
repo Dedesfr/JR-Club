@@ -20,6 +20,7 @@ class GameMatch extends Model
         'away_entry_id',
         'scheduled_at',
         'status',
+        'locked',
         'stage',
         'round',
         'bracket_slot',
@@ -35,7 +36,13 @@ class GameMatch extends Model
         return [
             'scheduled_at' => 'datetime',
             'round' => 'integer',
+            'locked' => 'boolean',
         ];
+    }
+
+    public function isLocked(): bool
+    {
+        return (bool) $this->locked;
     }
 
     public function league()

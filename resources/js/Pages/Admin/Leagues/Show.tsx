@@ -1,4 +1,5 @@
 import BracketTree from '@/Components/BracketTree';
+import Modal from '@/Components/Modal';
 import DatePicker from '@/Components/DatePicker';
 import DivisionPicker from '@/Components/DivisionPicker';
 import ParticipantPicker from '@/Components/ParticipantPicker';
@@ -11,7 +12,7 @@ import ParticipantImportDialog from '@/Components/ParticipantImportDialog';
 import EntryEditModal from '@/Components/EntryEditModal';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { formatJakartaDate, formatJakartaTime, getJakartaDateKey, JAKARTA_TIME_ZONE } from '@/lib/datetime';
-import { GameMatch, League, LeagueAward, LeagueEntry, LeagueStandingGroup, Team } from '@/types/jrclub';
+import { GameMatch, League, LeagueAward, LeagueEntry, LeagueStandingGroup, MatchSet, Team } from '@/types/jrclub';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -86,6 +87,8 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     const [editEntry, setEditEntry] = useState<LeagueEntry | null>(null);
     const [subModalMatch, setSubModalMatch] = useState<GameMatch | null>(null);
     const [photoModalMatch, setPhotoModalMatch] = useState<GameMatch | null>(null);
+    const [editingSet, setEditingSet] = useState<{ matchId: number; set: MatchSet } | null>(null);
+    const editSetForm = useForm({ home_points: '', away_points: '' });
     const awardForm = useForm({ title: '', winner_label: '' });
 
 
@@ -636,7 +639,11 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                                                     <div className="flex gap-1 px-2 shrink-0">
                                                                         {(match.sets ?? []).length > 0 ? (
                                                                             match.sets?.map((set) => (
-                                                                                <span key={set.id} className="rounded bg-surface-container border border-outline-variant/20 px-1.5 py-0.5 text-[0.6875rem] font-bold text-on-surface-variant">{set.home_points}-{set.away_points}</span>
+                                                                                <span key={set.id} className="inline-flex items-center gap-0.5 rounded bg-surface-container border border-outline-variant/20 px-1.5 py-0.5 text-[0.6875rem] font-bold text-on-surface-variant">
+                                                                                    {set.home_points}-{set.away_points}
+                                                                                    <button type="button" onClick={() => { setEditingSet({ matchId: match.id, set }); editSetForm.setData({ home_points: String(set.home_points), away_points: String(set.away_points) }); }} className="grid h-4 w-4 place-items-center rounded text-on-surface-variant hover:text-primary" aria-label="Edit set"><span className="material-symbols-outlined text-[11px]">edit</span></button>
+                                                                                    <button type="button" onClick={() => { if (confirm(`Delete set ${set.set_number}?`)) router.delete(route('admin.matches.sets.destroy', { match: match.id, set: set.id }), { preserveScroll: true }); }} className="grid h-4 w-4 place-items-center rounded text-on-surface-variant hover:text-error" aria-label="Delete set"><span className="material-symbols-outlined text-[11px]">delete</span></button>
+                                                                                </span>
                                                                             ))
                                                                         ) : (
                                                                             <span className="text-[0.6875rem] text-outline-variant italic">No sets</span>
@@ -647,11 +654,11 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                                                     <div className="flex items-center gap-1 shrink-0">
                                                                         <button type="button" onClick={() => setSubModalMatch(match)} className="rounded border border-outline-variant/20 px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary hover:bg-surface-container hover:text-primary transition-colors">Sub</button>
                                                                         <button type="button" onClick={() => setPhotoModalMatch(match)} className="rounded border border-outline-variant/20 px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-secondary hover:bg-surface-container hover:text-primary transition-colors">Pics</button>
-                                                                        {usesTournamentEntries ? (
+                                                                        {usesTournamentEntries && match.status !== 'completed' ? (
                                                                             <SetScoreEntry matchId={match.id} label="+ Set" homeLabel={match.home_label} awayLabel={match.away_label} />
-                                                                        ) : (
+                                                                        ) : !usesTournamentEntries ? (
                                                                             <Link href={route('matches.show', match.id)} className="rounded-full bg-primary text-on-primary px-3 py-1 text-[0.6875rem] font-bold shadow-[0px_4px_8px_rgba(0,86,164,0.15)] hover:scale-[0.98] transition-all">Open</Link>
-                                                                        )}
+                                                                        ) : null}
                                                                     </div>
                                                                 </div>
                                                             );
@@ -705,8 +712,10 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                                                     {(match.sets ?? []).length > 0 && (
                                                                         <div className="flex flex-wrap gap-1 border-t border-outline-variant/10 pt-2 mb-3">
                                                                             {match.sets?.map((set) => (
-                                                                                <span key={set.id} className="rounded bg-surface-container border border-outline-variant/20 px-2 py-0.5 text-[0.6875rem] font-bold text-on-surface-variant">
+                                                                                <span key={set.id} className="inline-flex items-center gap-0.5 rounded bg-surface-container border border-outline-variant/20 px-2 py-0.5 text-[0.6875rem] font-bold text-on-surface-variant">
                                                                                     {set.home_points}-{set.away_points}
+                                                                                    <button type="button" onClick={() => { setEditingSet({ matchId: match.id, set }); editSetForm.setData({ home_points: String(set.home_points), away_points: String(set.away_points) }); }} className="grid h-4 w-4 place-items-center rounded text-on-surface-variant hover:text-primary" aria-label="Edit set"><span className="material-symbols-outlined text-[11px]">edit</span></button>
+                                                                                    <button type="button" onClick={() => { if (confirm(`Delete set ${set.set_number}?`)) router.delete(route('admin.matches.sets.destroy', { match: match.id, set: set.id }), { preserveScroll: true }); }} className="grid h-4 w-4 place-items-center rounded text-on-surface-variant hover:text-error" aria-label="Delete set"><span className="material-symbols-outlined text-[11px]">delete</span></button>
                                                                                 </span>
                                                                             ))}
                                                                         </div>
@@ -714,11 +723,11 @@ export default function Show({ league, users, teams, divisionOptions, standings,
 
                                                                      {/* Bottom: Action */}
                                                                      <div className="flex items-center justify-center pt-2 border-t border-outline-variant/10">
-                                                                        {usesTournamentEntries ? (
+                                                                        {usesTournamentEntries && match.status !== 'completed' ? (
                                                                             <SetScoreEntry matchId={match.id} label="Record Set" homeLabel={match.home_label} awayLabel={match.away_label} />
-                                                                        ) : (
+                                                                        ) : !usesTournamentEntries ? (
                                                                             <Link href={route('matches.show', match.id)} className="rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2 text-[0.875rem] font-bold uppercase tracking-widest shadow-[0px_4px_8px_rgba(0,86,164,0.15)] hover:scale-[0.98] transition-all">Open</Link>
-                                                                        )}
+                                                                        ) : null}
                                                                     </div>
                                                                 </div>
                                                             );
@@ -759,6 +768,37 @@ export default function Show({ league, users, teams, divisionOptions, standings,
             {photoModalMatch && (
                 <PhotoUploader match={photoModalMatch} onClose={() => setPhotoModalMatch(null)} />
             )}
+
+            <Modal show={!!editingSet} onClose={() => setEditingSet(null)}>
+                {editingSet && (
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            editSetForm.patch(route('admin.matches.sets.update', { match: editingSet.matchId, set: editingSet.set.id }), {
+                                preserveScroll: true,
+                                onSuccess: () => setEditingSet(null),
+                            });
+                        }}
+                        className="grid gap-4 p-6"
+                    >
+                        <div>
+                            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Edit Set {editingSet.set.set_number}</p>
+                            <h3 className="text-xl font-black tracking-tight text-on-surface">Update set score</h3>
+                        </div>
+                        <label className="grid gap-2 text-sm font-medium text-on-surface">
+                            <span>Home points</span>
+                            <input type="number" min={0} value={editSetForm.data.home_points} onChange={(e) => editSetForm.setData('home_points', e.target.value)} className="rounded-xl border-0 bg-surface-container-low px-3 py-3" />
+                        </label>
+                        <label className="grid gap-2 text-sm font-medium text-on-surface">
+                            <span>Away points</span>
+                            <input type="number" min={0} value={editSetForm.data.away_points} onChange={(e) => editSetForm.setData('away_points', e.target.value)} className="rounded-xl border-0 bg-surface-container-low px-3 py-3" />
+                        </label>
+                        <button disabled={editSetForm.processing} className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-3 text-sm font-bold uppercase tracking-widest text-on-primary disabled:opacity-40">
+                            Save
+                        </button>
+                    </form>
+                )}
+            </Modal>
         </AdminLayout>
     );
 }

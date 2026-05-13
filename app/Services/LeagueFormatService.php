@@ -358,7 +358,7 @@ class LeagueFormatService
             ->map(function (LeagueGroup $group) {
                 $stats = [];
                 foreach ($group->groupEntries as $ge) {
-                    $stats[$ge->entry->id] = ['played' => 0, 'won' => 0, 'lost' => 0, 'score' => 0];
+                    $stats[$ge->entry->id] = ['played' => 0, 'won' => 0, 'lost' => 0, 'score' => 0, 'score_against' => 0];
                 }
 
                 foreach ($group->matches->where('status', 'completed') as $match) {
@@ -373,6 +373,7 @@ class LeagueFormatService
                         if ($match->sets) {
                             foreach ($match->sets as $set) {
                                 $stats[$match->home_entry_id]['score'] += $set->home_points;
+                                $stats[$match->home_entry_id]['score_against'] += $set->away_points;
                             }
                         }
                     }
@@ -388,6 +389,7 @@ class LeagueFormatService
                         if ($match->sets) {
                             foreach ($match->sets as $set) {
                                 $stats[$match->away_entry_id]['score'] += $set->away_points;
+                                $stats[$match->away_entry_id]['score_against'] += $set->home_points;
                             }
                         }
                     }
@@ -399,6 +401,8 @@ class LeagueFormatService
                         ->sortBy([
                             ['points', 'desc'],
                             [fn ($entry) => $entry->manual_advance_rank ?? PHP_INT_MAX, 'asc'],
+                            [fn ($entry) => -($stats[$entry->entry->id]['score'] ?? 0) + ($stats[$entry->entry->id]['score_against'] ?? 0), 'asc'],
+                            [fn ($entry) => -($stats[$entry->entry->id]['score'] ?? 0), 'asc'],
                             ['seed', 'asc'],
                         ])
                         ->values()
@@ -411,6 +415,7 @@ class LeagueFormatService
                             'won' => $stats[$groupEntry->entry->id]['won'] ?? 0,
                             'lost' => $stats[$groupEntry->entry->id]['lost'] ?? 0,
                             'score' => $stats[$groupEntry->entry->id]['score'] ?? 0,
+                            'score_difference' => ($stats[$groupEntry->entry->id]['score'] ?? 0) - ($stats[$groupEntry->entry->id]['score_against'] ?? 0),
                         ])
                         ->all(),
                 ];
@@ -429,6 +434,7 @@ class LeagueFormatService
             'goals_for' => 0,
             'goals_against' => 0,
             'points' => 0,
+            'score_difference' => 0,
         ]])->all();
 
         foreach ($league->matches->where('status', 'completed') as $match) {
@@ -456,6 +462,13 @@ class LeagueFormatService
             }
         }
 
-        return collect($rows)->sortByDesc('points')->values()->all();
+        return collect($rows)->map(function ($row) {
+            $row['score_difference'] = $row['goals_for'] - $row['goals_against'];
+            return $row;
+        })->sortBy([
+            ['points', 'desc'],
+            ['score_difference', 'desc'],
+            ['goals_for', 'desc'],
+        ])->values()->all();
     }
 }

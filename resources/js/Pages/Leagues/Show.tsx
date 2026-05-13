@@ -363,10 +363,13 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
                 <div className="w-7 shrink-0 text-center">MP</div>
                 <div className="w-7 shrink-0 text-center">W</div>
                 <div className="w-7 shrink-0 text-center">L</div>
+                <div className="w-9 shrink-0 text-center" title="Accumulated Score">Scr</div>
+                <div className="w-9 shrink-0 text-center" title="Score Difference">SD</div>
                 <div className="w-9 shrink-0 text-right font-black text-on-surface">Pts</div>
             </div>
             {standings.map((row, index) => {
                 const isLeader = index === 0 && row.played > 0;
+                const sd = row.score_difference ?? 0;
 
                 return (
                     <div key={row.team.id} className={`flex items-center border-b border-outline-variant/10 px-3 py-2.5 text-sm last:border-b-0 ${isLeader ? 'border-l-2 border-l-primary bg-primary/5' : ''}`}>
@@ -378,6 +381,8 @@ function TeamStandings({ standings }: { standings: Standing[] }) {
                         <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.played}</div>
                         <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.won}</div>
                         <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.lost}</div>
+                        <div className="w-9 shrink-0 text-center text-on-surface-variant tabular-nums">{row.goals_for}</div>
+                        <div className={`w-9 shrink-0 text-center text-sm tabular-nums ${sd > 0 ? 'text-primary' : sd < 0 ? 'text-error' : 'text-on-surface-variant'}`}>{sd > 0 ? `+${sd}` : sd}</div>
                         <div className={`w-9 shrink-0 text-right ${isLeader ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{row.points ?? (row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
                     </div>
                 );
@@ -402,11 +407,13 @@ function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; ad
                 <div className="w-7 shrink-0 text-center" title="Win">W</div>
                 <div className="w-7 shrink-0 text-center" title="Loss">L</div>
                 <div className="w-9 shrink-0 text-center" title="Accumulated Score">Scr</div>
+                <div className="w-9 shrink-0 text-center" title="Score Difference">SD</div>
                 <div className="w-9 shrink-0 text-right font-black text-on-surface" title="Points">Pts</div>
             </div>
             {sortedEntries.map((row: LeagueGroupStanding, index) => {
                 const advances = advanceCount > 0 && index < advanceCount;
                 const isCutRow = advanceCount > 0 && index === advanceCount;
+                const sd = row.score_difference ?? 0;
 
                 return (
                     <div key={row.id}>
@@ -428,7 +435,8 @@ function GroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; ad
                             <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.played ?? 0}</div>
                             <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.won ?? 0}</div>
                             <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.lost ?? 0}</div>
-                            <div className="w-9 shrink-0 text-center text-on-surface-variant">{row.score ?? 0}</div>
+                            <div className="w-9 shrink-0 text-center text-on-surface-variant tabular-nums">{row.score ?? 0}</div>
+                            <div className={`w-9 shrink-0 text-center tabular-nums ${sd > 0 ? 'text-primary' : sd < 0 ? 'text-error' : 'text-on-surface-variant'}`}>{sd > 0 ? `+${sd}` : sd}</div>
                             <div className={`w-9 shrink-0 text-right ${advances ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{row.points ?? (row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
                         </div>
                     </div>
@@ -534,6 +542,9 @@ function toTitle(value: string) {
 function compareGroupStandingRows(a: LeagueGroupStanding, b: LeagueGroupStanding) {
     const pointDiff = (b.points ?? 0) - (a.points ?? 0);
     if (pointDiff !== 0) return pointDiff;
+
+    const sdDiff = (b.score_difference ?? 0) - (a.score_difference ?? 0);
+    if (sdDiff !== 0) return sdDiff;
 
     const scoreDiff = (b.score ?? 0) - (a.score ?? 0);
     if (scoreDiff !== 0) return scoreDiff;

@@ -202,3 +202,58 @@ The system SHALL allow admins to choose whether a badminton league starts from g
 - **THEN** the league is stored with `start_stage = bracket`
 - **AND** group generation is not required before bracket seeding
 
+### Requirement: League Awards
+The system SHALL allow leagues to store zero or more awards, where each award has a title and a winner label. Member-facing league detail screens SHALL display the awards section when awards exist.
+
+#### Scenario: View awards for a completed league
+- **WHEN** a user opens a league that has awards
+- **THEN** the league detail page shows each award title and its winner label
+
+#### Scenario: Hide awards when none exist
+- **WHEN** a user opens a league that has no awards
+- **THEN** the league detail page does not render an awards section
+
+#### Scenario: Seeded basketball awards are visible
+- **WHEN** the completed basketball tournament is seeded
+- **THEN** its awards are persisted with the league
+- **AND** the member-facing league detail page shows those awards
+
+### Requirement: Score Difference in Standings
+The system SHALL include a signed `score_difference` value in league standings rows, computed as the accumulated points-for minus points-against across all completed-match sets for that entry or team, and member-facing league standings SHALL display it as a dedicated column.
+
+#### Scenario: Score difference is positive
+- **WHEN** an entry has accumulated more points scored than conceded across completed matches
+- **THEN** the standings row exposes `score_difference` as a positive integer
+- **AND** the member league detail page renders it with a leading `+`
+
+#### Scenario: Score difference is negative
+- **WHEN** an entry has conceded more points than it has scored
+- **THEN** the standings row exposes `score_difference` as a negative integer
+- **AND** the member league detail page renders it with a leading `-`
+
+#### Scenario: No completed matches
+- **WHEN** an entry has no completed matches
+- **THEN** `score_difference` is `0`
+
+### Requirement: Member Dashboard Landing Page
+The system SHALL provide a member dashboard at `/dashboard` that summarises the signed-in user's upcoming matches, recent results, teams, and ongoing leagues, replacing the previous redirect to the leagues index.
+
+#### Scenario: Member opens the dashboard
+- **WHEN** an authenticated member visits `/dashboard`
+- **THEN** the page shows their upcoming matches, recent results, teams they belong to, and the ongoing competitions they participate in
+
+#### Scenario: Member has no activity
+- **WHEN** an authenticated member with no teams, entries, or scheduled matches visits `/dashboard`
+- **THEN** the page renders with empty-state messaging for each section instead of redirecting
+
+### Requirement: Uniform League and Activity Listings
+Member-facing league and activity index pages SHALL render every item with the same card variant; no item is visually emphasised as "featured".
+
+#### Scenario: League index has no featured highlight
+- **WHEN** a member opens the league index
+- **THEN** every league card is rendered in the standard styling without a featured/banner highlight
+
+#### Scenario: Activity index has no featured highlight
+- **WHEN** a member opens the activity index
+- **THEN** every activity card is rendered in the standard styling without a featured/banner highlight
+
