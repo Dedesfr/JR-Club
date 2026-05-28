@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\LeagueAward;
 use App\Models\League;
 use App\Models\Sport;
@@ -21,7 +22,8 @@ class LeagueController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Leagues/Index', [
-            'leagues' => League::with('sport')
+            'leagues' => League::with(['sport', 'branch'])
+                ->manageableBy(request()->user())
                 ->withCount(['teams', 'entries', 'matches'])
                 ->latest()
                 ->get(),
@@ -32,6 +34,7 @@ class LeagueController extends Controller
     {
         return Inertia::render('Admin/Leagues/Create', [
             'sports' => Sport::with(['categories' => fn ($query) => $query->where('is_active', true)])->orderBy('name')->get(),
+            'branches' => auth()->user()?->isPusatAdmin() ? Branch::orderBy('name')->get(['id', 'name', 'is_global']) : [],
         ]);
     }
 
@@ -53,7 +56,12 @@ class LeagueController extends Controller
             'advance_upper_count' => ['required', 'integer', 'min:0'],
             'advance_lower_count' => ['required', 'integer', 'min:0'],
             'banner' => ['nullable', 'image', 'max:5120'],
+            'branch_id' => ['nullable', 'exists:branch,id'],
         ]);
+
+        if (! $request->user()->isPusatAdmin()) {
+            unset($validated['branch_id']);
+        }
 
         $sportCategory = $this->sportCategory($validated);
 
@@ -79,7 +87,10 @@ class LeagueController extends Controller
 
     public function show(League $league): Response
     {
+        $this->authorize('view', $league);
+
         $league->load([
+            'branch',
             'sport',
             'sportCategory',
             'awards',
@@ -150,12 +161,16 @@ class LeagueController extends Controller
 
         return Inertia::render('Admin/Leagues/Show', [
             'league' => $league,
-            'users' => User::query()->orderBy('name')->get(['id', 'name', 'email', 'gender', 'role']),
+            'users' => User::query()
+                ->when(! request()->user()->isPusatAdmin(), fn ($query) => $query->where('branch_id', request()->user()->branch_id))
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'gender', 'role', 'branch_id']),
             'teams' => Team::query()
                 ->where('sport_id', $league->sport_id)
+                ->manageableBy(request()->user())
                 ->with('members')
                 ->orderBy('name')
-                ->get(['id', 'name', 'sport_id']),
+                ->get(['id', 'name', 'sport_id', 'branch_id']),
             'divisionOptions' => $league->participant_total ? app(LeagueFormatService::class)->divisionOptions($league->participant_total) : [],
             'standings' => $league->standings(),
             'upperBracket' => $league->matches->where('stage', 'upper')->groupBy('round')->sortKeys()->values(),
@@ -165,6 +180,8 @@ class LeagueController extends Controller
 
     public function update(Request $request, League $league): RedirectResponse
     {
+        $this->authorize('update', $league);
+
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -195,6 +212,8 @@ class LeagueController extends Controller
 
     public function destroy(League $league): RedirectResponse
     {
+        $this->authorize('delete', $league);
+
         $league->delete();
 
         return redirect()->route('admin.leagues.index')->with('success', 'Tournament deleted.');
@@ -202,6 +221,8 @@ class LeagueController extends Controller
 
     public function uploadBanner(Request $request, League $league): RedirectResponse
     {
+        $this->authorize('update', $league);
+
         $request->validate(['banner' => ['required', 'image', 'max:5120']]);
 
         if ($league->banner_path && str_starts_with($league->banner_path, '/storage/')) {
@@ -216,6 +237,8 @@ class LeagueController extends Controller
 
     public function storeAward(Request $request, League $league): RedirectResponse
     {
+        $this->authorize('update', $league);
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'winner_label' => ['required', 'string', 'max:255'],
@@ -232,6 +255,7 @@ class LeagueController extends Controller
 
     public function destroyAward(League $league, LeagueAward $award): RedirectResponse
     {
+        $this->authorize('update', $league);
         abort_unless($award->league_id === $league->id, 404);
 
         $award->delete();
@@ -241,6 +265,8 @@ class LeagueController extends Controller
 
     public function storeTeam(Request $request, League $league): RedirectResponse
     {
+        $this->authorize('update', $league);
+
         $validated = $request->validate([
             'team_id' => ['nullable', 'exists:teams,id'],
             'name' => ['nullable', 'string', 'max:255'],
@@ -252,6 +278,7 @@ class LeagueController extends Controller
 
         if (! empty($validated['team_id'])) {
             $team = Team::query()->with('members')->findOrFail($validated['team_id']);
+            $this->authorize('view', $team);
 
             $playerIds = collect($validated['player_ids'] ?? [])->filter()->values();
             $requiredPlayers = $league->sportCategory?->player_count;
@@ -285,8 +312,8 @@ class LeagueController extends Controller
             }
 
             $team = Team::query()->updateOrCreate(
-                ['name' => $validated['name'], 'sport_id' => $league->sport_id],
-                ['created_by' => $request->user()->id],
+                ['name' => $validated['name'], 'sport_id' => $league->sport_id, 'branch_id' => $league->branch_id],
+                ['created_by' => $request->user()->id, 'branch_id' => $league->branch_id],
             );
 
             $members = $playerIds->mapWithKeys(fn (int $playerId, int $index) => [
@@ -337,6 +364,9 @@ class LeagueController extends Controller
 
     public function destroyTeam(League $league, Team $team): RedirectResponse
     {
+        $this->authorize('update', $league);
+        $this->authorize('view', $team);
+
         $league->teams()->detach($team->id);
         $league->entries()->where('team_id', $team->id)->delete();
 

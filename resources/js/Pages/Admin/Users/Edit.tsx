@@ -1,6 +1,7 @@
 import SelectInput from '@/Components/SelectInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { User } from '@/types';
+import { Branch } from '@/types/jrclub';
 import { Head, useForm } from '@inertiajs/react';
 
 const roleOptions = [
@@ -13,8 +14,9 @@ const genderOptions = [
     { value: 'female', label: 'female' },
 ];
 
-export default function Edit({ userRecord }: { userRecord: User }) {
-    const form = useForm({ name: userRecord.name, email: userRecord.email, role: userRecord.role, gender: userRecord.gender ?? '' });
+export default function Edit({ userRecord, branches }: { userRecord: User; branches: Branch[] }) {
+    const form = useForm({ name: userRecord.name, email: userRecord.email, role: userRecord.role, gender: userRecord.gender ?? '', branch_id: String(userRecord.branch_id ?? '') });
+    const branchOptions = branches.map((branch) => ({ value: String(branch.id), label: branch.name }));
 
     return (
         <AdminLayout title={`Edit ${userRecord.name}`}>
@@ -24,6 +26,7 @@ export default function Edit({ userRecord }: { userRecord: User }) {
                 <Field label="Email"><input value={form.data.email} onChange={(event) => form.setData('email', event.target.value)} className="rounded-xl border-0 bg-surface-container-low px-3 py-3" /></Field>
                 <Field label="Role"><SelectInput options={roleOptions} value={form.data.role} onChange={(value) => form.setData('role', value as 'member' | 'admin')} /></Field>
                 <Field label="Gender"><SelectInput isClearable options={genderOptions} value={form.data.gender} onChange={(value) => form.setData('gender', value)} /></Field>
+                <Field label="Branch"><SelectInput options={branchOptions} value={form.data.branch_id} onChange={(value) => form.setData('branch_id', value)} /></Field>
                 <div className="md:col-span-2 flex justify-end"><button className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-3 text-sm font-bold uppercase tracking-widest text-on-primary">Save</button></div>
             </form>
         </AdminLayout>

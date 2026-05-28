@@ -1,8 +1,13 @@
+import SelectInput from '@/Components/SelectInput';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import { Branch } from '@/types/jrclub';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
-export default function Create() {
-    const form = useForm({ name: '' });
+export default function Create({ branches }: { branches: Branch[] }) {
+    const { auth } = usePage<PageProps>().props;
+    const form = useForm({ name: '', branch_id: '' });
+    const branchOptions = [{ value: '', label: 'National' }, ...branches.map((branch) => ({ value: String(branch.id), label: branch.name }))];
 
     return (
         <AdminLayout
@@ -27,7 +32,7 @@ export default function Create() {
                 <div className="bg-surface-container-low/30 px-6 py-4 border-b border-outline-variant/10">
                     <h3 className="text-[0.75rem] font-bold uppercase tracking-[0.05em] text-primary">Team Information</h3>
                 </div>
-                <div className="p-6">
+                <div className="grid gap-4 p-6 md:grid-cols-2">
                     <label className="block">
                         <span className="block mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Team name</span>
                         <input
@@ -38,6 +43,12 @@ export default function Create() {
                         />
                         {form.errors.name ? <p className="mt-1 text-xs text-error">{form.errors.name}</p> : null}
                     </label>
+                    {auth.isPusatAdmin ? (
+                        <label className="block">
+                            <span className="mb-1.5 block text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Branch</span>
+                            <SelectInput options={branchOptions} value={form.data.branch_id} onChange={(value) => form.setData('branch_id', value)} />
+                        </label>
+                    ) : null}
                 </div>
             </form>
         </AdminLayout>

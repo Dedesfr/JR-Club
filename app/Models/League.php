@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToBranch;
 use App\Services\LeagueFormatService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class League extends Model
 {
-    use HasFactory;
+    use BelongsToBranch, HasFactory;
 
     protected $appends = [
         'banner_url',
@@ -16,6 +17,7 @@ class League extends Model
 
     protected $fillable = [
         'name',
+        'branch_id',
         'sport_id',
         'sport_category_id',
         'category',

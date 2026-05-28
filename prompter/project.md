@@ -53,7 +53,9 @@ JR Club is a PWA mobile app for PT Jasa Raharja's internal sports community. It 
 - **League**: A competition with registered teams, a match schedule, and standings
 - **Match**: A game between two teams within a league; live scoring broadcast via Reverb
 - **Leaderboard**: Derived from match results — points (3W/1D/0L), GD, GF as tiebreakers
-- **Roles**: `member` (participate) and `admin` (manage everything). No organizer/captain in MVP.
+- **Roles**: `member` (participate) and `admin` (manage within branch scope). No organizer/captain in MVP.
+- **Branches**: every user belongs to one `branch`; `branch.is_global = true` marks Pusat/headquarters. Pusat admins can manage all branches and national content, while branch admins are limited to their own branch. Pusat members do not get all-branch visibility.
+- **National content**: leagues, activities, and teams may have nullable `branch_id`; `null` means national/shared content visible to members from every branch and managed by Pusat admins.
 
 ## Important Constraints
 

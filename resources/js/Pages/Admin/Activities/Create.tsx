@@ -1,10 +1,12 @@
 import DatePicker from '@/Components/DatePicker';
 import SelectInput from '@/Components/SelectInput';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Sport } from '@/types/jrclub';
-import { Head, useForm } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import { Branch, Sport } from '@/types/jrclub';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
-export default function Create({ sports }: { sports: Sport[] }) {
+export default function Create({ sports, branches }: { sports: Sport[]; branches: Branch[] }) {
+    const { auth } = usePage<PageProps>().props;
     const form = useForm({
         title: '',
         description: '',
@@ -13,8 +15,10 @@ export default function Create({ sports }: { sports: Sport[] }) {
         max_participants: '10',
         status: 'open',
         sport_id: sports[0]?.id ?? 0,
+        branch_id: '',
     });
     const sportOptions = sports.map((sport) => ({ value: String(sport.id), label: sport.name }));
+    const branchOptions = [{ value: '', label: 'National' }, ...branches.map((branch) => ({ value: String(branch.id), label: branch.name }))];
 
     return (
         <AdminLayout title="Create Activity">
@@ -29,6 +33,9 @@ export default function Create({ sports }: { sports: Sport[] }) {
                 <Field label="Scheduled at"><DatePicker enableTime value={form.data.scheduled_at} onChange={(value) => form.setData('scheduled_at', value)} /></Field>
                 <Field label="Max participants"><input type="number" min={1} value={form.data.max_participants} onChange={(e) => form.setData('max_participants', e.target.value)} className="rounded-xl border-0 bg-surface-container-low px-3 py-3" /></Field>
                 <Field label="Status"><input value={form.data.status} onChange={(e) => form.setData('status', e.target.value)} className="rounded-xl border-0 bg-surface-container-low px-3 py-3" /></Field>
+                {auth.isPusatAdmin ? (
+                    <Field label="Branch"><SelectInput options={branchOptions} value={form.data.branch_id} onChange={(value) => form.setData('branch_id', value)} /></Field>
+                ) : null}
                 <Field label="Description" full><textarea value={form.data.description} onChange={(e) => form.setData('description', e.target.value)} className="min-h-28 rounded-xl border-0 bg-surface-container-low px-3 py-3" /></Field>
                 <div className="md:col-span-2 flex justify-end">
                     <button disabled={form.processing} className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-3 text-sm font-bold uppercase tracking-widest text-on-primary disabled:opacity-50">

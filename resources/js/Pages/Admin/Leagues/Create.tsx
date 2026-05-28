@@ -1,8 +1,9 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import DatePicker from '@/Components/DatePicker';
 import SelectInput, { SelectOption } from '@/Components/SelectInput';
-import { Sport } from '@/types/jrclub';
-import { Head, useForm } from '@inertiajs/react';
+import { Branch, Sport } from '@/types/jrclub';
+import { PageProps } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
 
 const startStageOptions: SelectOption[] = [
@@ -10,7 +11,8 @@ const startStageOptions: SelectOption[] = [
     { value: 'bracket', label: 'Bracket' },
 ];
 
-export default function Create({ sports }: { sports: Sport[] }) {
+export default function Create({ sports, branches }: { sports: Sport[]; branches: Branch[] }) {
+    const { auth } = usePage<PageProps>().props;
     const initialSport = sports[0];
     const initialCategory = initialSport?.categories?.[0];
     const form = useForm<{
@@ -26,6 +28,7 @@ export default function Create({ sports }: { sports: Sport[] }) {
         points_per_set: string;
         advance_upper_count: string;
         advance_lower_count: string;
+        branch_id: string;
         banner: File | null;
     }>({
         name: '',
@@ -40,11 +43,13 @@ export default function Create({ sports }: { sports: Sport[] }) {
         points_per_set: '21',
         advance_upper_count: '1',
         advance_lower_count: '1',
+        branch_id: '',
         banner: null,
     });
     const sportOptions = sports.map((sport) => ({ value: String(sport.id), label: sport.name }));
     const selectedSport = useMemo(() => sports.find((sport) => sport.id === Number(form.data.sport_id)), [sports, form.data.sport_id]);
     const categoryOptions = (selectedSport?.categories ?? []).map((category) => ({ value: String(category.id), label: category.name }));
+    const branchOptions = [{ value: '', label: 'National' }, ...branches.map((branch) => ({ value: String(branch.id), label: branch.name }))];
     const selectedCategory = selectedSport?.categories?.find((category) => String(category.id) === form.data.sport_category_id);
 
     const handleSportChange = (value: string) => {
@@ -99,6 +104,13 @@ export default function Create({ sports }: { sports: Sport[] }) {
                                 <SelectInput options={startStageOptions} value={form.data.start_stage} onChange={(value) => form.setData('start_stage', value || 'group')} placeholder="Select start stage" />
                             </div>
                         </Field>
+                        {auth.isPusatAdmin ? (
+                            <Field label="Branch">
+                                <div className="editorial-select-wrapper relative">
+                                    <SelectInput options={branchOptions} value={form.data.branch_id} onChange={(value) => form.setData('branch_id', value)} placeholder="Select branch" />
+                                </div>
+                            </Field>
+                        ) : null}
                         <Field label="Description" full>
                             <textarea value={form.data.description} onChange={(event) => form.setData('description', event.target.value)} className="w-full min-h-[120px] bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface resize-y" placeholder="Tournament details and rules..." />
                         </Field>

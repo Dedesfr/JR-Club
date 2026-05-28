@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sport;
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,15 +18,17 @@ class TeamController extends Controller
         $user = $request->user();
 
         return Inertia::render('Teams/Index', [
-            'teams' => Team::with(['sport', 'members:id,name'])->withCount('members')->latest()->get(),
+            'teams' => Team::with(['sport', 'members:id,name'])->withCount('members')->visibleTo($user)->latest()->get(),
             'sports' => Sport::orderBy('name')->get(),
-            'myTeams' => $user ? $user->teams()->with('sport')->get() : [],
+            'myTeams' => $user ? $user->teams()->with('sport')->visibleTo($user)->get() : [],
             'canManage' => $user?->can('admin') ?? false,
         ]);
     }
 
     public function show(Team $team): Response
     {
+        abort_unless(Team::query()->visibleTo(request()->user())->whereKey($team->id)->exists(), 404);
+
         return Inertia::render('Teams/Show', [
             'team' => $team->load(['sport', 'members:id,name']),
         ]);
@@ -46,6 +49,7 @@ class TeamController extends Controller
     public function update(Request $request, Team $team): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $team);
 
         $team->update($request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -58,6 +62,7 @@ class TeamController extends Controller
     public function destroy(Team $team): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('delete', $team);
         $team->delete();
 
         return back()->with('success', 'Team deleted.');
@@ -66,6 +71,7 @@ class TeamController extends Controller
     public function addMember(Request $request, Team $team): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $team);
 
         $validated = $request->validate([
             'user_id' => ['required', 'exists:users,id'],
@@ -82,6 +88,7 @@ class TeamController extends Controller
     public function removeMember(Team $team, User $user): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $team);
         $team->members()->detach($user->id);
 
         return back()->with('success', 'Roster updated.');

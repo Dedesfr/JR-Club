@@ -1,5 +1,6 @@
 import SelectInput from '@/Components/SelectInput';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { Branch } from '@/types/jrclub';
 import { Head, useForm } from '@inertiajs/react';
 
 const roleOptions = [
@@ -13,7 +14,7 @@ const genderOptions = [
     { value: 'female', label: 'female' },
 ];
 
-export default function Create() {
+export default function Create({ branches }: { branches: Branch[] }) {
     const form = useForm({
         name: '',
         email: '',
@@ -21,7 +22,9 @@ export default function Create() {
         password_confirmation: '',
         role: 'member' as 'member' | 'admin',
         gender: '',
+        branch_id: branches[0]?.id ? String(branches[0].id) : '',
     });
+    const branchOptions = branches.map((branch) => ({ value: String(branch.id), label: branch.name }));
 
     return (
         <AdminLayout
@@ -63,6 +66,9 @@ export default function Create() {
                 </Field>
                 <Field label="Gender" error={form.errors.gender}>
                     <SelectInput isClearable options={genderOptions} value={form.data.gender} onChange={(value) => form.setData('gender', value)} />
+                </Field>
+                <Field label="Branch" error={form.errors.branch_id}>
+                    <SelectInput options={branchOptions} value={form.data.branch_id} onChange={(value) => form.setData('branch_id', value)} />
                 </Field>
             </form>
         </AdminLayout>

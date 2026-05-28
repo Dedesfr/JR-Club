@@ -42,13 +42,14 @@ export default function Index({ users, search: initialSearch }: { users: Paginat
                                 <th className="px-6 py-4">Name</th>
                                 <th className="px-6 py-4">Email</th>
                                 <th className="px-6 py-4">Role</th>
+                                <th className="px-6 py-4">Branch</th>
                                 <th className="px-6 py-4" />
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-outline-variant/10">
                             {users.data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-12 text-center text-on-surface-variant">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-on-surface-variant">
                                         No users found.
                                     </td>
                                 </tr>
@@ -58,6 +59,9 @@ export default function Index({ users, search: initialSearch }: { users: Paginat
                                         <td className="px-6 py-4 font-bold text-on-surface">{user.name}</td>
                                         <td className="px-6 py-4 text-on-surface-variant">{user.email}</td>
                                         <td className="px-6 py-4 text-on-surface-variant">{user.role}</td>
+                                        <td className="px-6 py-4">
+                                            <BranchBadge name={user.branch?.name} />
+                                        </td>
                                         <td className="px-6 py-4 text-right">
                                             <Link
                                                 href={route('admin.users.edit', user.id)}
@@ -75,5 +79,13 @@ export default function Index({ users, search: initialSearch }: { users: Paginat
             </div>
             <Pagination items={users} />
         </AdminLayout>
+    );
+}
+
+function BranchBadge({ name }: { name?: string }) {
+    return (
+        <span className="rounded-full bg-surface-container-low px-2.5 py-1 text-xs font-bold text-on-surface-variant">
+            {name ?? 'No branch'}
+        </span>
     );
 }

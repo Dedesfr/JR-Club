@@ -85,6 +85,9 @@ export default function AdminLayout({ children, title, actions }: PropsWithChild
                         <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Signed in as</p>
                         <p className="mt-1 font-bold text-on-surface">{user.name}</p>
                         <p className="text-xs uppercase tracking-widest text-on-surface-variant">{user.role}</p>
+                        <p className="mt-2 inline-flex rounded-full bg-surface px-2.5 py-1 text-xs font-bold text-on-surface-variant">
+                            {user.branch?.name ?? 'No branch'}
+                        </p>
                     </div>
                 </aside>
 

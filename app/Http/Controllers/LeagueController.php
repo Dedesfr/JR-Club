@@ -42,7 +42,7 @@ class LeagueController extends Controller
             'matches.awayEntry.player1',
             'matches.awayEntry.player2',
             'matches.awayEntry.substitutes',
-        ])->latest();
+        ])->visibleTo($user)->latest();
 
         $allLeagues = (clone $leagueQuery)->get();
         $leagues = (clone $leagueQuery)->where('status', $statusFilter)->get();
@@ -61,6 +61,8 @@ class LeagueController extends Controller
 
     public function show(League $league): Response
     {
+        abort_unless(League::query()->visibleTo(request()->user())->whereKey($league->id)->exists(), 404);
+
         $league->load([
             'sport',
             'awards',
@@ -140,6 +142,7 @@ class LeagueController extends Controller
     public function update(Request $request, League $league): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $league);
 
         $league->update($request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
@@ -155,6 +158,7 @@ class LeagueController extends Controller
     public function destroy(League $league): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('delete', $league);
         $league->delete();
 
         return back()->with('success', 'Tournament deleted.');
@@ -163,8 +167,10 @@ class LeagueController extends Controller
     public function registerTeam(Request $request, League $league): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $league);
 
         $team = Team::findOrFail($request->validate(['team_id' => ['required', 'exists:teams,id']])['team_id']);
+        $this->authorize('view', $team);
 
         if ($team->sport_id !== $league->sport_id) {
             throw ValidationException::withMessages(['team_id' => 'Team sport must match league sport.']);
@@ -178,6 +184,7 @@ class LeagueController extends Controller
     public function scheduleMatch(Request $request, League $league): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $league);
 
         GameMatch::create($request->validate([
             'home_team_id' => ['required', 'exists:teams,id', 'different:away_team_id'],

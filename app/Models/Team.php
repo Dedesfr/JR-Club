@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToBranch;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Team extends Model
 {
-    use HasFactory;
+    use BelongsToBranch, HasFactory;
 
-    protected $fillable = ['name', 'sport_id', 'created_by', 'logo_path'];
+    protected $fillable = ['name', 'branch_id', 'sport_id', 'created_by', 'logo_path'];
 
     public function sport()
     {

@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'branch_id',
         'gender',
         'push_subscription',
     ];
@@ -54,6 +55,16 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function isPusatAdmin(): bool
+    {
+        return $this->isAdmin() && (bool) $this->branch?->is_global;
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function activities()

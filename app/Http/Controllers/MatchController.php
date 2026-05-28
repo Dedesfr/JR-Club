@@ -15,6 +15,8 @@ class MatchController extends Controller
 {
     public function show(GameMatch $match): Response
     {
+        abort_unless($match->league()->visibleTo(request()->user())->exists(), 404);
+
         return Inertia::render('Matches/Show', [
             'match' => $match->load(['league.sport', 'homeTeam', 'awayTeam', 'homeEntry.team', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.players', 'homeEntry.substitutes', 'awayEntry.team', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.players', 'awayEntry.substitutes', 'sets', 'documents', 'substitutions']),
             'canManage' => request()->user()?->can('admin') ?? false,
@@ -24,6 +26,7 @@ class MatchController extends Controller
     public function start(GameMatch $match): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $match->league);
         $match->update(['status' => 'live']);
         SendPushNotification::dispatch('Match starting', "{$match->home_label} vs {$match->away_label} is live.");
         broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam', 'homeEntry.team', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.players', 'homeEntry.substitutes', 'awayEntry.team', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.players', 'awayEntry.substitutes', 'sets'])));
@@ -34,6 +37,7 @@ class MatchController extends Controller
     public function updateScore(Request $request, GameMatch $match): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $match->league);
 
         $match->update($request->validate([
             'home_score' => ['required', 'integer', 'min:0'],
@@ -48,6 +52,7 @@ class MatchController extends Controller
     public function end(GameMatch $match): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $match->league);
         $match->update(['status' => 'completed']);
         SendPushNotification::dispatch('Match result', "{$match->home_label} {$match->home_score} - {$match->away_score} {$match->away_label}");
         broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam', 'homeEntry.team', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.players', 'homeEntry.substitutes', 'awayEntry.team', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.players', 'awayEntry.substitutes', 'sets'])));

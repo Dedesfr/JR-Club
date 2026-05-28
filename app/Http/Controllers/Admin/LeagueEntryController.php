@@ -16,6 +16,8 @@ class LeagueEntryController extends Controller
 {
     public function store(Request $request, League $league): RedirectResponse
     {
+        $this->authorize('update', $league);
+
         if (! in_array($league->entry_type, ['single', 'double'], true)) {
             throw ValidationException::withMessages(['league' => 'Entries are only available for direct-entry league categories.']);
         }
@@ -57,6 +59,7 @@ class LeagueEntryController extends Controller
 
     public function update(Request $request, League $league, LeagueEntry $entry): RedirectResponse
     {
+        $this->authorize('update', $league);
         abort_unless($entry->league_id === $league->id, 404);
 
         if (! in_array($league->entry_type, ['single', 'double'], true)) {
@@ -119,6 +122,7 @@ class LeagueEntryController extends Controller
 
     public function destroy(League $league, LeagueEntry $entry): RedirectResponse
     {
+        $this->authorize('update', $league);
         abort_unless($entry->league_id === $league->id, 404);
 
         if ($entry->group_picture_path && Storage::disk('public')->exists($entry->group_picture_path)) {

@@ -28,6 +28,7 @@ export default function Index({ leagues }: { leagues: (League & { teams_count: n
                         <thead className="bg-surface-container-low/50 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant border-b border-outline-variant/20">
                             <tr>
                                 <th className="px-6 py-4">Tournament</th>
+                                <th className="px-6 py-4">Branch</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4 text-right">Entries</th>
                                 <th className="px-6 py-4 text-right">Teams</th>
@@ -37,7 +38,7 @@ export default function Index({ leagues }: { leagues: (League & { teams_count: n
                         <tbody className="divide-y divide-outline-variant/10">
                             {leagues.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-on-surface-variant">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-on-surface-variant">
                                         No tournaments found.
                                     </td>
                                 </tr>
@@ -49,6 +50,9 @@ export default function Index({ leagues }: { leagues: (League & { teams_count: n
                                                 <p className="font-bold text-on-surface group-hover:text-primary transition-colors">{league.name}</p>
                                                 <p className="text-[0.75rem] text-on-surface-variant mt-0.5">{league.category ? categoryLabels[league.category] : league.sport?.name}</p>
                                             </Link>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <BranchBadge name={league.branch?.name} />
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="rounded-full bg-surface-container-low px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">
@@ -66,5 +70,13 @@ export default function Index({ leagues }: { leagues: (League & { teams_count: n
                 </div>
             </div>
         </AdminLayout>
+    );
+}
+
+function BranchBadge({ name }: { name?: string }) {
+    return (
+        <span className="rounded-full bg-surface-container-low px-2.5 py-1 text-xs font-bold text-on-surface-variant">
+            {name ?? 'National'}
+        </span>
     );
 }

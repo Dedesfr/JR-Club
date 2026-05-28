@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Branch;
 use App\Models\Sport;
 use App\Models\Team;
 use App\Models\User;
@@ -13,6 +14,9 @@ class TeamSeeder extends Seeder
 {
     public function run(): void
     {
+        $pusatId = Branch::query()->where('is_global', true)->value('id')
+            ?? Branch::query()->where('name', 'Pusat')->value('id');
+
         $admin = User::query()->firstOrCreate(
             ['email' => 'admin@jasaraharja.co.id'],
             [
@@ -20,6 +24,7 @@ class TeamSeeder extends Seeder
                 'password' => 'password',
                 'role' => 'admin',
                 'gender' => 'male',
+                'branch_id' => $pusatId,
             ],
         );
 
@@ -81,6 +86,7 @@ class TeamSeeder extends Seeder
                         'password' => 'password',
                         'role' => 'member',
                         'gender' => $member['gender'],
+                        'branch_id' => $pusatId,
                     ],
                 );
 

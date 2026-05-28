@@ -21,6 +21,7 @@ class ActivityController extends Controller
         $activities = Activity::query()
             ->with(['sport', 'participants:id,name'])
             ->withCount('participants')
+            ->visibleTo($user)
             ->when($sport, fn ($query) => $query->whereHas('sport', fn ($sportQuery) => $sportQuery->where('name', $sport)))
             ->orderBy('scheduled_at')
             ->get();
@@ -35,6 +36,8 @@ class ActivityController extends Controller
 
     public function show(Activity $activity): Response
     {
+        abort_unless(Activity::query()->visibleTo(request()->user())->whereKey($activity->id)->exists(), 404);
+
         return Inertia::render('Activities/Show', [
             'activity' => $activity->load(['sport', 'participants:id,name']),
         ]);
@@ -61,6 +64,7 @@ class ActivityController extends Controller
     public function update(Request $request, Activity $activity): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('update', $activity);
 
         $activity->update($request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
@@ -81,6 +85,7 @@ class ActivityController extends Controller
     public function destroy(Activity $activity): RedirectResponse
     {
         Gate::authorize('admin');
+        $this->authorize('delete', $activity);
 
         $activity->delete();
 
@@ -89,6 +94,7 @@ class ActivityController extends Controller
 
     public function join(Request $request, Activity $activity): RedirectResponse
     {
+        abort_unless(Activity::query()->visibleTo($request->user())->whereKey($activity->id)->exists(), 404);
         abort_if(in_array($activity->status, ['full', 'completed', 'cancelled'], true), 422);
 
         $activity->participants()->syncWithoutDetaching([
@@ -104,6 +110,8 @@ class ActivityController extends Controller
 
     public function leave(Request $request, Activity $activity): RedirectResponse
     {
+        abort_unless(Activity::query()->visibleTo($request->user())->whereKey($activity->id)->exists(), 404);
+
         $activity->participants()->detach($request->user()->id);
 
         if ($activity->status === 'full') {

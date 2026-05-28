@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -29,10 +30,20 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
+        if ($user) {
+            $user->loadMissing('branch');
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'isPusatAdmin' => $user?->isPusatAdmin() ?? false,
+                'branches' => $user?->isPusatAdmin()
+                    ? Branch::orderBy('name')->get(['id', 'name', 'is_global'])
+                    : [],
             ],
         ];
     }

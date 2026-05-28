@@ -41,6 +41,7 @@ export default function Index({ teams, search: initialSearch }: { teams: Paginat
                             <tr>
                                 <th className="px-6 py-4">Team</th>
                                 <th className="px-6 py-4">Sport</th>
+                                <th className="px-6 py-4">Branch</th>
                                 <th className="px-6 py-4 text-right">Members</th>
                                 <th className="px-6 py-4" />
                             </tr>
@@ -48,7 +49,7 @@ export default function Index({ teams, search: initialSearch }: { teams: Paginat
                         <tbody className="divide-y divide-outline-variant/10">
                             {teams.data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-12 text-center text-on-surface-variant">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-on-surface-variant">
                                         No teams found.
                                     </td>
                                 </tr>
@@ -61,6 +62,9 @@ export default function Index({ teams, search: initialSearch }: { teams: Paginat
                                             </Link>
                                         </td>
                                         <td className="px-6 py-4 text-on-surface-variant">{team.sport?.name}</td>
+                                        <td className="px-6 py-4">
+                                            <BranchBadge name={team.branch?.name} />
+                                        </td>
                                         <td className="px-6 py-4 text-right font-medium text-on-surface-variant">{team.members_count ?? 0}</td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
@@ -88,5 +92,13 @@ export default function Index({ teams, search: initialSearch }: { teams: Paginat
             </div>
             <Pagination items={teams} />
         </AdminLayout>
+    );
+}
+
+function BranchBadge({ name }: { name?: string }) {
+    return (
+        <span className="rounded-full bg-surface-container-low px-2.5 py-1 text-xs font-bold text-on-surface-variant">
+            {name ?? 'National'}
+        </span>
     );
 }

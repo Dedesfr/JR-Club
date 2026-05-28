@@ -49,10 +49,11 @@ class LeaderboardController extends Controller
 
     public function leagues(Request $request): Response
     {
+        $user = $request->user();
         $sportId = $request->integer('sport_id') ?: null;
         $leagueId = $request->integer('league_id') ?: null;
         
-        $leaguesQuery = League::query()->orderByDesc('created_at');
+        $leaguesQuery = League::query()->visibleTo($user)->orderByDesc('created_at');
         if ($sportId) {
             $leaguesQuery->where('sport_id', $sportId);
         }
@@ -101,7 +102,7 @@ class LeaderboardController extends Controller
                 'lowerThirdPlaceMatch.awayEntry.player1',
                 'lowerThirdPlaceMatch.awayEntry.player2',
                 'lowerThirdPlaceMatch.sets',
-            ])->find($leagueId);
+            ])->visibleTo($user)->find($leagueId);
 
             if ($league) {
                 $upperBracket = $league->matches->where('stage', 'upper')->groupBy('round')->sortKeys()->values();

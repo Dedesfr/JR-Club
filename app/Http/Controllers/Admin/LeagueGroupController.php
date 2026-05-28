@@ -15,6 +15,8 @@ class LeagueGroupController extends Controller
 {
     public function store(Request $request, League $league, LeagueFormatService $leagueFormatService): RedirectResponse
     {
+        $this->authorize('update', $league);
+
         if ($league->group_locked) {
             return back()->withErrors(['group_count' => 'Groups are locked for this league.']);
         }
@@ -55,6 +57,8 @@ class LeagueGroupController extends Controller
 
     public function lock(League $league): RedirectResponse
     {
+        $this->authorize('update', $league);
+
         if (! $league->group_locked) {
             $league->update(['group_locked' => true]);
         }
@@ -64,6 +68,8 @@ class LeagueGroupController extends Controller
 
     public function updateSchedule(Request $request, League $league, LeagueFormatService $leagueFormatService): RedirectResponse
     {
+        $this->authorize('update', $league);
+
         $validated = $request->validate([
             'interval' => ['required', 'integer', 'min:0'],
             'schedule' => ['required', 'array', 'min:1'],
@@ -83,6 +89,7 @@ class LeagueGroupController extends Controller
 
     public function update(Request $request, League $league, LeagueGroupEntry $groupEntry): RedirectResponse
     {
+        $this->authorize('update', $league);
         abort_unless($groupEntry->group->league_id === $league->id, 404);
 
         $validated = $request->validate([

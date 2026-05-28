@@ -25,6 +25,7 @@ export default function Index({ activities }: { activities: PaginatedResponse<Ac
                             <tr>
                                 <th className="px-6 py-4">Title</th>
                                 <th className="px-6 py-4">Sport</th>
+                                <th className="px-6 py-4">Branch</th>
                                 <th className="px-6 py-4">Scheduled</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4" />
@@ -33,7 +34,7 @@ export default function Index({ activities }: { activities: PaginatedResponse<Ac
                         <tbody className="divide-y divide-outline-variant/10">
                             {activities.data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-on-surface-variant">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-on-surface-variant">
                                         No activities found.
                                     </td>
                                 </tr>
@@ -46,6 +47,9 @@ export default function Index({ activities }: { activities: PaginatedResponse<Ac
                                             </Link>
                                         </td>
                                         <td className="px-6 py-4 text-on-surface-variant">{activity.sport?.name}</td>
+                                        <td className="px-6 py-4">
+                                            <BranchBadge name={activity.branch?.name} />
+                                        </td>
                                         <td className="px-6 py-4 text-on-surface-variant">
                                             {`${formatJakartaDate(activity.scheduled_at, { year: 'numeric', month: 'short', day: 'numeric' }, 'id-ID')} ${formatJakartaTime(activity.scheduled_at, 'id-ID')}`}
                                         </td>
@@ -83,5 +87,13 @@ export default function Index({ activities }: { activities: PaginatedResponse<Ac
             </div>
             <Pagination items={activities} />
         </AdminLayout>
+    );
+}
+
+function BranchBadge({ name }: { name?: string }) {
+    return (
+        <span className="rounded-full bg-surface-container-low px-2.5 py-1 text-xs font-bold text-on-surface-variant">
+            {name ?? 'National'}
+        </span>
     );
 }

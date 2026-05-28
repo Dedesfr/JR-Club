@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Activity;
+use App\Models\Branch;
 use App\Models\Sport;
 use App\Models\SportCategory;
 use App\Models\User;
@@ -19,13 +20,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $pusatId = Branch::query()->where('is_global', true)->value('id')
+            ?? Branch::query()->where('name', 'Pusat')->value('id');
+
         $admin = User::factory()->create([
             'name' => 'JR Club Admin',
             'email' => 'admin@jasaraharja.co.id',
             'password' => 'password',
             'role' => 'admin',
             'gender' => 'male',
+            'branch_id' => $pusatId,
         ]);
+
+        $this->call(BranchAdminSeeder::class);
 
         $sports = collect([
             ['Padel', 'sports_tennis', 2, 'Fast doubles sessions after work.'],

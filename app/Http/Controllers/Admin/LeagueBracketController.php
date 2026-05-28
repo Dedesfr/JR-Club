@@ -15,6 +15,8 @@ class LeagueBracketController extends Controller
 {
     public function adjust(Request $request, League $league, BracketService $bracketService)
     {
+        $this->authorize('update', $league);
+
         $validated = $request->validate([
             'match_id' => ['required', 'exists:matches,id'],
             'home_entry_id' => ['nullable', 'exists:league_entries,id'],
@@ -34,6 +36,8 @@ class LeagueBracketController extends Controller
 
     public function store(Request $request, League $league, BracketService $bracketService, LeagueFormatService $leagueFormatService): RedirectResponse
     {
+        $this->authorize('update', $league);
+
         $validated = $request->validate([
             'advance_upper_count' => ['required', 'integer', 'min:0'],
             'advance_lower_count' => ['required', 'integer', 'min:0'],

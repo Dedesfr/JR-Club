@@ -1,3 +1,9 @@
+export type Branch = {
+    id: number;
+    name: string;
+    is_global: boolean;
+};
+
 export type SportCategory = {
     id: number;
     sport_id: number;
@@ -21,6 +27,8 @@ export type Sport = {
 
 export type Activity = {
     id: number;
+    branch_id?: number | null;
+    branch?: Branch | null;
     title: string;
     description?: string;
     location: string;
@@ -79,6 +87,8 @@ export type LeagueStandingGroup = {
 
 export type Team = {
     id: number;
+    branch_id?: number | null;
+    branch?: Branch | null;
     name: string;
     logo_path?: string | null;
     sport: Sport;
@@ -88,6 +98,8 @@ export type Team = {
 
 export type League = {
     id: number;
+    branch_id?: number | null;
+    branch?: Branch | null;
     name: string;
     banner_url?: string | null;
     description?: string;

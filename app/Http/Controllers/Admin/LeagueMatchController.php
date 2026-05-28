@@ -16,6 +16,8 @@ class LeagueMatchController extends Controller
 {
     public function store(Request $request, GameMatch $match, LeagueFormatService $leagueFormatService, BracketService $bracketService): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+
         if ($match->status === 'completed') {
             return back()->withErrors(['sets' => 'Match is already completed. No more sets can be added.']);
         }
@@ -38,6 +40,9 @@ class LeagueMatchController extends Controller
 
     public function updateSet(Request $request, GameMatch $match, MatchSet $set, LeagueFormatService $leagueFormatService, BracketService $bracketService): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+        abort_unless($set->match_id === $match->id, 404);
+
         $validated = $request->validate([
             'home_points' => ['required', 'integer', 'min:0'],
             'away_points' => ['required', 'integer', 'min:0', 'different:home_points'],
@@ -53,6 +58,9 @@ class LeagueMatchController extends Controller
 
     public function destroySet(GameMatch $match, MatchSet $set, LeagueFormatService $leagueFormatService, BracketService $bracketService): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+        abort_unless($set->match_id === $match->id, 404);
+
         DB::transaction(function () use ($match, $set, $leagueFormatService, $bracketService) {
             $set->delete();
 
@@ -69,6 +77,8 @@ class LeagueMatchController extends Controller
 
     public function lock(GameMatch $match): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+
         if (! in_array($match->status, ['live', 'completed'], true)) {
             return back()->withErrors(['status' => 'Only live or completed matches can be locked.']);
         }
@@ -80,6 +90,8 @@ class LeagueMatchController extends Controller
 
     public function unlock(GameMatch $match): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+
         $match->update(['locked' => false]);
 
         return back()->with('success', 'Match unlocked.');
@@ -87,6 +99,8 @@ class LeagueMatchController extends Controller
 
     public function updateSchedule(Request $request, GameMatch $match): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+
         $validated = $request->validate([
             'scheduled_at' => ['required', 'date'],
             'location' => ['nullable', 'string', 'max:255'],
@@ -99,6 +113,8 @@ class LeagueMatchController extends Controller
 
     public function substitute(Request $request, GameMatch $match): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+
         $validated = $request->validate([
             'entry_id' => ['required', 'exists:league_entries,id'],
             'original_player_id' => ['required', 'exists:users,id'],
@@ -119,6 +135,8 @@ class LeagueMatchController extends Controller
 
     public function uploadDocuments(Request $request, GameMatch $match): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+
         $request->validate([
             'documents' => ['required', 'array', 'max:10'],
             'documents.*' => ['required', 'file', 'mimes:jpeg,png,webp', 'max:5120'], // 5MB
@@ -138,6 +156,8 @@ class LeagueMatchController extends Controller
 
     public function destroyDocument(GameMatch $match, $documentId): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+
         $document = $match->documents()->findOrFail($documentId);
 
         if (\Illuminate\Support\Facades\Storage::disk('public')->exists($document->path)) {
@@ -151,6 +171,8 @@ class LeagueMatchController extends Controller
 
     public function complete(GameMatch $match): RedirectResponse
     {
+        $this->authorize('update', $match->league);
+
         $match->update(['status' => 'completed']);
 
         broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.substitutes', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.substitutes', 'sets', 'league'])));

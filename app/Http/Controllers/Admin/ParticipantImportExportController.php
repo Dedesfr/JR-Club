@@ -19,6 +19,8 @@ class ParticipantImportExportController extends Controller
 
     public function import(Request $request, League $league)
     {
+        $this->authorize('update', $league);
+
         $request->validate([
             'file' => ['required', 'file', 'mimes:xlsx,xls'],
         ]);
@@ -41,6 +43,8 @@ class ParticipantImportExportController extends Controller
 
     public function export(League $league): BinaryFileResponse
     {
+        $this->authorize('view', $league);
+
         return Excel::download(new LeagueParticipantsExport($league), "league_{$league->id}_participants.xlsx");
     }
 }
