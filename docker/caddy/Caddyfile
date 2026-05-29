@@ -1,0 +1,22 @@
+# In-container web server. TLS is terminated by the host Caddy in front,
+# so this listens on plain HTTP :80 (mapped to host :8080 in docker-compose).
+:80 {
+	root * /var/www/html/public
+	encode zstd gzip
+
+	# Block dotfiles (e.g. .git) but allow /.well-known. Caddy uses Go's RE2
+	# engine, which has no lookahead, so this is expressed as two matchers.
+	@hidden {
+		path_regexp /\..+
+		not path /.well-known/*
+	}
+	respond @hidden 403
+
+	# PHP requests are proxied to PHP-FPM in the "app" container.
+	# SCRIPT_FILENAME resolves against the app container's filesystem,
+	# which is why this root path must match the app container's path.
+	php_fastcgi app:9000
+
+	# Static files (built Vite assets, images) are served from this image.
+	file_server
+}

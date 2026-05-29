@@ -1,0 +1,19 @@
+# Add this to the Caddy already running on your VPS.
+# Either append to /etc/caddy/Caddyfile, or drop it in a file that your
+# main Caddyfile imports (e.g. `import sites/*` -> /etc/caddy/sites/jrclub).
+#
+# Caddy will obtain and renew a Let's Encrypt certificate for this domain
+# automatically. Make sure the domain's DNS A/AAAA record points at this VPS.
+
+jrclub.dedesfr.my.id {
+	# Reverb websocket (Pusher protocol endpoint is /app/<key>).
+	# Caddy auto-handles the websocket upgrade.
+	handle /app/* {
+		reverse_proxy 127.0.0.1:8082
+	}
+
+	# Everything else -> the app's web (Caddy) container.
+	handle {
+		reverse_proxy 127.0.0.1:8080
+	}
+}
