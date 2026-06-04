@@ -12,7 +12,7 @@ import ParticipantImportDialog from '@/Components/ParticipantImportDialog';
 import EntryEditModal from '@/Components/EntryEditModal';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { formatJakartaDate, formatJakartaTime, getJakartaDateKey, JAKARTA_TIME_ZONE } from '@/lib/datetime';
-import { GameMatch, League, LeagueAward, LeagueEntry, LeagueStandingGroup, MatchSet, Team } from '@/types/jrclub';
+import { GameMatch, League, LeagueAward, LeagueEntry, LeagueStandingGroup, MatchFormatOption, MatchSet, Team } from '@/types/jrclub';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -65,7 +65,7 @@ const getJakartaTimeInputValue = (value: string | Date) => {
     return `${hour}:${minute}`;
 };
 
-export default function Show({ league, users, teams, divisionOptions, standings, upperBracket, lowerBracket }: { league: League; users: UserOption[]; teams: Team[]; divisionOptions: { group_count: number; group_size: number }[]; standings: LeagueStandingGroup[]; upperBracket: GameMatch[][]; lowerBracket: GameMatch[][] }) {
+export default function Show({ league, users, teams, divisionOptions, standings, upperBracket, lowerBracket, matchFormats }: { league: League; users: UserOption[]; teams: Team[]; divisionOptions: { group_count: number; group_size: number }[]; standings: LeagueStandingGroup[]; upperBracket: GameMatch[][]; lowerBracket: GameMatch[][]; matchFormats: MatchFormatOption[] }) {
     const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('Overview');
     const form = useForm({
         name: league.name,
@@ -77,6 +77,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
         participant_total: league.participant_total?.toString() ?? '',
         sets_to_win: league.sets_to_win?.toString() ?? '2',
         points_per_set: league.points_per_set?.toString() ?? '21',
+        match_format: league.match_format ?? '',
         advance_upper_count: league.advance_upper_count?.toString() ?? '0',
         advance_lower_count: league.advance_lower_count?.toString() ?? '0',
     });
@@ -100,6 +101,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     const hasExistingGroupMatches = (league.matches ?? []).some((match) => match.stage === 'group');
     const hasExistingBracketMatches = (league.matches ?? []).some((match) => ['upper', 'lower', 'third_place', 'lower_third_place'].includes(match.stage ?? ''));
     const formatLabel = league.sport_category?.name ?? (league.category ? (categoryLabels[league.category] ?? league.category) : 'Team based');
+    const matchFormatOptions = [{ value: '', label: 'Custom / Badminton default' }, ...matchFormats.map((format) => ({ value: format.value, label: format.label }))];
     const bracketGroupCount = Math.max(1, league.group_count ?? league.groups?.length ?? 0);
     const upperBracketEntryCount = startsFromBracket ? (league.participant_total || league.entries?.length || 0) : bracketGroupCount * (league.advance_upper_count ?? 0);
     const lowerBracketEntryCount = startsFromBracket ? 0 : bracketGroupCount * (league.advance_lower_count ?? 0);
@@ -132,6 +134,16 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     const [bracketRoundsCount, setBracketRoundsCount] = useState(() =>
         calculateBracketRounds(Number(bracketForm.data.advance_upper_count), Number(bracketForm.data.advance_lower_count))
     );
+
+    const handleMatchFormatChange = (value: string) => {
+        const format = matchFormats.find((item) => item.value === value);
+        form.setData((data) => ({
+            ...data,
+            match_format: value,
+            sets_to_win: format ? String(format.sets_to_win) : data.sets_to_win,
+            points_per_set: format ? String(format.points_per_set) : data.points_per_set,
+        }));
+    };
 
     const handleBracketAdvanceChange = (field: 'advance_upper_count' | 'advance_lower_count', value: string) => {
         bracketForm.setData(field, value);
@@ -376,7 +388,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                 <Field label="Start from"><SelectInput options={startStageOptions} value={form.data.start_stage} onChange={(value) => form.setData('start_stage', value === 'bracket' ? 'bracket' : 'group')} /></Field>
                                 <Field label="Start date"><DatePicker value={form.data.start_date} onChange={(value) => form.setData('start_date', value)} /></Field>
 <Field label="Participant total"><input type="number" min={2} value={form.data.participant_total} onChange={(event) => form.setData('participant_total', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" /></Field>
-                                <Field label="Format"><div className="w-full border-0 border-b-2 border-outline-variant/10 rounded-t-md bg-surface-container-lowest px-3 py-2.5 text-sm font-bold text-on-surface-variant">{`${formatLabel} • ${league.entry_type ?? 'team'}`}</div></Field>
+                                <Field label="Category"><div className="w-full border-0 border-b-2 border-outline-variant/10 rounded-t-md bg-surface-container-lowest px-3 py-2.5 text-sm font-bold text-on-surface-variant">{`${formatLabel} • ${league.entry_type ?? 'team'}`}</div></Field>
                                 <Field label="Description" full><textarea value={form.data.description} onChange={(event) => form.setData('description', event.target.value)} className="w-full min-h-[120px] bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface resize-y" /></Field>
                                 <Field label="Documentation link" full>
                                     <input type="url" value={form.data.documentation_url} onChange={(event) => form.setData('documentation_url', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" placeholder="https://drive.google.com/..." />
@@ -385,6 +397,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                 <div className="md:col-span-2 border-t border-outline-variant/10 pt-4 mt-2">
                                     <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant mb-3">Match Rules &amp; Advancement</p>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <Field label="Match format"><SelectInput options={matchFormatOptions} value={form.data.match_format} onChange={(value) => handleMatchFormatChange(value || '')} /></Field>
                                         <Field label="Sets to win"><input type="number" min={1} value={form.data.sets_to_win} onChange={(e) => form.setData('sets_to_win', e.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" /></Field>
                                         <Field label="Points per set"><input type="number" min={1} value={form.data.points_per_set} onChange={(e) => form.setData('points_per_set', e.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" /></Field>
                                         <Field label="Upper advances"><input type="number" min={0} value={form.data.advance_upper_count} onChange={(e) => form.setData('advance_upper_count', e.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" /></Field>

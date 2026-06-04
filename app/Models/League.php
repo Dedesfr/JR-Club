@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToBranch;
 use App\Services\LeagueFormatService;
+use App\Support\MatchFormat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,6 +23,7 @@ class League extends Model
         'sport_category_id',
         'category',
         'entry_type',
+        'match_format',
         'description',
         'documentation_url',
         'start_date',
@@ -136,6 +138,11 @@ class League extends Model
     public function standings(): array
     {
         return app(LeagueFormatService::class)->standings($this);
+    }
+
+    public function formatRules(): array
+    {
+        return MatchFormat::rules($this->match_format, $this->sets_to_win, $this->points_per_set);
     }
 
     public function getBannerUrlAttribute(): ?string

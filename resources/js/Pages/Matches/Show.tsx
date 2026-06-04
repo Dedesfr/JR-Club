@@ -7,6 +7,15 @@ import { formatJakartaDateTime, formatJakartaTime } from '@/lib/datetime';
 
 const CARD_SHADOW = 'shadow-[0_12px_32px_rgba(15,23,42,0.04)]';
 
+const matchFormatRules: Record<string, { label: string; deuce: boolean; completion_mode: 'first_to_win' | 'all_sets' | 'single_block' }> = {
+    semi_klasik: { label: 'Padel Semi Klasik', deuce: false, completion_mode: 'first_to_win' },
+    padel_best_of_three: { label: 'Padel Best of Three', deuce: false, completion_mode: 'all_sets' },
+    padel_best_of_five: { label: 'Padel Best of Five', deuce: false, completion_mode: 'all_sets' },
+    padel_americano: { label: 'Padel Americano', deuce: false, completion_mode: 'single_block' },
+    tenis_meja_best_of_five: { label: 'Tenis Meja Best of Five', deuce: true, completion_mode: 'first_to_win' },
+    tenis_meja_best_of_seven: { label: 'Tenis Meja Best of Seven', deuce: true, completion_mode: 'first_to_win' },
+};
+
 function getFallbackIcon(seed: string): string {
     let hash = 0;
     for (let i = 0; i < seed.length; i++) {
@@ -59,12 +68,16 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
     const setsWonAway = completedSets.filter((s) => s.away_points > s.home_points).length;
     const setsToWin = match.league?.sets_to_win ?? 2;
     const pointsPerSet = match.league?.points_per_set ?? 21;
-    const totalSetSlots = Math.max(1, 2 * setsToWin - 1);
+    const formatRules = match.league?.match_format ? matchFormatRules[match.league.match_format] : undefined;
+    const completionMode = formatRules?.completion_mode ?? 'first_to_win';
+    const totalSetSlots = completionMode === 'all_sets' ? setsToWin : completionMode === 'single_block' ? 1 : Math.max(1, 2 * setsToWin - 1);
     const currentSetNumber = completedSets.length + 1;
     const isLive = score.status === 'live';
-    const isFinal = score.status === 'final' || score.status === 'completed' || setsWonHome >= setsToWin || setsWonAway >= setsToWin;
+    const isFinal = score.status === 'final' || score.status === 'completed' || (completionMode === 'first_to_win' && (setsWonHome >= setsToWin || setsWonAway >= setsToWin)) || (completionMode !== 'first_to_win' && completedSets.length >= totalSetSlots);
     const homeLeading = score.home > score.away;
     const awayLeading = score.away > score.home;
+    const formatLabel = formatRules?.label ?? 'Tournament Match';
+    const scoreHint = `${formatRules?.deuce ? 'First to ' + pointsPerSet + ', win by 2' : 'First to ' + pointsPerSet}`;
 
     // Auto-generated play-by-play from set transitions + current state
     type TimelineItem = { key: string; time: string; title: string; detail: string; icon: string; emphasis?: boolean };
@@ -73,7 +86,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
         const winner = setsWonHome > setsWonAway ? homeLabel : awayLabel;
         timeline.push({ key: 'final', time: 'Final', title: `${winner} won ${Math.max(setsWonHome, setsWonAway)} — ${Math.min(setsWonHome, setsWonAway)}`, detail: 'Match ended', icon: 'emoji_events', emphasis: true });
     } else if (isLive) {
-        timeline.push({ key: 'live', time: 'Now', title: `${homeLabel} ${score.home} — ${score.away} ${awayLabel}`, detail: `Set ${Math.min(currentSetNumber, totalSetSlots)} · first to ${pointsPerSet}`, icon: 'sports_score', emphasis: true });
+        timeline.push({ key: 'live', time: 'Now', title: `${homeLabel} ${score.home} — ${score.away} ${awayLabel}`, detail: `Set ${Math.min(currentSetNumber, totalSetSlots)} · ${scoreHint}`, icon: 'sports_score', emphasis: true });
     }
     [...completedSets].reverse().forEach((set) => {
         const winner = set.home_points > set.away_points ? homeLabel : awayLabel;
@@ -138,7 +151,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                     <section className={`overflow-hidden rounded-xl bg-inverse-surface text-inverse-on-surface ${CARD_SHADOW}`}>
                         <div className="flex items-center justify-between border-b border-white/5 px-5 py-2.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-inverse-on-surface/70 sm:px-6">
                             <span>
-                                Set {Math.min(currentSetNumber, totalSetSlots)} of {totalSetSlots} · First to {pointsPerSet}
+                                Set {Math.min(currentSetNumber, totalSetSlots)} of {totalSetSlots} · {scoreHint}
                             </span>
                             <span className="hidden sm:inline">
                                 {match.location || 'Main Court'} · {formatJakartaTime(match.scheduled_at)}
@@ -274,7 +287,7 @@ export default function Show({ match, canManage }: { match: GameMatch; canManage
                     {/* Section: Match Info */}
                     <section className={`grid gap-4 rounded-xl bg-surface-container-lowest p-5 sm:grid-cols-2 ${CARD_SHADOW}`}>
                         <InfoRow icon="location_on" label="Venue" title={match.location || 'Main Court'} detail={formatJakartaDateTime(match.scheduled_at)} />
-                        <InfoRow icon="sports" label="Format" title={match.league ? 'Tournament Match' : 'Team Match'} detail={`${match.league?.sport?.name ?? ''}${match.league?.category ? ` · ${match.league.category}` : ''}`.trim() || '—'} />
+                        <InfoRow icon="sports" label="Format" title={formatLabel} detail={`${match.league?.sport?.name ?? ''}${match.league?.category ? ` · ${match.league.category}` : ''} · ${scoreHint}`.trim() || '—'} />
                     </section>
 
                 </div>
@@ -572,6 +585,7 @@ function RecordSetForm({ matchId, homeLabel, awayLabel }: { matchId: number; hom
             </div>
             {form.errors.home_points && <p className="mt-1 text-[0.75rem] text-error">{form.errors.home_points}</p>}
             {form.errors.away_points && <p className="mt-1 text-[0.75rem] text-error">{form.errors.away_points}</p>}
+            {(form.errors as any).sets && <p className="mt-1 text-[0.75rem] text-error">{(form.errors as any).sets}</p>}
             {(form.errors as any).locked && <p className="mt-1 text-[0.75rem] text-error">{(form.errors as any).locked}</p>}
         </form>
     );

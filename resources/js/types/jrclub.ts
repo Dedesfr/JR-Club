@@ -47,6 +47,15 @@ export type LeagueAward = {
     sort_order?: number;
 };
 
+export type MatchFormatOption = {
+    value: string;
+    label: string;
+    sets_to_win: number;
+    points_per_set: number;
+    deuce: boolean;
+    completion_mode: 'first_to_win' | 'all_sets' | 'single_block';
+};
+
 export type LeagueEntry = {
     id: number;
     label: string;
@@ -110,6 +119,7 @@ export type League = {
     sport_category_id?: number | null;
     category?: string | null;
     entry_type?: 'single' | 'double' | 'team' | null;
+    match_format?: string | null;
     start_date: string;
     end_date?: string;
     participant_total?: number | null;

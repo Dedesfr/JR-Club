@@ -18,6 +18,23 @@ class SportController extends Controller
         return Inertia::render('Admin/Sports/Index', ['sports' => Sport::orderBy('name')->paginate(10)]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('Admin/Sports/Create');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $sport = Sport::create($request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'icon' => ['required', 'string', 'max:255'],
+            'max_players_per_team' => ['required', 'integer', 'min:1'],
+            'description' => ['nullable', 'string'],
+        ]));
+
+        return redirect()->route('admin.sports.edit', $sport)->with('success', 'Sport created.');
+    }
+
     public function edit(Sport $sport): Response
     {
         return Inertia::render('Admin/Sports/Edit', ['sport' => $sport->load('categories')]);

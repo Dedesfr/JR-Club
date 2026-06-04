@@ -1,7 +1,7 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import DatePicker from '@/Components/DatePicker';
 import SelectInput, { SelectOption } from '@/Components/SelectInput';
-import { Branch, Sport } from '@/types/jrclub';
+import { Branch, MatchFormatOption, Sport } from '@/types/jrclub';
 import { PageProps } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
@@ -11,7 +11,7 @@ const startStageOptions: SelectOption[] = [
     { value: 'bracket', label: 'Bracket' },
 ];
 
-export default function Create({ sports, branches }: { sports: Sport[]; branches: Branch[] }) {
+export default function Create({ sports, branches, matchFormats }: { sports: Sport[]; branches: Branch[]; matchFormats: MatchFormatOption[] }) {
     const { auth } = usePage<PageProps>().props;
     const initialSport = sports[0];
     const initialCategory = initialSport?.categories?.[0];
@@ -26,6 +26,7 @@ export default function Create({ sports, branches }: { sports: Sport[]; branches
         participant_total: string;
         sets_to_win: string;
         points_per_set: string;
+        match_format: string;
         advance_upper_count: string;
         advance_lower_count: string;
         branch_id: string;
@@ -41,6 +42,7 @@ export default function Create({ sports, branches }: { sports: Sport[]; branches
         participant_total: '8',
         sets_to_win: '2',
         points_per_set: '21',
+        match_format: '',
         advance_upper_count: '1',
         advance_lower_count: '1',
         branch_id: '',
@@ -50,6 +52,7 @@ export default function Create({ sports, branches }: { sports: Sport[]; branches
     const selectedSport = useMemo(() => sports.find((sport) => sport.id === Number(form.data.sport_id)), [sports, form.data.sport_id]);
     const categoryOptions = (selectedSport?.categories ?? []).map((category) => ({ value: String(category.id), label: category.name }));
     const branchOptions = [{ value: '', label: 'National' }, ...branches.map((branch) => ({ value: String(branch.id), label: branch.name }))];
+    const matchFormatOptions = [{ value: '', label: 'Custom / Badminton default' }, ...matchFormats.map((format) => ({ value: format.value, label: format.label }))];
     const selectedCategory = selectedSport?.categories?.find((category) => String(category.id) === form.data.sport_category_id);
 
     const handleSportChange = (value: string) => {
@@ -58,6 +61,16 @@ export default function Create({ sports, branches }: { sports: Sport[]; branches
             ...data,
             sport_id: Number(value || sports[0]?.id || 0),
             sport_category_id: sport?.categories?.[0]?.id ? String(sport.categories[0].id) : '',
+        }));
+    };
+
+    const handleMatchFormatChange = (value: string) => {
+        const format = matchFormats.find((item) => item.value === value);
+        form.setData((data) => ({
+            ...data,
+            match_format: value,
+            sets_to_win: format ? String(format.sets_to_win) : data.sets_to_win,
+            points_per_set: format ? String(format.points_per_set) : data.points_per_set,
         }));
     };
 
@@ -151,6 +164,11 @@ export default function Create({ sports, branches }: { sports: Sport[]; branches
                         <h3 className="text-[0.75rem] font-bold uppercase tracking-[0.05em] text-primary">Match Rules & Advancement</h3>
                     </div>
                     <div className="p-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        <Field label="Match format">
+                            <div className="editorial-select-wrapper relative">
+                                <SelectInput options={matchFormatOptions} value={form.data.match_format} onChange={(value) => handleMatchFormatChange(value || '')} placeholder="Select format" />
+                            </div>
+                        </Field>
                         <Field label="Sets to win">
                             <input type="number" min={1} value={form.data.sets_to_win} onChange={(event) => form.setData('sets_to_win', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-4 py-3 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" />
                         </Field>

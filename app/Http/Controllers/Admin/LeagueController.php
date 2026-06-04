@@ -11,6 +11,7 @@ use App\Models\SportCategory;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\LeagueFormatService;
+use App\Support\MatchFormat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -35,6 +36,7 @@ class LeagueController extends Controller
         return Inertia::render('Admin/Leagues/Create', [
             'sports' => Sport::with(['categories' => fn ($query) => $query->where('is_active', true)])->orderBy('name')->get(),
             'branches' => auth()->user()?->isPusatAdmin() ? Branch::orderBy('name')->get(['id', 'name', 'is_global']) : [],
+            'matchFormats' => MatchFormat::options(),
         ]);
     }
 
@@ -53,6 +55,7 @@ class LeagueController extends Controller
             'participant_total' => ['nullable', 'integer', 'min:2'],
             'sets_to_win' => ['required', 'integer', 'min:1'],
             'points_per_set' => ['required', 'integer', 'min:1'],
+            'match_format' => ['nullable', MatchFormat::rule()],
             'advance_upper_count' => ['required', 'integer', 'min:0'],
             'advance_lower_count' => ['required', 'integer', 'min:0'],
             'banner' => ['nullable', 'image', 'max:5120'],
@@ -175,6 +178,7 @@ class LeagueController extends Controller
             'standings' => $league->standings(),
             'upperBracket' => $league->matches->where('stage', 'upper')->groupBy('round')->sortKeys()->values(),
             'lowerBracket' => $league->matches->where('stage', 'lower')->groupBy('round')->sortKeys()->values(),
+            'matchFormats' => MatchFormat::options(),
         ]);
     }
 
@@ -194,6 +198,7 @@ class LeagueController extends Controller
             'participant_total' => ['nullable', 'integer', 'min:2'],
             'sets_to_win' => ['sometimes', 'integer', 'min:1'],
             'points_per_set' => ['sometimes', 'integer', 'min:1'],
+            'match_format' => ['sometimes', 'nullable', MatchFormat::rule()],
             'advance_upper_count' => ['sometimes', 'integer', 'min:0'],
             'advance_lower_count' => ['sometimes', 'integer', 'min:0'],
         ]);

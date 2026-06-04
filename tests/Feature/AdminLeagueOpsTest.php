@@ -10,6 +10,7 @@ use App\Models\Sport;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -197,5 +198,102 @@ class AdminLeagueOpsTest extends TestCase
         
         $document = $match->documents()->first();
         Storage::disk('public')->assertExists($document->path);
+    }
+
+    public function test_tenis_meja_deuce_validation()
+    {
+        Event::fake();
+        $match = $this->makeMatch('tenis_meja_best_of_five', pointsPerSet: 11);
+
+        $valid = $this->actingAs($this->admin)->post(route('admin.matches.sets.store', $match), [
+            'home_points' => 11,
+            'away_points' => 9,
+        ]);
+        $valid->assertSessionHas('success');
+
+        $invalid = $this->actingAs($this->admin)->post(route('admin.matches.sets.store', $match->fresh()), [
+            'home_points' => 11,
+            'away_points' => 10,
+        ]);
+        $invalid->assertSessionHasErrors(['sets']);
+
+        $validDeuce = $this->actingAs($this->admin)->post(route('admin.matches.sets.store', $match->fresh()), [
+            'home_points' => 12,
+            'away_points' => 10,
+        ]);
+        $validDeuce->assertSessionHas('success');
+    }
+
+    public function test_padel_all_sets_stays_live_until_all_sets_recorded()
+    {
+        Event::fake();
+        $match = $this->makeMatch('padel_best_of_three');
+
+        $this->actingAs($this->admin)->post(route('admin.matches.sets.store', $match), ['home_points' => 21, 'away_points' => 10]);
+        $this->actingAs($this->admin)->post(route('admin.matches.sets.store', $match->fresh()), ['home_points' => 21, 'away_points' => 11]);
+
+        $this->assertSame('live', $match->fresh()->status);
+
+        $this->actingAs($this->admin)->post(route('admin.matches.sets.store', $match->fresh()), ['home_points' => 12, 'away_points' => 21]);
+
+        $match->refresh();
+        $this->assertSame('completed', $match->status);
+        $this->assertSame(2, $match->home_score);
+        $this->assertSame(1, $match->away_score);
+    }
+
+    public function test_americano_single_block_completes_on_one_block_to_21()
+    {
+        Event::fake();
+        $match = $this->makeMatch('padel_americano');
+
+        $response = $this->actingAs($this->admin)->post(route('admin.matches.sets.store', $match), [
+            'home_points' => 21,
+            'away_points' => 18,
+        ]);
+
+        $response->assertSessionHas('success');
+        $match->refresh();
+        $this->assertSame('completed', $match->status);
+        $this->assertSame(1, $match->home_score);
+        $this->assertSame(0, $match->away_score);
+    }
+
+    public function test_null_match_format_keeps_first_to_win_completion()
+    {
+        Event::fake();
+        $match = $this->makeMatch(null, setsToWin: 2, pointsPerSet: 21);
+
+        $this->actingAs($this->admin)->post(route('admin.matches.sets.store', $match), ['home_points' => 21, 'away_points' => 10]);
+        $this->actingAs($this->admin)->post(route('admin.matches.sets.store', $match->fresh()), ['home_points' => 21, 'away_points' => 11]);
+
+        $match->refresh();
+        $this->assertSame('completed', $match->status);
+        $this->assertSame(2, $match->home_score);
+        $this->assertSame(0, $match->away_score);
+    }
+
+    private function makeMatch(?string $matchFormat, int $setsToWin = 3, int $pointsPerSet = 21): GameMatch
+    {
+        $sport = Sport::create(['name' => 'Sport ' . uniqid(), 'description' => 'Test']);
+        $league = League::create([
+            'name' => 'Scoring League ' . uniqid(),
+            'sport_id' => $sport->id,
+            'status' => 'active',
+            'stage' => 'upper',
+            'start_date' => now(),
+            'created_by' => $this->admin->id,
+            'match_format' => $matchFormat,
+            'sets_to_win' => $setsToWin,
+            'points_per_set' => $pointsPerSet,
+        ]);
+
+        return GameMatch::create([
+            'league_id' => $league->id,
+            'status' => 'scheduled',
+            'stage' => 'upper',
+            'round' => 1,
+            'scheduled_at' => now(),
+        ]);
     }
 }

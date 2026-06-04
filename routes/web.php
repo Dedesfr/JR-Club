@@ -108,6 +108,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/matches/{match}/complete', [AdminLeagueMatchController::class, 'complete'])->name('matches.complete');
 
         Route::get('/sports', [AdminSportController::class, 'index'])->name('sports.index');
+        Route::get('/sports/create', [AdminSportController::class, 'create'])->name('sports.create');
+        Route::post('/sports', [AdminSportController::class, 'store'])->name('sports.store');
         Route::get('/sports/{sport}/edit', [AdminSportController::class, 'edit'])->name('sports.edit');
         Route::patch('/sports/{sport}', [AdminSportController::class, 'update'])->name('sports.update');
         Route::post('/sports/{sport}/categories', [AdminSportController::class, 'storeCategory'])->name('sports.categories.store');

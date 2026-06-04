@@ -8,6 +8,7 @@ use App\Models\GameMatch;
 use App\Models\MatchSet;
 use App\Services\BracketService;
 use App\Services\LeagueFormatService;
+use App\Support\MatchFormat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,10 @@ class LeagueMatchController extends Controller
             'home_points' => ['required', 'integer', 'min:0'],
             'away_points' => ['required', 'integer', 'min:0', 'different:home_points'],
         ]);
+
+        if ($error = $this->validateSetScore($match, $validated, $match->sets()->count() + 1)) {
+            return back()->withErrors(['sets' => $error]);
+        }
 
         MatchSet::updateOrCreate(
             ['match_id' => $match->id, 'set_number' => $match->sets()->count() + 1],
@@ -47,6 +52,10 @@ class LeagueMatchController extends Controller
             'home_points' => ['required', 'integer', 'min:0'],
             'away_points' => ['required', 'integer', 'min:0', 'different:home_points'],
         ]);
+
+        if ($error = $this->validateSetScore($match, $validated, $set->set_number)) {
+            return back()->withErrors(['sets' => $error]);
+        }
 
         $set->update($validated);
 
@@ -184,9 +193,15 @@ class LeagueMatchController extends Controller
     {
         $homeSets = $match->sets->filter(fn ($set) => $set->home_points > $set->away_points)->count();
         $awaySets = $match->sets->filter(fn ($set) => $set->away_points > $set->home_points)->count();
+        $rules = $match->league->formatRules();
+        $setCount = $match->sets->count();
+        $setsToWin = (int) $rules['sets_to_win'];
 
-        $setsToWin = $match->league->sets_to_win ?? 2;
-        $status = max($homeSets, $awaySets) >= $setsToWin ? 'completed' : ($match->sets->count() > 0 ? 'live' : 'scheduled');
+        $status = match ($rules['completion_mode']) {
+            MatchFormat::ALL_SETS => $setCount >= $setsToWin ? 'completed' : ($setCount > 0 ? 'live' : 'scheduled'),
+            MatchFormat::SINGLE_BLOCK => $setCount >= 1 ? 'completed' : 'scheduled',
+            default => max($homeSets, $awaySets) >= $setsToWin ? 'completed' : ($setCount > 0 ? 'live' : 'scheduled'),
+        };
 
         $match->update([
             'home_score' => $homeSets,
@@ -206,5 +221,34 @@ class LeagueMatchController extends Controller
         }
 
         broadcast(new MatchScoreUpdated($match->fresh(['homeTeam', 'awayTeam', 'homeEntry.player1', 'homeEntry.player2', 'homeEntry.substitutes', 'awayEntry.player1', 'awayEntry.player2', 'awayEntry.substitutes', 'sets', 'league'])));
+    }
+
+    private function validateSetScore(GameMatch $match, array $score, int $setNumber): ?string
+    {
+        $rules = $match->league->formatRules();
+        $maxSets = match ($rules['completion_mode']) {
+            MatchFormat::ALL_SETS => (int) $rules['sets_to_win'],
+            MatchFormat::SINGLE_BLOCK => 1,
+            default => null,
+        };
+
+        if ($maxSets !== null && $setNumber > $maxSets) {
+            return "This format only allows {$maxSets} set" . ($maxSets === 1 ? '.' : 's.');
+        }
+
+        $winnerPoints = max($score['home_points'], $score['away_points']);
+        $loserPoints = min($score['home_points'], $score['away_points']);
+        $target = (int) $rules['points_per_set'];
+        $minimumMargin = $rules['deuce'] ? 2 : 1;
+
+        if ($winnerPoints < $target) {
+            return "A set must reach at least {$target} points.";
+        }
+
+        if (($winnerPoints - $loserPoints) < $minimumMargin) {
+            return $rules['deuce'] ? 'Deuce format sets must be won by 2 points.' : 'A set must have a clear winner.';
+        }
+
+        return null;
     }
 }
