@@ -95,7 +95,7 @@ class LeagueController extends Controller
 
         $league->load([
             'branch',
-            'sport',
+            'sport.categories' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
             'sportCategory',
             'awards',
             'teams.members',

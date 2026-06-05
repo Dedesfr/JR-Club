@@ -18,12 +18,14 @@ class LeagueEntryController extends Controller
     {
         $this->authorize('update', $league);
 
-        if (! in_array($league->entry_type, ['single', 'double'], true)) {
+        $entryType = $league->entry_type ?? $league->sportCategory?->entry_type;
+
+        if (! in_array($entryType, ['single', 'double'], true)) {
             throw ValidationException::withMessages(['league' => 'Entries are only available for direct-entry league categories.']);
         }
 
         $validated = $request->validate([
-            'group_name' => [Rule::requiredIf(fn () => $league->entry_type === 'double'), 'nullable', 'string', 'max:255'],
+            'group_name' => [Rule::requiredIf(fn () => $entryType === 'double'), 'nullable', 'string', 'max:255'],
             'group_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'player1_id' => ['required', 'exists:users,id'],
             'player2_id' => ['nullable', 'exists:users,id', 'different:player1_id'],
@@ -31,7 +33,7 @@ class LeagueEntryController extends Controller
             'substitute_ids.*' => ['integer', 'exists:users,id', 'distinct'],
         ]);
 
-        if ($request->hasFile('group_picture') && $league->entry_type !== 'double') {
+        if ($request->hasFile('group_picture') && $entryType !== 'double') {
             throw ValidationException::withMessages(['group_picture' => 'Group picture is only available for doubles entries.']);
         }
 
@@ -44,7 +46,7 @@ class LeagueEntryController extends Controller
         $this->assertCategoryRules($league, $player1, $player2, $substitutes);
 
         $entry = $league->entries()->create([
-            'group_name' => $league->entry_type === 'double' ? ($validated['group_name'] ?? null) : null,
+            'group_name' => $entryType === 'double' ? ($validated['group_name'] ?? null) : null,
             'group_picture_path' => $request->file('group_picture')?->store('league-entries', 'public'),
             'player1_id' => $validated['player1_id'],
             'player2_id' => $validated['player2_id'] ?? null,
@@ -62,12 +64,14 @@ class LeagueEntryController extends Controller
         $this->authorize('update', $league);
         abort_unless($entry->league_id === $league->id, 404);
 
-        if (! in_array($league->entry_type, ['single', 'double'], true)) {
+        $entryType = $league->entry_type ?? $league->sportCategory?->entry_type;
+
+        if (! in_array($entryType, ['single', 'double'], true)) {
             throw ValidationException::withMessages(['league' => 'Entries are only available for direct-entry league categories.']);
         }
 
         $validated = $request->validate([
-            'group_name' => [Rule::requiredIf(fn () => $league->entry_type === 'double'), 'nullable', 'string', 'max:255'],
+            'group_name' => [Rule::requiredIf(fn () => $entryType === 'double'), 'nullable', 'string', 'max:255'],
             'group_picture' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'remove_group_picture' => ['nullable', 'boolean'],
             'player1_id' => ['required', 'exists:users,id'],
@@ -77,7 +81,7 @@ class LeagueEntryController extends Controller
             'seed' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        if ($request->hasFile('group_picture') && $league->entry_type !== 'double') {
+        if ($request->hasFile('group_picture') && $entryType !== 'double') {
             throw ValidationException::withMessages(['group_picture' => 'Group picture is only available for doubles entries.']);
         }
 
@@ -107,7 +111,7 @@ class LeagueEntryController extends Controller
         }
 
         $entry->update([
-            'group_name' => $league->entry_type === 'double' ? ($validated['group_name'] ?? null) : null,
+            'group_name' => $entryType === 'double' ? ($validated['group_name'] ?? null) : null,
             'group_picture_path' => $groupPicturePath,
             'player1_id' => $validated['player1_id'],
             'player2_id' => $validated['player2_id'] ?? null,

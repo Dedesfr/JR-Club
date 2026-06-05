@@ -24,13 +24,6 @@ type UserOption = {
 };
 
 const tabs = ['Overview', 'Participants', 'Groups', 'Bracket', 'Matches'] as const;
-const categoryLabels: Record<string, string> = {
-    MS: 'Single Putra',
-    WS: 'Single Putri',
-    MD: 'Ganda Putra',
-    WD: 'Ganda Putri',
-    XD: 'Ganda Campuran',
-};
 const statusOptions = ['upcoming', 'active', 'completed'].map((status) => ({ value: status, label: status }));
 const startStageOptions = [
     { value: 'group', label: 'Group Stage' },
@@ -80,6 +73,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
         match_format: league.match_format ?? '',
         advance_upper_count: league.advance_upper_count?.toString() ?? '0',
         advance_lower_count: league.advance_lower_count?.toString() ?? '0',
+        sport_category_id: league.sport_category_id?.toString() ?? '',
     });
 
     const bannerForm = useForm<{ banner: File | null }>({ banner: null });
@@ -100,8 +94,8 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     const hasExistingGroups = (league.groups?.length ?? 0) > 0;
     const hasExistingGroupMatches = (league.matches ?? []).some((match) => match.stage === 'group');
     const hasExistingBracketMatches = (league.matches ?? []).some((match) => ['upper', 'lower', 'third_place', 'lower_third_place'].includes(match.stage ?? ''));
-    const formatLabel = league.sport_category?.name ?? (league.category ? (categoryLabels[league.category] ?? league.category) : 'Team based');
     const matchFormatOptions = [{ value: '', label: 'Custom / Badminton default' }, ...matchFormats.map((format) => ({ value: format.value, label: format.label }))];
+    const categoryOptions = [{ value: '', label: 'No category' }, ...(league.sport?.categories ?? []).map((cat) => ({ value: String(cat.id), label: cat.name }))];
     const bracketGroupCount = Math.max(1, league.group_count ?? league.groups?.length ?? 0);
     const upperBracketEntryCount = startsFromBracket ? (league.participant_total || league.entries?.length || 0) : bracketGroupCount * (league.advance_upper_count ?? 0);
     const lowerBracketEntryCount = startsFromBracket ? 0 : bracketGroupCount * (league.advance_lower_count ?? 0);
@@ -388,7 +382,10 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                 <Field label="Start from"><SelectInput options={startStageOptions} value={form.data.start_stage} onChange={(value) => form.setData('start_stage', value === 'bracket' ? 'bracket' : 'group')} /></Field>
                                 <Field label="Start date"><DatePicker value={form.data.start_date} onChange={(value) => form.setData('start_date', value)} /></Field>
 <Field label="Participant total"><input type="number" min={2} value={form.data.participant_total} onChange={(event) => form.setData('participant_total', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" /></Field>
-                                <Field label="Category"><div className="w-full border-0 border-b-2 border-outline-variant/10 rounded-t-md bg-surface-container-lowest px-3 py-2.5 text-sm font-bold text-on-surface-variant">{`${formatLabel} • ${league.entry_type ?? 'team'}`}</div></Field>
+                                <Field label="Sport"><div className="w-full border-0 border-b-2 border-outline-variant/10 rounded-t-md bg-surface-container-lowest px-3 py-2.5 text-sm font-bold text-on-surface-variant">{league.sport?.name ?? '—'}</div></Field>
+                                <Field label="Category"><SelectInput options={categoryOptions} value={form.data.sport_category_id} onChange={(value) => form.setData('sport_category_id', value)} /></Field>
+                                <Field label="Branch"><div className="w-full border-0 border-b-2 border-outline-variant/10 rounded-t-md bg-surface-container-lowest px-3 py-2.5 text-sm font-bold text-on-surface-variant">{league.branch?.name ?? 'National'}</div></Field>
+                                <Field label="Entry type"><div className="w-full border-0 border-b-2 border-outline-variant/10 rounded-t-md bg-surface-container-lowest px-3 py-2.5 text-sm font-bold text-on-surface-variant">{league.entry_type ?? '—'}</div></Field>
                                 <Field label="Description" full><textarea value={form.data.description} onChange={(event) => form.setData('description', event.target.value)} className="w-full min-h-[120px] bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface resize-y" /></Field>
                                 <Field label="Documentation link" full>
                                     <input type="url" value={form.data.documentation_url} onChange={(event) => form.setData('documentation_url', event.target.value)} className="w-full bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2.5 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface" placeholder="https://drive.google.com/..." />
