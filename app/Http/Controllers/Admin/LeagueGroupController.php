@@ -22,7 +22,7 @@ class LeagueGroupController extends Controller
         }
 
         $validated = $request->validate([
-            'group_count' => ['required', 'integer', 'min:2'],
+            'group_count' => ['required', 'integer', 'min:1'],
             'interval' => ['required', 'integer', 'min:0'],
             'schedule' => ['nullable', 'array'],
             'schedule.*.round' => ['required_with:schedule', 'integer', 'min:1'],

@@ -15,7 +15,7 @@ class LeagueFormatService
     {
         $options = [];
 
-        for ($groupCount = 2; $groupCount <= $total; $groupCount++) {
+        for ($groupCount = 1; $groupCount <= $total; $groupCount++) {
             if ($total % $groupCount !== 0) {
                 continue;
             }
