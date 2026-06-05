@@ -117,7 +117,7 @@ export default function Show({ profile, isPublic }: { profile: Profile; isPublic
                             {profile.teams.length ? profile.teams.map((team) => (
                                 <div key={team.id} className="rounded-xl bg-surface-container-low p-4">
                                     <p className="font-bold text-on-surface">{team.name}</p>
-                                    <p className="mt-1 text-sm text-on-surface-variant">{team.sport.name}{typeof team.members_count === 'number' ? ` - ${team.members_count} members` : ''}</p>
+                                    <p className="mt-1 text-sm text-on-surface-variant">{(team.sports ?? []).map((s) => s.name).join(', ') || '—'}{typeof team.members_count === 'number' ? ` - ${team.members_count} members` : ''}</p>
                                 </div>
                             )) : (
                                 <div className="rounded-xl bg-surface-container-low p-4 text-sm font-medium text-on-surface-variant">No active teams yet.</div>

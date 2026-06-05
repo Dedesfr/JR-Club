@@ -12,14 +12,18 @@ export default function Show({ team }: { team: Team }) {
                         <span className="mb-2 block text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Team Management</span>
                         <h1 className="text-3xl font-black leading-none tracking-tight text-on-surface">{team.name}</h1>
                     </div>
-                    <div className="rounded-lg bg-surface-container-low p-2">
-                        <span className="material-symbols-outlined fill text-primary">{team.sport.icon}</span>
+                    <div className="flex gap-1">
+                        {(team.sports ?? []).map((sport) => (
+                            <div key={sport.id} className="rounded-lg bg-surface-container-low p-2">
+                                <span className="material-symbols-outlined fill text-primary">{sport.icon}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
                 <div className="flex gap-4">
                     <div className="flex flex-col"><span className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Players</span><span className="text-4xl font-black tracking-tighter text-on-surface">{team.members?.length ?? 0}</span></div>
                     <div className="w-px bg-surface-container-highest" />
-                    <div className="flex flex-col"><span className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Sport</span><span className="text-2xl font-black tracking-tighter text-on-surface">{team.sport.name}</span></div>
+                    <div className="flex flex-col"><span className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Sport</span><span className="text-2xl font-black tracking-tighter text-on-surface">{(team.sports ?? []).map((s) => s.name).join(', ') || '—'}</span></div>
                 </div>
             </section>
             <h2 className="mb-4 mt-8 px-2 text-xl font-bold tracking-tight">Active Roster</h2>

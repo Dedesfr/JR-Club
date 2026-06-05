@@ -100,9 +100,11 @@ export type Team = {
     branch?: Branch | null;
     name: string;
     logo_path?: string | null;
-    sport: Sport;
+    sport_logo?: string | null;
+    sports?: Sport[];
     members?: { id: number; name: string; email?: string; pivot?: { role: string } }[];
     members_count?: number;
+    has_squad?: boolean;
 };
 
 export type League = {

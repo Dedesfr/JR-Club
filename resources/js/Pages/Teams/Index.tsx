@@ -4,7 +4,7 @@ import { Sport, Team } from '@/types/jrclub';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Index({ teams, sports, myTeams, canManage }: { teams: Team[]; sports: Sport[]; myTeams: Team[]; canManage: boolean }) {
-    const form = useForm({ name: '', sport_id: sports[0]?.id ?? '' });
+    const form = useForm<{ name: string; sport_ids: number[] }>({ name: '', sport_ids: [] });
     const sportOptions = sports.map((sport) => ({ value: String(sport.id), label: sport.name }));
 
     return (
@@ -30,7 +30,14 @@ export default function Index({ teams, sports, myTeams, canManage }: { teams: Te
             {canManage ? (
                 <form onSubmit={(e) => { e.preventDefault(); form.post(route('teams.store'), { preserveScroll: true, onSuccess: () => form.reset('name') }); }} className="my-6 grid gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-[0_12px_32px_-4px_rgba(25,28,30,0.06)]">
                     <input className="rounded-md border-0 bg-surface-container-low" placeholder="Team name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
-                    <SelectInput options={sportOptions} value={form.data.sport_id} onChange={(value) => form.setData('sport_id', Number(value || sports[0]?.id || 0))} placeholder="Select sport" />
+                    <div className="flex flex-wrap gap-2">
+                        {sports.map((sport) => {
+                            const selected = form.data.sport_ids.includes(sport.id);
+                            return (
+                                <button key={sport.id} type="button" onClick={() => { const ids = form.data.sport_ids; form.setData('sport_ids', ids.includes(sport.id) ? ids.filter((s) => s !== sport.id) : [...ids, sport.id]); }} className={`rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-colors ${selected ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'}`}>{sport.name}</button>
+                            );
+                        })}
+                    </div>
                     <button className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-3 text-sm font-bold uppercase tracking-widest text-on-primary">Create Team</button>
                 </form>
             ) : null}
@@ -44,7 +51,7 @@ export default function Index({ teams, sports, myTeams, canManage }: { teams: Te
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-container text-sm font-black text-on-primary">{team.name.split(' ').map((word) => word[0]).join('').slice(0, 2)}</div>
                             <div>
                                 <h2 className="font-bold tracking-tight text-on-surface">{team.name}</h2>
-                                <p className="text-sm text-on-surface-variant">{team.sport.name}</p>
+                                <p className="text-sm text-on-surface-variant">{(team.sports ?? []).map((s) => s.name).join(', ') || '—'}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">

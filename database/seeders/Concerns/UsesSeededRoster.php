@@ -32,7 +32,7 @@ trait UsesSeededRoster
     private function seededBadmintonTeams(?int $limit = null): Collection
     {
         $query = Team::query()
-            ->whereHas('sport', fn ($sportQuery) => $sportQuery->where('name', 'Badminton'))
+            ->whereHas('sports', fn ($sportQuery) => $sportQuery->where('name', 'Badminton'))
             ->with(['members' => fn ($memberQuery) => $memberQuery->orderBy('users.id')])
             ->orderBy('id');
 

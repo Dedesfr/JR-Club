@@ -15,6 +15,7 @@ use App\Support\MatchFormat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -168,12 +169,7 @@ class LeagueController extends Controller
                 ->when(! request()->user()->isPusatAdmin(), fn ($query) => $query->where('branch_id', request()->user()->branch_id))
                 ->orderBy('name')
                 ->get(['id', 'name', 'email', 'gender', 'role', 'branch_id']),
-            'teams' => Team::query()
-                ->where('sport_id', $league->sport_id)
-                ->manageableBy(request()->user())
-                ->with('members')
-                ->orderBy('name')
-                ->get(['id', 'name', 'sport_id', 'branch_id']),
+            'teams' => $this->teamsForLeague($league),
             'divisionOptions' => $league->participant_total ? app(LeagueFormatService::class)->divisionOptions($league->participant_total) : [],
             'standings' => $league->standings(),
             'upperBracket' => $league->matches->where('stage', 'upper')->groupBy('round')->sortKeys()->values(),
@@ -317,9 +313,11 @@ class LeagueController extends Controller
             }
 
             $team = Team::query()->updateOrCreate(
-                ['name' => $validated['name'], 'sport_id' => $league->sport_id, 'branch_id' => $league->branch_id],
+                ['name' => $validated['name'], 'branch_id' => $league->branch_id],
                 ['created_by' => $request->user()->id, 'branch_id' => $league->branch_id],
             );
+
+            $team->sports()->syncWithoutDetaching([$league->sport_id]);
 
             $members = $playerIds->mapWithKeys(fn (int $playerId, int $index) => [
                 $playerId => [
@@ -338,7 +336,7 @@ class LeagueController extends Controller
             $team->members()->sync($members->union($substitutes)->all());
         }
 
-        if ($team->sport_id !== $league->sport_id) {
+        if (! $team->sports()->where('sports.id', $league->sport_id)->exists()) {
             return back()->withErrors(['team_id' => 'Team sport must match league sport.']);
         }
 
@@ -385,6 +383,48 @@ class LeagueController extends Controller
             'MD', 'WD', 'XD' => 'double',
             default => null,
         };
+    }
+
+    private function teamsForLeague(League $league): \Illuminate\Support\Collection
+    {
+        $sportId = $league->sport_id;
+
+        // Sport squad members (team_sport_members) for this sport
+        $squadByTeam = DB::table('team_sport_members')
+            ->join('users', 'users.id', '=', 'team_sport_members.user_id')
+            ->where('team_sport_members.sport_id', $sportId)
+            ->select('team_sport_members.team_id', 'users.id', 'users.name', 'users.gender')
+            ->get()
+            ->groupBy('team_id');
+
+        // Sport logo per team (from team_sports pivot)
+        $logoByTeam = DB::table('team_sports')
+            ->where('sport_id', $sportId)
+            ->whereNotNull('logo_path')
+            ->pluck('logo_path', 'team_id');
+
+        return Team::query()
+            ->whereHas('sports', fn ($q) => $q->where('sports.id', $sportId))
+            ->manageableBy(request()->user())
+            ->with('members:id,name,gender')
+            ->orderBy('name')
+            ->get(['id', 'name', 'logo_path'])
+            ->map(function (Team $team) use ($squadByTeam, $logoByTeam) {
+                $squad = $squadByTeam->get($team->id);
+                $hasSquad = $squad && $squad->isNotEmpty();
+
+                return [
+                    'id' => $team->id,
+                    'name' => $team->name,
+                    'logo_path' => $team->logo_path,
+                    'sport_logo' => $logoByTeam->get($team->id),
+                    'has_squad' => $hasSquad,
+                    // Use sport squad if configured, otherwise fall back to global roster
+                    'members' => $hasSquad
+                        ? $squad->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'gender' => $u->gender])->values()->all()
+                        : $team->members->map(fn ($m) => ['id' => $m->id, 'name' => $m->name, 'gender' => $m->gender ?? null])->all(),
+                ];
+            });
     }
 
     private function sportCategory(array $validated): ?SportCategory

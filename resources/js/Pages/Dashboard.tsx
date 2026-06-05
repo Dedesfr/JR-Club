@@ -165,7 +165,7 @@ export default function Dashboard({
                                     )}
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{team.name}</p>
-                                        <p className="text-xs text-on-surface-variant mt-0.5">{team.sport.name}</p>
+                                        <p className="text-xs text-on-surface-variant mt-0.5">{(team.sports ?? []).map((s) => s.name).join(', ')}</p>
                                     </div>
                                     <span className="material-symbols-outlined text-base text-on-surface-variant group-hover:translate-x-0.5 transition-transform shrink-0">chevron_right</span>
                                 </Link>

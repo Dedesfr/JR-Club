@@ -53,7 +53,7 @@ class LeagueController extends Controller
             'allLeagues' => $allLeagues,
             'activeLeague' => $activeLeague,
             'sports' => Sport::orderBy('name')->get(),
-            'teams' => Team::with('sport')->orderBy('name')->get(),
+            'teams' => Team::with('sports')->orderBy('name')->get(),
             'canManage' => $user?->can('admin') ?? false,
             'statusFilter' => $statusFilter,
         ]);
@@ -172,7 +172,7 @@ class LeagueController extends Controller
         $team = Team::findOrFail($request->validate(['team_id' => ['required', 'exists:teams,id']])['team_id']);
         $this->authorize('view', $team);
 
-        if ($team->sport_id !== $league->sport_id) {
+        if (! $team->sports()->where('sports.id', $league->sport_id)->exists()) {
             throw ValidationException::withMessages(['team_id' => 'Team sport must match league sport.']);
         }
 

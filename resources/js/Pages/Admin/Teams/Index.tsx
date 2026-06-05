@@ -61,7 +61,16 @@ export default function Index({ teams, search: initialSearch }: { teams: Paginat
                                                 {team.name}
                                             </Link>
                                         </td>
-                                        <td className="px-6 py-4 text-on-surface-variant">{team.sport?.name}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-wrap gap-1">
+                                                {(team.sports ?? []).map((sport) => (
+                                                    <span key={sport.id} className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-widest text-primary">
+                                                        {sport.name}
+                                                    </span>
+                                                ))}
+                                                {(team.sports ?? []).length === 0 && <span className="text-on-surface-variant">—</span>}
+                                            </div>
+                                        </td>
                                         <td className="px-6 py-4">
                                             <BranchBadge name={team.branch?.name} />
                                         </td>

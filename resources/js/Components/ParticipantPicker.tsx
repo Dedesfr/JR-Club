@@ -1,4 +1,4 @@
-import { useForm, router } from '@inertiajs/react';
+import { useForm, router, usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
 import ReactSelect, { MultiValue, SingleValue, StylesConfig } from 'react-select';
 import { League, Team } from '@/types/jrclub';
@@ -60,6 +60,8 @@ export default function ParticipantPicker({
     const isTeamEntry = league.entry_type === 'team';
     const isDoubles = league.entry_type === 'double';
     const allowsGroupPicture = ['MD', 'WD', 'XD'].includes(league.category ?? '');
+    const genderRule = league.sport_category?.gender_rule ?? league.category ?? null;
+    const { errors: pageErrors } = usePage().props as { errors: Record<string, string> };
 
     const form = useForm({
         team_id: '',
@@ -77,20 +79,28 @@ export default function ParticipantPicker({
         return users.filter((u) => memberIds.has(String(u.id)));
     }, [users, selectedTeam]);
 
+    const squadLabel = useMemo(() => {
+        if (!selectedTeam) return null;
+        if (selectedTeam.has_squad) {
+            return { text: `Sport squad · ${activeUsers.length} members`, variant: 'squad' as const };
+        }
+        return { text: `Global roster · ${activeUsers.length} members (no squad configured)`, variant: 'roster' as const };
+    }, [selectedTeam, activeUsers.length]);
+
     const getPlayerOptions = (slotIndex: number): SelectOption[] => {
         const takenIds = new Set(form.data.player_ids.filter((id, i) => i !== slotIndex && id));
         let pool = activeUsers.filter((u) => !takenIds.has(String(u.id)));
 
-        const cat = league.category;
-        if (cat === 'MS' || cat === 'MD') {
-            pool = pool.filter((u) => u.gender === 'male' || u.gender == null);
-        } else if (cat === 'WS' || cat === 'WD') {
-            pool = pool.filter((u) => u.gender === 'female' || u.gender == null);
-        } else if (cat === 'XD') {
+        const rule = genderRule;
+        if (rule === 'male' || rule === 'MS' || rule === 'MD') {
+            pool = pool.filter((u) => u.gender === 'male');
+        } else if (rule === 'female' || rule === 'WS' || rule === 'WD') {
+            pool = pool.filter((u) => u.gender === 'female');
+        } else if (rule === 'mixed' || rule === 'XD') {
             const otherSlot = slotIndex === 0 ? form.data.player_ids[1] : form.data.player_ids[0];
             const otherPlayer = otherSlot ? activeUsers.find((u) => String(u.id) === otherSlot) : null;
             if (otherPlayer?.gender) {
-                pool = pool.filter((u) => !u.gender || u.gender !== otherPlayer.gender);
+                pool = pool.filter((u) => u.gender && u.gender !== otherPlayer.gender);
             }
         }
 
@@ -102,10 +112,14 @@ export default function ParticipantPicker({
 
     const substituteOptions = useMemo(() => {
         const taken = new Set(form.data.player_ids.filter(Boolean));
-        return activeUsers
-            .filter((u) => !taken.has(String(u.id)))
-            .map((u) => ({ value: String(u.id), label: u.name }));
-    }, [activeUsers, form.data.player_ids]);
+        let pool = activeUsers.filter((u) => !taken.has(String(u.id)));
+        if (genderRule === 'male' || genderRule === 'MS' || genderRule === 'MD') {
+            pool = pool.filter((u) => u.gender === 'male');
+        } else if (genderRule === 'female' || genderRule === 'WS' || genderRule === 'WD') {
+            pool = pool.filter((u) => u.gender === 'female');
+        }
+        return pool.map((u) => ({ value: String(u.id), label: u.name }));
+    }, [activeUsers, form.data.player_ids, genderRule]);
 
     const teamOptions = teams.map((t) => ({ value: String(t.id), label: t.name }));
 
@@ -150,7 +164,7 @@ export default function ParticipantPicker({
     const colSpan = playerCount === 1 ? 'md:col-span-2' : 'md:col-span-1';
     const isSubmitDisabled =
         form.processing ||
-        form.data.player_ids.some((id) => !id) ||
+        (!isTeamEntry && form.data.player_ids.some((id) => !id)) ||
         (isTeamEntry && !form.data.team_id) ||
         (isDoubles && !form.data.group_name);
 
@@ -158,20 +172,32 @@ export default function ParticipantPicker({
         <form onSubmit={submit} className="rounded-xl bg-surface-container-lowest p-5 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
             <div className="grid gap-4 md:grid-cols-4 md:items-end">
                 {/* Team selector */}
-                <label className="block md:col-span-4">
+                <div className="md:col-span-4">
                     <span className="block mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">
                         Team {isTeamEntry ? '' : <span className="font-normal normal-case tracking-normal">(optional — filters players)</span>}
                     </span>
-                    <ReactSelect<SelectOption, false>
-                        isClearable={!isTeamEntry}
-                        options={teamOptions}
-                        value={teamOptions.find((o) => o.value === form.data.team_id) ?? null}
-                        onChange={(selected: SingleValue<SelectOption>) => handleTeamChange(selected?.value ?? '')}
-                        placeholder={isTeamEntry ? 'Select team' : 'Select team to filter players'}
-                        styles={selectStyles as StylesConfig<SelectOption, false>}
-                    />
+                    <div className="flex items-center gap-3">
+                        {selectedTeam?.sport_logo ? (
+                            <img src={selectedTeam.sport_logo} alt={selectedTeam.name} className="h-10 w-10 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant/20" />
+                        ) : null}
+                        <div className="flex-1 min-w-0">
+                            <ReactSelect<SelectOption, false>
+                                isClearable={!isTeamEntry}
+                                options={teamOptions}
+                                value={teamOptions.find((o) => o.value === form.data.team_id) ?? null}
+                                onChange={(selected: SingleValue<SelectOption>) => handleTeamChange(selected?.value ?? '')}
+                                placeholder={isTeamEntry ? 'Select team' : 'Select team to filter players'}
+                                styles={selectStyles as StylesConfig<SelectOption, false>}
+                            />
+                        </div>
+                    </div>
+                    {squadLabel ? (
+                        <span className={`mt-1.5 inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-widest ${squadLabel.variant === 'squad' ? 'bg-primary/10 text-primary' : 'bg-surface-container text-on-surface-variant'}`}>
+                            {squadLabel.text}
+                        </span>
+                    ) : null}
                     {form.errors.team_id ? <span className="text-xs font-medium text-error mt-1 block">{form.errors.team_id}</span> : null}
-                </label>
+                </div>
 
                 {/* Group name — doubles only */}
                 {isDoubles ? (
@@ -251,8 +277,10 @@ export default function ParticipantPicker({
                     </button>
                 </div>
             </div>
-            {Object.values(form.errors).length > 0 ? (
-                <p className="text-sm font-medium text-error mt-3">{Object.values(form.errors)[0]}</p>
+            {(Object.values(form.errors).length > 0 || Object.values(pageErrors).length > 0) ? (
+                <p className="text-sm font-medium text-error mt-3">
+                    {Object.values(form.errors)[0] ?? Object.values(pageErrors)[0]}
+                </p>
             ) : null}
         </form>
     );

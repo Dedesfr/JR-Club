@@ -39,12 +39,14 @@ class TeamSeeder extends Seeder
 
         foreach ($this->parseRosterDocument() as $teamName => $entries) {
             $team = Team::query()->updateOrCreate(
-                ['name' => $teamName, 'sport_id' => $badminton->id],
+                ['name' => $teamName],
                 [
                     'created_by' => $admin->id,
                     'logo_path' => $this->resolveTeamLogoPath($teamName),
                 ],
             );
+
+            $team->sports()->syncWithoutDetaching([$badminton->id]);
 
             $captainAssigned = false;
             $members = collect($entries)
@@ -78,7 +80,7 @@ class TeamSeeder extends Seeder
                     return $members;
                 }, collect());
 
-            $memberIds = $members->mapWithKeys(function (array $member) {
+            $memberIds = $members->mapWithKeys(function (array $member) use ($pusatId) {
                 $user = User::query()->updateOrCreate(
                     ['email' => $member['email']],
                     [
@@ -86,9 +88,13 @@ class TeamSeeder extends Seeder
                         'password' => 'password',
                         'role' => 'member',
                         'gender' => $member['gender'],
-                        'branch_id' => $pusatId,
                     ],
                 );
+
+                // Only default branch on first creation; never overwrite an existing assignment.
+                if ($user->wasRecentlyCreated) {
+                    $user->update(['branch_id' => $pusatId]);
+                }
 
                 return [
                     $user->id => [
@@ -98,7 +104,7 @@ class TeamSeeder extends Seeder
                 ];
             });
 
-            $team->members()->sync($memberIds->all());
+            $team->members()->syncWithoutDetaching($memberIds->all());
         }
     }
 

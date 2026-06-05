@@ -127,12 +127,14 @@ class CompletedBasketballLeagueSeeder extends Seeder
         return collect($this->teamDefinitions())
             ->mapWithKeys(function (array $definition) use ($sport, $admin) {
                 $team = Team::query()->updateOrCreate(
-                    ['name' => $definition['name'], 'sport_id' => $sport->id],
+                    ['name' => $definition['name']],
                     [
                         'created_by' => $admin->id,
                         'logo_path' => $this->resolveTeamLogoPath($definition['name']),
                     ],
                 );
+
+                $team->sports()->syncWithoutDetaching([$sport->id]);
 
                 $members = collect($definition['players'])
                     ->filter(fn (string $name) => $name !== '-')

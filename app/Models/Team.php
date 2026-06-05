@@ -12,9 +12,9 @@ class Team extends Model
 
     protected $fillable = ['name', 'branch_id', 'sport_id', 'created_by', 'logo_path'];
 
-    public function sport()
+    public function sports()
     {
-        return $this->belongsTo(Sport::class);
+        return $this->belongsToMany(Sport::class, 'team_sports')->withPivot('logo_path')->withTimestamps();
     }
 
     public function members()

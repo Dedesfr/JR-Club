@@ -21,7 +21,7 @@ class ProfileShowController extends Controller
 
     private function render(User $user, bool $public): Response
     {
-        $user->load(['activities.sport', 'teams.sport']);
+        $user->load(['activities.sport', 'teams.sports']);
 
         return Inertia::render('Profile/Show', [
             'profile' => [

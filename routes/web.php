@@ -139,6 +139,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/teams/{team}', [AdminTeamController::class, 'destroy'])->name('teams.destroy');
         Route::post('/teams/{team}/members', [AdminTeamController::class, 'addMember'])->name('teams.members.store');
         Route::delete('/teams/{team}/members/{user}', [AdminTeamController::class, 'removeMember'])->name('teams.members.destroy');
+        Route::post('/teams/{team}/sports/{sport}/members/{user}', [AdminTeamController::class, 'assignSportMember'])->name('teams.sports.members.store');
+        Route::delete('/teams/{team}/sports/{sport}/members/{user}', [AdminTeamController::class, 'removeSportMember'])->name('teams.sports.members.destroy');
+        Route::post('/teams/{team}/sports/{sport}/logo', [AdminTeamController::class, 'uploadSportLogo'])->name('teams.sports.logo.store');
     });
 });
 

@@ -93,12 +93,14 @@ class BasketballLeagueSeeder extends Seeder
 
         $teams = $sourceTeams->map(function (Team $sourceTeam) use ($admin, $sport, $playersPerTeam) {
             $team = Team::query()->updateOrCreate(
-                ['name' => $sourceTeam->name, 'sport_id' => $sport->id],
+                ['name' => $sourceTeam->name],
                 [
                     'created_by' => $admin->id,
                     'logo_path' => $sourceTeam->logo_path,
                 ],
             );
+
+            $team->sports()->syncWithoutDetaching([$sport->id]);
 
             $players = $sourceTeam->members
                 ->filter(fn ($member) => $member->pivot?->role !== 'substitute')

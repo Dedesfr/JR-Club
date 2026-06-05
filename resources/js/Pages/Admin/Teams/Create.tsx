@@ -1,13 +1,18 @@
 import SelectInput from '@/Components/SelectInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { PageProps } from '@/types';
-import { Branch } from '@/types/jrclub';
+import { Branch, Sport } from '@/types/jrclub';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
-export default function Create({ branches }: { branches: Branch[] }) {
+export default function Create({ branches, sports }: { branches: Branch[]; sports: Sport[] }) {
     const { auth } = usePage<PageProps>().props;
-    const form = useForm({ name: '', branch_id: '' });
+    const form = useForm<{ name: string; branch_id: string; sport_ids: number[] }>({ name: '', branch_id: '', sport_ids: [] });
     const branchOptions = [{ value: '', label: 'National' }, ...branches.map((branch) => ({ value: String(branch.id), label: branch.name }))];
+
+    function toggleSport(id: number) {
+        const ids = form.data.sport_ids;
+        form.setData('sport_ids', ids.includes(id) ? ids.filter((s) => s !== id) : [...ids, id]);
+    }
 
     return (
         <AdminLayout
@@ -32,7 +37,7 @@ export default function Create({ branches }: { branches: Branch[] }) {
                 <div className="bg-surface-container-low/30 px-6 py-4 border-b border-outline-variant/10">
                     <h3 className="text-[0.75rem] font-bold uppercase tracking-[0.05em] text-primary">Team Information</h3>
                 </div>
-                <div className="grid gap-4 p-6 md:grid-cols-2">
+                <div className="p-6 space-y-6">
                     <label className="block">
                         <span className="block mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Team name</span>
                         <input
@@ -49,6 +54,26 @@ export default function Create({ branches }: { branches: Branch[] }) {
                             <SelectInput options={branchOptions} value={form.data.branch_id} onChange={(value) => form.setData('branch_id', value)} />
                         </label>
                     ) : null}
+
+                    <div>
+                        <span className="block mb-2 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Sports</span>
+                        <div className="flex flex-wrap gap-2">
+                            {sports.map((sport) => {
+                                const selected = form.data.sport_ids.includes(sport.id);
+                                return (
+                                    <button
+                                        key={sport.id}
+                                        type="button"
+                                        onClick={() => toggleSport(sport.id)}
+                                        className={`rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-colors ${selected ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'}`}
+                                    >
+                                        {sport.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        {form.errors.sport_ids ? <p className="mt-1 text-xs text-error">{form.errors.sport_ids}</p> : null}
+                    </div>
                 </div>
             </form>
         </AdminLayout>

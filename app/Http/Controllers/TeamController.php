@@ -18,9 +18,10 @@ class TeamController extends Controller
         $user = $request->user();
 
         return Inertia::render('Teams/Index', [
-            'teams' => Team::with(['sport', 'members:id,name'])->withCount('members')->visibleTo($user)->latest()->get(),
+            'teams' => Team::with(['sports', 'members:id,name,email'])->withCount('members')->visibleTo($user)->latest()->get(),
             'sports' => Sport::orderBy('name')->get(),
-            'myTeams' => $user ? $user->teams()->with('sport')->visibleTo($user)->get() : [],
+            'users' => User::orderBy('name')->get(['id', 'name', 'email']),
+            'myTeams' => $user ? $user->teams()->with('sports')->visibleTo($user)->get() : [],
             'canManage' => $user?->can('admin') ?? false,
         ]);
     }
@@ -30,7 +31,7 @@ class TeamController extends Controller
         abort_unless(Team::query()->visibleTo(request()->user())->whereKey($team->id)->exists(), 404);
 
         return Inertia::render('Teams/Show', [
-            'team' => $team->load(['sport', 'members:id,name']),
+            'team' => $team->load(['sports', 'members:id,name,email']),
         ]);
     }
 
@@ -38,10 +39,14 @@ class TeamController extends Controller
     {
         Gate::authorize('admin');
 
-        Team::create($request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'sport_id' => ['required', 'exists:sports,id'],
-        ]) + ['created_by' => $request->user()->id]);
+            'sport_ids' => ['array'],
+            'sport_ids.*' => ['exists:sports,id'],
+        ]);
+
+        $team = Team::create(['name' => $validated['name'], 'created_by' => $request->user()->id]);
+        $team->sports()->sync($validated['sport_ids'] ?? []);
 
         return back()->with('success', 'Team created.');
     }
@@ -51,10 +56,14 @@ class TeamController extends Controller
         Gate::authorize('admin');
         $this->authorize('update', $team);
 
-        $team->update($request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'sport_id' => ['required', 'exists:sports,id'],
-        ]));
+            'sport_ids' => ['array'],
+            'sport_ids.*' => ['exists:sports,id'],
+        ]);
+
+        $team->update(['name' => $validated['name']]);
+        $team->sports()->sync($validated['sport_ids'] ?? []);
 
         return back()->with('success', 'Team updated.');
     }

@@ -36,7 +36,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $teams = $user->teams()->with('sport')->get();
+        $teams = $user->teams()->with('sports')->get();
 
         $ongoingLeagues = League::with('sport')
             ->whereIn('id', function ($query) use ($entryIds) {
