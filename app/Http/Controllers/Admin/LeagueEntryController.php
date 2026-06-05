@@ -147,7 +147,9 @@ class LeagueEntryController extends Controller
         $valid = match ($genderRule ?? $league->category) {
             'male', 'MS' => $player1->gender === 'male' && ($requiresPartner ? $player2?->gender === 'male' : $player2 === null),
             'female', 'WS' => $player1->gender === 'female' && ($requiresPartner ? $player2?->gender === 'female' : $player2 === null),
-            'mixed', 'XD' => collect([$player1->gender, $player2?->gender])->sort()->values()->all() === ['female', 'male'],
+            'mixed', 'XD' => $requiresPartner
+                ? collect([$player1->gender, $player2?->gender])->sort()->values()->all() === ['female', 'male']
+                : $player2 === null,
             'MD' => $player1->gender === 'male' && $player2?->gender === 'male',
             'WD' => $player1->gender === 'female' && $player2?->gender === 'female',
             'open' => $league->entry_type === 'single' ? $player2 === null : $player2 !== null,
