@@ -56,7 +56,7 @@ class LeagueBracketController extends Controller
 
         $scheduleMap = collect($validated['schedule'] ?? [])->keyBy('round')->map->scheduled_at;
 
-        $bracketService->seedBrackets($league->fresh(), $upperEntries, $lowerEntries, $scheduleMap, (int) $validated['interval'], ($league->start_stage ?? 'group') === 'group');
+        $bracketService->seedBrackets($league->fresh(), $upperEntries, $lowerEntries, $scheduleMap, (int) $validated['interval'], true);
 
         return back()->with('success', 'Brackets seeded.');
     }
@@ -64,14 +64,12 @@ class LeagueBracketController extends Controller
     private function entriesForBracket(League $league, LeagueFormatService $leagueFormatService, array $validated): array
     {
         if (($league->start_stage ?? 'group') === 'bracket') {
-            $entries = $league->entries()->orderBy('seed')->orderBy('id')->get();
+            $limit = (int) $validated['advance_upper_count'];
+            $query = $league->entries()->orderBy('seed')->orderBy('id');
+            $entries = $limit > 0 ? $query->limit($limit)->get() : $query->get();
 
             if ($entries->isEmpty()) {
                 throw ValidationException::withMessages(['advance_upper_count' => 'Register league entries before seeding brackets.']);
-            }
-
-            if ($league->participant_total !== null && $entries->count() !== $league->participant_total) {
-                throw ValidationException::withMessages(['advance_upper_count' => 'Participant total must match the number of league entries before brackets are seeded.']);
             }
 
             return [$entries, collect()];

@@ -236,33 +236,20 @@ class BracketService
 
     private function resolveByes(Collection $matches): void
     {
-        $pending = $matches;
+        foreach ($matches as $match) {
+            $match = $match->fresh(['nextMatch']);
 
-        while ($pending->isNotEmpty()) {
-            $advanced = collect();
-
-            foreach ($pending as $match) {
-                $match = $match->fresh(['nextMatch']);
-
-                if ($match->status === 'completed') {
-                    continue;
-                }
-
-                $participants = collect([$match->home_entry_id, $match->away_entry_id])->filter();
-
-                if ($participants->count() !== 1) {
-                    continue;
-                }
-
-                $winnerEntryId = $participants->first();
-                $this->advanceWinner($match, $winnerEntryId);
-
-                if ($match->nextMatch !== null) {
-                    $advanced->push($match->nextMatch);
-                }
+            if ($match->status === 'completed') {
+                continue;
             }
 
-            $pending = $advanced->unique('id')->values();
+            $participants = collect([$match->home_entry_id, $match->away_entry_id])->filter();
+
+            if ($participants->count() !== 1) {
+                continue;
+            }
+
+            $this->advanceWinner($match, $participants->first());
         }
     }
 
