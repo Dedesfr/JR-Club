@@ -35,8 +35,9 @@ export default function Pagination<T>({ items }: { items: Paginated<T> }) {
                             <span
                                 key={`${link.label}-${index}`}
                                 className={`${baseClassName} cursor-not-allowed bg-surface-container-low text-on-surface-variant/50`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
+                            >
+                                <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                            </span>
                         );
                     }
 
@@ -46,8 +47,9 @@ export default function Pagination<T>({ items }: { items: Paginated<T> }) {
                             href={link.url}
                             preserveScroll
                             className={`${baseClassName} ${link.active ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'}`}
-                            dangerouslySetInnerHTML={{ __html: link.label }}
-                        />
+                        >
+                            <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                        </Link>
                     );
                 })}
             </nav>
