@@ -241,7 +241,8 @@ class LeagueMatchController extends Controller
         $target = (int) $rules['points_per_set'];
         $minimumMargin = $rules['deuce'] ? 2 : 1;
 
-        if ($winnerPoints < $target) {
+        // Allow walkout/forfeit scores (loser has 0 points) without enforcing minimum target
+        if ($winnerPoints < $target && $loserPoints > 0) {
             return "A set must reach at least {$target} points.";
         }
 

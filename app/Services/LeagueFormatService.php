@@ -395,16 +395,32 @@ class LeagueFormatService
                     }
                 }
 
+                $sortedEntries = $group->groupEntries->all();
+                usort($sortedEntries, function ($a, $b) use ($stats) {
+                    if ($a->points !== $b->points) {
+                        return $b->points - $a->points;
+                    }
+                    $aRank = $a->manual_advance_rank ?? PHP_INT_MAX;
+                    $bRank = $b->manual_advance_rank ?? PHP_INT_MAX;
+                    if ($aRank !== $bRank) {
+                        return $aRank - $bRank;
+                    }
+                    $aSD = -($stats[$a->entry->id]['score'] ?? 0) + ($stats[$a->entry->id]['score_against'] ?? 0);
+                    $bSD = -($stats[$b->entry->id]['score'] ?? 0) + ($stats[$b->entry->id]['score_against'] ?? 0);
+                    if ($aSD !== $bSD) {
+                        return $aSD - $bSD;
+                    }
+                    $aScore = -($stats[$a->entry->id]['score'] ?? 0);
+                    $bScore = -($stats[$b->entry->id]['score'] ?? 0);
+                    if ($aScore !== $bScore) {
+                        return $aScore - $bScore;
+                    }
+                    return $a->seed - $b->seed;
+                });
+
                 return [
                     'group' => $group->name,
-                    'entries' => $group->groupEntries
-                        ->sortBy([
-                            ['points', 'desc'],
-                            [fn ($entry) => $entry->manual_advance_rank ?? PHP_INT_MAX, 'asc'],
-                            [fn ($entry) => -($stats[$entry->entry->id]['score'] ?? 0) + ($stats[$entry->entry->id]['score_against'] ?? 0), 'asc'],
-                            [fn ($entry) => -($stats[$entry->entry->id]['score'] ?? 0), 'asc'],
-                            ['seed', 'asc'],
-                        ])
+                    'entries' => collect($sortedEntries)
                         ->values()
                         ->map(fn ($groupEntry) => [
                             'id' => $groupEntry->id,
