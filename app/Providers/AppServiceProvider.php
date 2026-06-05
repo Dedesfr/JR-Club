@@ -9,6 +9,7 @@ use App\Policies\ActivityPolicy;
 use App\Policies\LeaguePolicy;
 use App\Policies\TeamPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         Gate::before(fn ($user) => $user->isPusatAdmin() ? true : null);
 
         Gate::define('admin', fn ($user) => $user->role === 'admin');
