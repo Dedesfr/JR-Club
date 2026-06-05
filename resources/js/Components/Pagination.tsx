@@ -28,7 +28,7 @@ export default function Pagination<T>({ items }: { items: Paginated<T> }) {
             </p>
             <nav className="flex flex-wrap gap-2" aria-label="Pagination">
                 {items.links.map((link, index) => {
-                    const baseClassName = 'rounded-full px-3 py-1.5 text-sm font-medium transition-colors';
+                    const baseClassName = 'rounded-full px-4 py-2.5 text-sm font-medium transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation';
 
                     if (!link.url) {
                         return (
