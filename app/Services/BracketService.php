@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\GameMatch;
 use App\Models\League;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -68,6 +69,33 @@ class BracketService
             $league->update(['stage' => 'upper']);
 
             return compact('upper', 'lower');
+        });
+    }
+
+    public function updateBracketSchedule(League $league, Collection $scheduleMap, int $intervalMinutes = 0): void
+    {
+        DB::transaction(function () use ($league, $scheduleMap, $intervalMinutes) {
+            $matchesByRound = $league->matches()
+                ->whereIn('stage', ['upper', 'lower', 'third_place', 'lower_third_place'])
+                ->orderBy('round')
+                ->orderBy('scheduled_at')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('round');
+
+            foreach ($matchesByRound as $round => $matches) {
+                if (! $scheduleMap->has($round)) {
+                    continue;
+                }
+
+                $baseTime = Carbon::parse($scheduleMap->get($round));
+
+                foreach ($matches->values() as $index => $match) {
+                    $match->update([
+                        'scheduled_at' => $baseTime->copy()->addMinutes($index * $intervalMinutes),
+                    ]);
+                }
+            }
         });
     }
 

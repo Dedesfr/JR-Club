@@ -13,7 +13,7 @@ export default function DivisionPicker({ leagueId, options, startDate, hasExisti
     const activeGroupCount = initialGroupCount ?? defaultOption?.group_count ?? 2;
     const activeOption = options.find((option) => option.group_count === activeGroupCount) ?? defaultOption;
     const initialRounds = Math.max(1, initialSchedule?.length ?? activeOption?.group_size ?? 1);
-    
+
     const [rounds, setRounds] = useState(initialRounds);
 
     const { data, setData } = useForm({
@@ -49,29 +49,37 @@ export default function DivisionPicker({ leagueId, options, startDate, hasExisti
         }
     };
 
+    const buildPayload = () => ({
+        ...data,
+        schedule: data.schedule.map((round) => ({
+            ...round,
+            scheduled_at: combineDateAndTime(round.scheduled_at, data.start_time),
+        })),
+    });
+
+    const submitScheduleUpdate = () => {
+        router.patch(route('admin.leagues.groups.schedule.update', leagueId), buildPayload(), { preserveScroll: true });
+    };
+
+    const submitGroupGeneration = () => {
+        if ((hasExistingGroups || hasExistingGroupMatches) && !window.confirm('Groups and group matches already exist. Generating again will replace them. Continue?')) {
+            return;
+        }
+
+        router.post(route('admin.leagues.groups.store', leagueId), buildPayload(), { preserveScroll: true });
+    };
+
     return (
         <form
             onSubmit={(event) => {
                 event.preventDefault();
 
-                const payload = {
-                    ...data,
-                    schedule: data.schedule.map((round) => ({
-                        ...round,
-                        scheduled_at: combineDateAndTime(round.scheduled_at, data.start_time),
-                    })),
-                };
-
                 if (groupLocked) {
-                    router.patch(route('admin.leagues.groups.schedule.update', leagueId), payload, { preserveScroll: true });
+                    submitScheduleUpdate();
                     return;
                 }
 
-                if ((hasExistingGroups || hasExistingGroupMatches) && !window.confirm('Groups and group matches already exist. Generating again will replace them. Continue?')) {
-                    return;
-                }
-
-                router.post(route('admin.leagues.groups.store', leagueId), payload, { preserveScroll: true });
+                submitGroupGeneration();
             }}
             className="flex flex-col gap-4 rounded-xl bg-surface-container-lowest p-4 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]"
         >
@@ -81,8 +89,8 @@ export default function DivisionPicker({ leagueId, options, startDate, hasExisti
                 </div>
             ) : null}
 
-            <div className="flex flex-col md:flex-row md:items-end gap-4">
-                <label className="grid flex-1 gap-2 text-sm font-medium text-on-surface">
+            <div className="flex flex-col md:flex-row md:flex-wrap md:items-end gap-4">
+                <label className="grid flex-1 min-w-[200px] gap-2 text-sm font-medium text-on-surface">
                     <span>Division format</span>
                     <SelectInput 
                         options={divisionOptions} 
@@ -113,6 +121,15 @@ export default function DivisionPicker({ leagueId, options, startDate, hasExisti
                 <button className="shrink-0 rounded-full bg-gradient-to-br from-primary to-primary-container px-6 h-[42px] text-[0.8125rem] font-bold uppercase tracking-widest text-on-primary shadow-sm hover:scale-[0.98] transition-all disabled:cursor-not-allowed disabled:opacity-50">
                     {groupLocked ? 'Save Schedule' : 'Generate Groups'}
                 </button>
+                {!groupLocked && hasExistingGroupMatches ? (
+                    <button
+                        type="button"
+                        onClick={submitScheduleUpdate}
+                        className="shrink-0 rounded-full border border-outline-variant/20 bg-surface-container-low px-6 h-[42px] text-[0.8125rem] font-bold uppercase tracking-widest text-on-surface transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        Update Schedule
+                    </button>
+                ) : null}
                 <button
                     type="button"
                     onClick={() => {

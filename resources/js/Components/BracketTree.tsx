@@ -100,6 +100,15 @@ export default function BracketTree({
         }
     }
 
+    let thirdPlaceWinnerLabel: string | null = null;
+    if (thirdPlaceMatch && thirdPlaceMatch.status === 'completed') {
+        if (thirdPlaceMatch.home_score > thirdPlaceMatch.away_score) {
+            thirdPlaceWinnerLabel = thirdPlaceMatch.home_label ?? null;
+        } else if (thirdPlaceMatch.away_score > thirdPlaceMatch.home_score) {
+            thirdPlaceWinnerLabel = thirdPlaceMatch.away_label ?? null;
+        }
+    }
+
     return (
         <section className="overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3 bg-primary px-4 py-3 text-on-primary">
@@ -137,6 +146,63 @@ export default function BracketTree({
                     />
                 </div>
 
+                {thirdPlaceMatch && (
+                    <div className="mt-8 flex flex-col items-center border-t border-outline-variant/30 pt-6">
+                        <p className="mb-3 text-center text-[0.6875rem] font-black uppercase tracking-[0.12em] text-primary">Third Place Match</p>
+                        <div className="w-[220px]">
+                            <div 
+                                className={[
+                                    'rounded-lg border border-outline bg-surface-container-lowest text-on-surface shadow-[0px_8px_20px_rgba(15,23,42,0.06)] overflow-hidden',
+                                    adjustMode && !readOnly && (!thirdPlaceMatch.sets || thirdPlaceMatch.sets.length === 0) ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''
+                                ].join(' ')}
+                                onClick={() => handleMatchClick(thirdPlaceMatch)}
+                            >
+                                <div className="grid w-full overflow-hidden">
+                                    <div className={[
+                                        'grid min-h-10 grid-cols-[1fr_2.5rem] items-center gap-3 px-3 py-2 text-left',
+                                        isWinner(thirdPlaceMatch, 'home') ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container-lowest text-on-surface'
+                                    ].join(' ')}>
+                                        <span className="line-clamp-2 text-sm font-black uppercase leading-tight" title={thirdPlaceMatch.home_label ?? 'TBC'}>
+                                            {thirdPlaceMatch.home_label ?? 'TBC'}
+                                        </span>
+                                        <span className={['text-right text-base font-black', isWinner(thirdPlaceMatch, 'home') ? 'text-current' : 'text-on-surface-variant'].join(' ')}>
+                                            {thirdPlaceMatch.home_score}
+                                        </span>
+                                    </div>
+                                    <div className={[
+                                        'grid min-h-10 grid-cols-[1fr_2.5rem] items-center gap-3 px-3 py-2 text-left border-t border-outline-variant',
+                                        isWinner(thirdPlaceMatch, 'away') ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container-lowest text-on-surface'
+                                    ].join(' ')}>
+                                        <span className="line-clamp-2 text-sm font-black uppercase leading-tight" title={thirdPlaceMatch.away_label ?? 'TBC'}>
+                                            {thirdPlaceMatch.away_label ?? 'TBC'}
+                                        </span>
+                                        <span className={['text-right text-base font-black', isWinner(thirdPlaceMatch, 'away') ? 'text-current' : 'text-on-surface-variant'].join(' ')}>
+                                            {thirdPlaceMatch.away_score}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="mt-2 text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">{matchStatus(thirdPlaceMatch.status)}</p>
+                            
+                            {(thirdPlaceMatch.sets ?? []).length > 0 && (
+                                <div className="mt-1 flex flex-wrap justify-center gap-1">
+                                    {thirdPlaceMatch.sets?.map((set) => (
+                                        <span key={set.id} className="rounded bg-surface-container border border-outline-variant/20 px-2 py-0.5 text-[0.6875rem] font-bold text-on-surface-variant">
+                                            {set.home_points}-{set.away_points}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                            
+                            {!readOnly && (
+                                <div className="flex justify-center pt-2">
+                                    <SetScoreEntry matchId={thirdPlaceMatch.id} label="Record Set" homeLabel={thirdPlaceMatch.home_label} awayLabel={thirdPlaceMatch.away_label} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 <div className="mt-8 flex flex-col md:flex-row gap-6 justify-center max-w-2xl mx-auto">
                     <div className="flex-1 grid gap-2 rounded-lg border border-outline bg-surface-container-lowest p-3 shadow-[0px_8px_20px_rgba(15,23,42,0.06)]">
                         <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">Champion</p>
@@ -157,36 +223,8 @@ export default function BracketTree({
                             ].join(' ')}
                             onClick={() => handleMatchClick(thirdPlaceMatch)}
                         >
-                            <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">Third Place Match</p>
-                            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mt-2">
-                                <span className={['text-sm font-bold truncate text-right', isWinner(thirdPlaceMatch, 'home') ? 'text-primary' : 'text-on-surface'].join(' ')}>
-                                    {thirdPlaceMatch.home_label ?? 'TBC'}
-                                </span>
-                                <span className="text-xs font-black text-on-surface-variant px-2 py-1 bg-surface-variant rounded">VS</span>
-                                <span className={['text-sm font-bold truncate', isWinner(thirdPlaceMatch, 'away') ? 'text-primary' : 'text-on-surface'].join(' ')}>
-                                    {thirdPlaceMatch.away_label ?? 'TBC'}
-                                </span>
-                            </div>
-                            {(thirdPlaceMatch.home_score > 0 || thirdPlaceMatch.away_score > 0) && (
-                                <p className="text-center text-xs font-black text-primary mt-1">
-                                    {thirdPlaceMatch.home_score} - {thirdPlaceMatch.away_score}
-                                </p>
-                            )}
-                            <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">{matchStatus(thirdPlaceMatch.status)}</p>
-                            {(thirdPlaceMatch.sets ?? []).length > 0 && (
-                                <div className="flex flex-wrap justify-center gap-1">
-                                    {thirdPlaceMatch.sets?.map((set) => (
-                                        <span key={set.id} className="rounded bg-surface-container border border-outline-variant/20 px-2 py-0.5 text-[0.6875rem] font-bold text-on-surface-variant">
-                                            {set.home_points}-{set.away_points}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                            {!readOnly && (
-                                <div className="flex justify-center pt-1" onClick={(event) => event.stopPropagation()}>
-                                    <SetScoreEntry matchId={thirdPlaceMatch.id} label="Record Set" homeLabel={thirdPlaceMatch.home_label} awayLabel={thirdPlaceMatch.away_label} />
-                                </div>
-                            )}
+                            <p className="text-center text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant">Third Place</p>
+                            <p className="min-h-7 text-center text-base font-black text-on-surface">{thirdPlaceWinnerLabel ?? 'TBC'}</p>
                         </div>
                     )}
                 </div>

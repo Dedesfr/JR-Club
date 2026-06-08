@@ -93,6 +93,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/leagues/{league}/groups/schedule', [AdminLeagueGroupController::class, 'updateSchedule'])->name('leagues.groups.schedule.update');
         Route::patch('/leagues/{league}/groups/{groupEntry}', [AdminLeagueGroupController::class, 'update'])->name('leagues.groups.update');
         Route::post('/leagues/{league}/brackets', [AdminLeagueBracketController::class, 'store'])->name('leagues.brackets.store');
+        Route::patch('/leagues/{league}/brackets/schedule', [AdminLeagueBracketController::class, 'updateSchedule'])->name('leagues.brackets.schedule.update');
         Route::post('/leagues/{league}/bracket/adjust', [AdminLeagueBracketController::class, 'adjust'])->name('leagues.brackets.adjust');
 
         Route::patch('/matches/{match}/schedule', [AdminLeagueMatchController::class, 'updateSchedule'])->name('matches.schedule.update');

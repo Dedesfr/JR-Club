@@ -12,7 +12,7 @@ import ParticipantImportDialog from '@/Components/ParticipantImportDialog';
 import EntryEditModal from '@/Components/EntryEditModal';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { formatJakartaDate, formatJakartaTime, getJakartaDateKey, JAKARTA_TIME_ZONE } from '@/lib/datetime';
-import { GameMatch, League, LeagueAward, LeagueEntry, LeagueStandingGroup, MatchFormatOption, MatchSet, Team } from '@/types/jrclub';
+import { GameMatch, League, LeagueAward, LeagueEntry, LeagueGroupStanding, LeagueStandingGroup, MatchFormatOption, MatchSet, Standing, Team } from '@/types/jrclub';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -29,6 +29,22 @@ const startStageOptions = [
     { value: 'group', label: 'Group Stage' },
     { value: 'bracket', label: 'Bracket' },
 ];
+
+function fallbackIcon(id?: number): string {
+    if (!id) return `/images/icon-1.jpeg`;
+    return `/images/icon-${((id - 1) % 7) + 1}.jpeg`;
+}
+
+function resolveEntryImage(entry?: LeagueEntry | null): string | undefined {
+    if (!entry) return undefined;
+    if (entry.group_picture_path) return `/storage/${entry.group_picture_path}`;
+    if (entry.team?.logo_path) return entry.team.logo_path;
+    return undefined;
+}
+
+function resolveTeamImage(team?: Team | null): string | undefined {
+    return team?.logo_path || undefined;
+}
 
 const getTodayJakartaDateKey = () => getJakartaDateKey(new Date());
 
@@ -58,7 +74,7 @@ const getJakartaTimeInputValue = (value: string | Date) => {
     return `${hour}:${minute}`;
 };
 
-export default function Show({ league, users, teams, divisionOptions, standings, upperBracket, lowerBracket, matchFormats }: { league: League; users: UserOption[]; teams: Team[]; divisionOptions: { group_count: number; group_size: number }[]; standings: LeagueStandingGroup[]; upperBracket: GameMatch[][]; lowerBracket: GameMatch[][]; matchFormats: MatchFormatOption[] }) {
+export default function Show({ league, users, teams, divisionOptions, standings, upperBracket, lowerBracket, matchFormats }: { league: League; users: UserOption[]; teams: Team[]; divisionOptions: { group_count: number; group_size: number }[]; standings: Standing[] | LeagueStandingGroup[]; upperBracket: GameMatch[][]; lowerBracket: GameMatch[][]; matchFormats: MatchFormatOption[] }) {
     const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('Overview');
     const form = useForm({
         name: league.name,
@@ -100,20 +116,52 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     const upperBracketEntryCount = startsFromBracket ? (league.participant_total || league.entries?.length || 0) : bracketGroupCount * (league.advance_upper_count ?? 0);
     const lowerBracketEntryCount = startsFromBracket ? 0 : bracketGroupCount * (league.advance_lower_count ?? 0);
     const bracketSeedSize = upperBracketEntryCount;
+    const bracketMatches = (league.matches ?? []).filter((match) => ['upper', 'lower', 'third_place', 'lower_third_place'].includes(match.stage ?? '') && match.round != null);
+    const bracketMatchesByRound = bracketMatches.reduce((acc, match) => {
+        const round = match.round as number;
+        if (!acc[round]) {
+            acc[round] = [];
+        }
+        acc[round].push(match);
+        return acc;
+    }, {} as Record<number, GameMatch[]>);
+    const initialBracketRounds = Math.max(
+        Math.ceil(Math.log2(Math.max(1, upperBracketEntryCount))),
+        Math.ceil(Math.log2(Math.max(1, lowerBracketEntryCount)))
+    ) + 1;
+    const bracketScheduleRounds = Math.max(initialBracketRounds, ...Object.keys(bracketMatchesByRound).map(Number), 1);
+    const initialBracketSchedule = Array.from({ length: bracketScheduleRounds }).map((_, index) => {
+        const round = index + 1;
+        const firstMatch = (bracketMatchesByRound[round] ?? [])
+            .slice()
+            .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
+
+        return {
+            round,
+            scheduled_at: firstMatch?.scheduled_at ? getJakartaDateKey(firstMatch.scheduled_at) : getTodayJakartaDateKey(),
+        };
+    });
+    const firstScheduledBracketMatch = bracketMatches
+        .slice()
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
+    const initialBracketStartTime = firstScheduledBracketMatch?.scheduled_at ? getJakartaTimeInputValue(firstScheduledBracketMatch.scheduled_at) : '17:00';
+    const initialBracketInterval = Object.values(bracketMatchesByRound)
+        .map((matches) => matches.slice().sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()))
+        .find((matches) => matches.length > 1)
+        ?.slice(0, 2)
+        .reduce((interval, match, index, matches) => {
+            if (index === 0 || matches.length < 2) {
+                return interval;
+            }
+
+            return Math.max(0, Math.round((new Date(match.scheduled_at).getTime() - new Date(matches[0].scheduled_at).getTime()) / 60000));
+        }, 15) ?? 15;
     const bracketForm = useForm({
         advance_upper_count: startsFromBracket ? String(bracketSeedSize) : (league.advance_upper_count?.toString() ?? '0'),
         advance_lower_count: startsFromBracket ? '0' : (league.advance_lower_count?.toString() ?? '0'),
-        interval: 15,
-        start_time: '17:00',
-        schedule: Array.from({
-            length: Math.max(
-                Math.ceil(Math.log2(Math.max(1, upperBracketEntryCount))),
-                Math.ceil(Math.log2(Math.max(1, lowerBracketEntryCount)))
-            ) + 1
-        }).map((_, i) => ({
-            round: i + 1,
-            scheduled_at: getTodayJakartaDateKey(),
-        })),
+        interval: initialBracketInterval,
+        start_time: initialBracketStartTime,
+        schedule: initialBracketSchedule,
     });
 
     const calculateBracketRounds = (upperPerGroup: number, lowerPerGroup: number) => {
@@ -170,6 +218,26 @@ export default function Show({ league, users, teams, divisionOptions, standings,
             newSchedule[index].scheduled_at = dateStr;
             bracketForm.setData('schedule', newSchedule);
         }
+    };
+
+    const buildBracketPayload = () => ({
+        ...bracketForm.data,
+        schedule: bracketForm.data.schedule.map((round) => ({
+            ...round,
+            scheduled_at: `${round.scheduled_at}T${bracketForm.data.start_time || '00:00'}`,
+        })),
+    });
+
+    const submitBracketSeed = () => {
+        if (hasExistingBracketMatches && !window.confirm('Bracket matches already exist. Seeding again will replace them. Continue?')) {
+            return;
+        }
+
+        router.post(route('admin.leagues.brackets.store', league.id), buildBracketPayload(), { preserveScroll: true });
+    };
+
+    const submitBracketScheduleUpdate = () => {
+        router.patch(route('admin.leagues.brackets.schedule.update', league.id), buildBracketPayload(), { preserveScroll: true });
     };
 
     const bracketRoundLabel = (roundIndex: number, totalRounds: number) => {
@@ -467,7 +535,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                             ) : (
                                 <>
                                     {divisionOptions.length > 0 ? <DivisionPicker leagueId={league.id} options={divisionOptions} startDate={league.start_date} hasExistingGroups={hasExistingGroups} hasExistingGroupMatches={hasExistingGroupMatches} groupLocked={league.group_locked ?? false} initialGroupCount={league.group_count ?? undefined} initialInterval={initialGroupInterval} initialStartTime={initialGroupStartTime} initialSchedule={initialGroupSchedule} /> : null}
-                                    {standings.length > 0 ? <GroupTable leagueId={league.id} standings={standings} /> : <EmptyState text="Generate groups after the entry list reaches the participant total." />}
+                                    {standings.length > 0 ? <GroupTable leagueId={league.id} standings={standings as LeagueStandingGroup[]} /> : <EmptyState text="Generate groups after the entry list reaches the participant total." />}
                                 </>
                             )}
                         </div>
@@ -475,23 +543,13 @@ export default function Show({ league, users, teams, divisionOptions, standings,
 
                     {activeTab === 'Bracket' ? (
                         <div className="grid gap-4">
+                            <CompetitionTable league={league} standings={standings} usesDirectEntries={usesDirectEntries} />
+
                             {usesTournamentEntries ? (
                                 <>
                                     <form onSubmit={(event) => {
                                         event.preventDefault();
-
-                                        if (hasExistingBracketMatches && !window.confirm('Bracket matches already exist. Seeding again will replace them. Continue?')) {
-                                            return;
-                                        }
-
-                                        bracketForm.transform((data) => ({
-                                            ...data,
-                                            schedule: data.schedule.map((round) => ({
-                                                ...round,
-                                                scheduled_at: `${round.scheduled_at}T${data.start_time || '00:00'}`,
-                                            })),
-                                        }));
-                                        bracketForm.post(route('admin.leagues.brackets.store', league.id), { preserveScroll: true });
+                                        submitBracketSeed();
                                     }} className="flex flex-col gap-4 rounded-xl bg-surface-container-lowest p-6 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
                                         <div className="flex flex-col md:flex-row gap-4 md:items-end">
                                             <Field label="Upper advances">
@@ -509,6 +567,15 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                             <button className="shrink-0 rounded-full bg-gradient-to-br from-primary to-primary-container px-6 py-2 h-[42px] text-[0.8125rem] font-bold uppercase tracking-widest text-on-primary shadow-sm hover:scale-[0.98] transition-all">
                                                 Seed Brackets
                                             </button>
+                                            {hasExistingBracketMatches ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={submitBracketScheduleUpdate}
+                                                    className="shrink-0 rounded-full border border-outline-variant/20 bg-surface-container-low px-6 py-2 h-[42px] text-[0.8125rem] font-bold uppercase tracking-widest text-on-surface transition-colors hover:bg-surface-container"
+                                                >
+                                                    Update Schedule
+                                                </button>
+                                            ) : null}
                                         </div>
 
                                         {bracketRoundsCount > 0 && (
@@ -863,6 +930,149 @@ function AwardsManager({ leagueId, awards, form }: { leagueId: number; awards: L
             )}
         </div>
     );
+}
+
+function CompetitionTable({ league, standings, usesDirectEntries }: { league: League; standings: Standing[] | LeagueStandingGroup[]; usesDirectEntries: boolean }) {
+    const startsFromBracket = (league.start_stage ?? 'group') === 'bracket';
+
+    if (startsFromBracket) {
+        return <EmptyState text="This league starts from the bracket, so group standings are skipped." />;
+    }
+
+    if (standings.length === 0) {
+        return <EmptyState text="No standings available yet. Complete matches to populate the competition table." />;
+    }
+
+    return (
+        <div className="grid gap-4">
+            <div className="flex flex-col gap-3 rounded-xl bg-surface-container-lowest p-5 shadow-[0px_12px_32px_rgba(15,23,42,0.04)] md:flex-row md:items-end md:justify-between">
+                <div>
+                    <p className="text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-primary">Current Standings</p>
+                    <h2 className="mt-1 text-2xl font-black tracking-normal text-on-surface">Competition table</h2>
+                    <p className="mt-1 text-sm font-medium text-on-surface-variant">Rankings update from completed match results.</p>
+                </div>
+                <Link href={route('leaderboards.index')} className="text-sm font-bold text-primary hover:text-primary-container">View full leaderboard</Link>
+            </div>
+
+            {usesDirectEntries ? (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {(standings as LeagueStandingGroup[]).map((group) => (
+                        <AdminGroupStanding key={group.group} group={group} advanceCount={league.advance_upper_count ?? 0} />
+                    ))}
+                </div>
+            ) : (
+                <AdminTeamStandings standings={standings as Standing[]} />
+            )}
+        </div>
+    );
+}
+
+function AdminTeamStandings({ standings }: { standings: Standing[] }) {
+    return (
+        <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
+            <div className="flex items-center border-b border-outline-variant/30 bg-surface-container-low px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                <div className="w-5 shrink-0 text-center">#</div>
+                <div className="min-w-0 flex-grow pl-2">Club</div>
+                <div className="w-7 shrink-0 text-center">MP</div>
+                <div className="w-7 shrink-0 text-center">W</div>
+                <div className="w-7 shrink-0 text-center">L</div>
+                <div className="w-9 shrink-0 text-center" title="Accumulated Score">Scr</div>
+                <div className="w-9 shrink-0 text-center" title="Score Difference">SD</div>
+                <div className="w-9 shrink-0 text-right font-black text-on-surface">Pts</div>
+            </div>
+            {standings.map((row, index) => {
+                const isLeader = index === 0 && row.played > 0;
+                const sd = row.score_difference ?? 0;
+
+                return (
+                    <div key={row.team.id} className={`flex items-center border-b border-outline-variant/10 px-3 py-2.5 text-sm last:border-b-0 ${isLeader ? 'border-l-2 border-l-primary bg-primary/5' : ''}`}>
+                        <div className={`w-5 shrink-0 text-center ${isLeader ? 'font-black text-primary' : 'font-medium text-on-surface-variant'}`}>{index + 1}</div>
+                        <div className="flex min-w-0 flex-grow items-center gap-2 pl-2">
+                            <img src={resolveTeamImage(row.team) ?? fallbackIcon(row.team.id)} alt={row.team.name} className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover shadow-sm" />
+                            <span className={`min-w-0 break-words leading-tight [overflow-wrap:anywhere] ${isLeader ? 'font-black text-on-surface' : 'font-semibold text-on-surface'}`}>{row.team.name}</span>
+                        </div>
+                        <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.played}</div>
+                        <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.won}</div>
+                        <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.lost}</div>
+                        <div className="w-9 shrink-0 text-center text-on-surface-variant tabular-nums">{row.goals_for}</div>
+                        <div className={`w-9 shrink-0 text-center text-sm tabular-nums ${sd > 0 ? 'text-primary' : sd < 0 ? 'text-error' : 'text-on-surface-variant'}`}>{sd > 0 ? `+${sd}` : sd}</div>
+                        <div className={`w-9 shrink-0 text-right ${isLeader ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{row.points ?? (row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function AdminGroupStanding({ group, advanceCount }: { group: LeagueStandingGroup; advanceCount: number }) {
+    const sortedEntries = [...group.entries].sort(compareGroupStandingRows);
+
+    return (
+        <div className="flex h-full flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_4px_12px_rgba(15,23,42,0.06),0px_0px_0px_1px_rgba(15,23,42,0.04)]">
+            <div className="flex items-center justify-between border-b border-outline-variant/30 bg-surface-container-low px-4 py-2.5">
+                <span className="text-xs font-black uppercase tracking-widest text-on-surface">{group.group}</span>
+                {advanceCount > 0 ? <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Top {advanceCount} advance</span> : null}
+            </div>
+            <div className="flex items-center border-b border-outline-variant/20 bg-surface-container-low/60 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                <div className="w-5 shrink-0 text-center">#</div>
+                <div className="min-w-0 flex-grow pl-2">Club</div>
+                <div className="w-7 shrink-0 text-center" title="Match Played">MP</div>
+                <div className="w-7 shrink-0 text-center" title="Win">W</div>
+                <div className="w-7 shrink-0 text-center" title="Loss">L</div>
+                <div className="w-9 shrink-0 text-center" title="Accumulated Score">Scr</div>
+                <div className="w-9 shrink-0 text-center" title="Score Difference">SD</div>
+                <div className="w-9 shrink-0 text-right font-black text-on-surface" title="Points">Pts</div>
+            </div>
+            {sortedEntries.map((row: LeagueGroupStanding, index) => {
+                const advances = advanceCount > 0 && index < advanceCount;
+                const isCutRow = advanceCount > 0 && index === advanceCount;
+                const sd = row.score_difference ?? 0;
+
+                return (
+                    <div key={row.id}>
+                        {isCutRow ? (
+                            <div className="border-t border-dashed border-outline-variant/60 px-3 py-0.5 text-center text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/70">
+                                Cut line
+                            </div>
+                        ) : null}
+                        <div className={`flex items-center border-b border-outline-variant/10 px-3 py-2.5 text-sm last:border-b-0 transition-colors ${advances ? 'border-l-2 border-l-primary bg-primary/5' : ''}`}>
+                            <div className={`w-5 shrink-0 text-center ${advances ? 'font-black text-primary' : 'font-medium text-on-surface-variant'}`}>{index + 1}</div>
+                            <div className="flex min-w-0 flex-grow items-center gap-2 pl-2">
+                                <img
+                                    src={resolveEntryImage(row.entry) ?? fallbackIcon(row.id)}
+                                    alt={row.entry.label}
+                                    className="h-6 w-6 shrink-0 rounded-full bg-surface-container-high object-cover shadow-sm"
+                                />
+                                <span className={`min-w-0 break-words leading-tight [overflow-wrap:anywhere] ${advances ? 'font-black text-on-surface' : 'font-semibold text-on-surface'}`}>{row.entry.label}</span>
+                            </div>
+                            <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.played ?? 0}</div>
+                            <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.won ?? 0}</div>
+                            <div className="w-7 shrink-0 text-center text-on-surface-variant">{row.lost ?? 0}</div>
+                            <div className="w-9 shrink-0 text-center text-on-surface-variant tabular-nums">{row.score ?? 0}</div>
+                            <div className={`w-9 shrink-0 text-center tabular-nums ${sd > 0 ? 'text-primary' : sd < 0 ? 'text-error' : 'text-on-surface-variant'}`}>{sd > 0 ? `+${sd}` : sd}</div>
+                            <div className={`w-9 shrink-0 text-right ${advances ? 'font-black text-primary' : 'font-bold text-on-surface'}`}>{row.points ?? (row.won ?? 0) * 2 + (row.lost ?? 0)}</div>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function compareGroupStandingRows(a: LeagueGroupStanding, b: LeagueGroupStanding) {
+    const pointDiff = (b.points ?? 0) - (a.points ?? 0);
+    if (pointDiff !== 0) return pointDiff;
+
+    const sdDiff = (b.score_difference ?? 0) - (a.score_difference ?? 0);
+    if (sdDiff !== 0) return sdDiff;
+
+    const scoreDiff = (b.score ?? 0) - (a.score ?? 0);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const winDiff = (b.won ?? 0) - (a.won ?? 0);
+    if (winDiff !== 0) return winDiff;
+
+    return a.entry.label.localeCompare(b.entry.label);
 }
 
 function ParticipantList({ league, onEdit }: { league: League; onEdit?: (entry: LeagueEntry) => void }) {

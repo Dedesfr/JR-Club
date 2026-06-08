@@ -61,6 +61,27 @@ class LeagueBracketController extends Controller
         return back()->with('success', 'Brackets seeded.');
     }
 
+    public function updateSchedule(Request $request, League $league, BracketService $bracketService): RedirectResponse
+    {
+        $this->authorize('update', $league);
+
+        $validated = $request->validate([
+            'interval' => ['required', 'integer', 'min:0'],
+            'schedule' => ['required', 'array', 'min:1'],
+            'schedule.*.round' => ['required', 'integer', 'min:1'],
+            'schedule.*.scheduled_at' => ['required', 'date'],
+        ]);
+
+        if (! $league->matches()->whereIn('stage', ['upper', 'lower', 'third_place', 'lower_third_place'])->exists()) {
+            throw ValidationException::withMessages(['schedule' => 'Seed bracket matches before updating their schedule.']);
+        }
+
+        $scheduleMap = collect($validated['schedule'])->keyBy('round')->map->scheduled_at;
+        $bracketService->updateBracketSchedule($league->fresh(), $scheduleMap, (int) $validated['interval']);
+
+        return back()->with('success', 'Bracket match schedule updated.');
+    }
+
     private function entriesForBracket(League $league, LeagueFormatService $leagueFormatService, array $validated): array
     {
         if (($league->start_stage ?? 'group') === 'bracket') {
@@ -75,27 +96,67 @@ class LeagueBracketController extends Controller
             return [$entries, collect()];
         }
 
-        $rankedEntries = collect($leagueFormatService->standings($league))
-            ->flatMap(fn ($group) => $group['entries'])
-            ->map(fn ($row) => $row['entry']);
-
-        $perGroup = $league->groups()->count();
+        $standingGroups = collect($leagueFormatService->standings($league));
 
         return [
-            $this->slicePerGroup($rankedEntries, $perGroup, 0, (int) $validated['advance_upper_count']),
-            $this->slicePerGroup($rankedEntries, $perGroup, (int) $validated['advance_upper_count'], (int) $validated['advance_lower_count']),
+            $this->slicePerGroup($standingGroups, 0, (int) $validated['advance_upper_count']),
+            $this->slicePerGroup($standingGroups, (int) $validated['advance_upper_count'], (int) $validated['advance_lower_count']),
         ];
     }
 
-    private function slicePerGroup(Collection $rankedEntries, int $groupCount, int $offset, int $take): Collection
+    private function slicePerGroup(Collection $standingGroups, int $offset, int $take): Collection
     {
         if ($take === 0) {
             return collect();
         }
 
-        return $rankedEntries
-            ->chunk(max(1, (int) ($rankedEntries->count() / max(1, $groupCount))))
-            ->flatMap(fn ($group) => $group->slice($offset, $take))
+        $selectedByGroup = $standingGroups
+            ->map(fn ($group) => collect($group['entries'] ?? [])->slice($offset, $take)->values())
+            ->filter(fn (Collection $entries) => $entries->isNotEmpty())
+            ->shuffle()
             ->values();
+
+        $groupCount = $selectedByGroup->count();
+
+        if ($groupCount <= 1) {
+            return $selectedByGroup
+                ->flatMap(fn (Collection $groupEntries) => $groupEntries->map(fn ($row) => $row['entry']))
+                ->values();
+        }
+
+        $ordered = collect();
+        $shift = random_int(1, $groupCount - 1);
+
+        for ($rankIndex = 0; $rankIndex < $take; $rankIndex++) {
+            if ($rankIndex + 1 < $take) {
+                foreach ($selectedByGroup as $groupIndex => $groupEntries) {
+                    $primary = $groupEntries->get($rankIndex);
+                    $opponent = $selectedByGroup->get(($groupIndex + $shift) % $groupCount)?->get($rankIndex + 1);
+
+                    if ($primary) {
+                        $ordered->push($primary['entry']);
+                    }
+
+                    if ($opponent) {
+                        $ordered->push($opponent['entry']);
+                    }
+                }
+
+                $rankIndex++;
+
+                continue;
+            }
+
+            foreach (collect(range(0, $groupCount - 1))->shuffle() as $groupIndex) {
+                $row = $selectedByGroup->get($groupIndex)?->get($rankIndex);
+
+                if ($row) {
+                    $ordered->push($row['entry']);
+                }
+            }
+        }
+
+        return $ordered->values();
     }
+
 }
