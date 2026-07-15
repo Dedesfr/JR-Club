@@ -32,9 +32,9 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        Gate::before(fn ($user) => $user->isPusatAdmin() ? true : null);
+        Gate::before(fn ($user) => ($user->isPusatAdmin() || $user->isSuperAdmin()) ? true : null);
 
-        Gate::define('admin', fn ($user) => $user->role === 'admin');
+        Gate::define('admin', fn ($user) => $user->isAdmin());
         Gate::policy(League::class, LeaguePolicy::class);
         Gate::policy(Activity::class, ActivityPolicy::class);
         Gate::policy(Team::class, TeamPolicy::class);

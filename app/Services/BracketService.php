@@ -72,6 +72,25 @@ class BracketService
         });
     }
 
+    public function resetBrackets(League $league): void
+    {
+        DB::transaction(function () use ($league) {
+            $league->matches()
+                ->whereIn('stage', ['upper', 'lower', 'third_place', 'lower_third_place'])
+                ->delete();
+
+            $league->update([
+                'third_place_match_id' => null,
+                'lower_third_place_match_id' => null,
+                'upper_champion_entry_id' => null,
+                'lower_champion_entry_id' => null,
+                'stage' => $league->start_stage ?? 'group',
+                'bracket_seed_count' => 0,
+                'status' => $league->status === 'completed' ? 'active' : $league->status,
+            ]);
+        });
+    }
+
     public function updateBracketSchedule(League $league, Collection $scheduleMap, int $intervalMinutes = 0): void
     {
         DB::transaction(function () use ($league, $scheduleMap, $intervalMinutes) {

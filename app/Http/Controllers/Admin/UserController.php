@@ -77,7 +77,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', 'in:member,admin'],
+            'role' => ['required', Rule::in($this->assignableRoles($user))],
             'gender' => ['nullable', 'in:male,female'],
             'branch_id' => ['required', 'exists:branch,id'],
         ]);
@@ -89,6 +89,23 @@ class UserController extends Controller
         $user->update($validated);
 
         return redirect()->route('admin.users.index')->with('success', 'User updated.');
+    }
+
+    /**
+     * Super admin is created only via seeder, never granted through the UI.
+     * It stays assignable on edit solely so an existing super admin keeps the role.
+     *
+     * @return array<int, string>
+     */
+    private function assignableRoles(User $user): array
+    {
+        $roles = ['member', 'admin'];
+
+        if ($user->isSuperAdmin()) {
+            $roles[] = 'super_admin';
+        }
+
+        return $roles;
     }
 
     private function authorizeUserBranch(User $user): void

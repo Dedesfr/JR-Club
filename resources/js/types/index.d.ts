@@ -4,7 +4,7 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    role: 'member' | 'admin';
+    role: 'member' | 'admin' | 'super_admin';
     branch_id: number;
     branch?: Branch | null;
     gender?: 'male' | 'female' | null;

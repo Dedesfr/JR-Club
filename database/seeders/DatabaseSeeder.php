@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             'branch_id' => $pusatId,
         ]);
 
+        $this->call(SuperAdminSeeder::class);
         $this->call(BranchAdminSeeder::class);
 
         $sports = collect([

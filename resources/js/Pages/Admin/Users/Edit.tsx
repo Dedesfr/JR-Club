@@ -4,10 +4,6 @@ import { User } from '@/types';
 import { Branch } from '@/types/jrclub';
 import { Head, useForm } from '@inertiajs/react';
 
-const roleOptions = [
-    { value: 'member', label: 'member' },
-    { value: 'admin', label: 'admin' },
-];
 const genderOptions = [
     { value: '', label: 'Unset' },
     { value: 'male', label: 'male' },
@@ -15,6 +11,12 @@ const genderOptions = [
 ];
 
 export default function Edit({ userRecord, branches }: { userRecord: User; branches: Branch[] }) {
+    // Super admin is created only via seeder; it stays selectable here solely to preserve an existing super admin's role on edit.
+    const roleOptions = [
+        { value: 'member', label: 'member' },
+        { value: 'admin', label: 'admin' },
+        ...(userRecord.role === 'super_admin' ? [{ value: 'super_admin', label: 'super_admin' }] : []),
+    ];
     const form = useForm({ name: userRecord.name, email: userRecord.email, role: userRecord.role, gender: userRecord.gender ?? '', branch_id: String(userRecord.branch_id ?? '') });
     const branchOptions = branches.map((branch) => ({ value: String(branch.id), label: branch.name }));
 
@@ -24,7 +26,7 @@ export default function Edit({ userRecord, branches }: { userRecord: User; branc
             <form onSubmit={(event) => { event.preventDefault(); form.patch(route('admin.users.update', userRecord.id)); }} className="grid gap-4 rounded-xl bg-surface-container-lowest p-6 shadow-[0px_12px_32px_rgba(15,23,42,0.04)] md:grid-cols-2">
                 <Field label="Name"><input value={form.data.name} onChange={(event) => form.setData('name', event.target.value)} className="rounded-xl border-0 bg-surface-container-low px-3 py-3" /></Field>
                 <Field label="Email"><input value={form.data.email} onChange={(event) => form.setData('email', event.target.value)} className="rounded-xl border-0 bg-surface-container-low px-3 py-3" /></Field>
-                <Field label="Role"><SelectInput options={roleOptions} value={form.data.role} onChange={(value) => form.setData('role', value as 'member' | 'admin')} /></Field>
+                <Field label="Role"><SelectInput options={roleOptions} value={form.data.role} onChange={(value) => form.setData('role', value as 'member' | 'admin' | 'super_admin')} /></Field>
                 <Field label="Gender"><SelectInput isClearable options={genderOptions} value={form.data.gender} onChange={(value) => form.setData('gender', value)} /></Field>
                 <Field label="Branch"><SelectInput options={branchOptions} value={form.data.branch_id} onChange={(value) => form.setData('branch_id', value)} /></Field>
                 <div className="md:col-span-2 flex justify-end"><button className="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-3 text-sm font-bold uppercase tracking-widest text-on-primary">Save</button></div>

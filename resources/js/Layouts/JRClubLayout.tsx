@@ -13,6 +13,7 @@ const navItems = [
 export default function JRClubLayout({ children, active, actionHref }: PropsWithChildren<{ active: string; actionHref?: string }>) {
     const page = usePage<PageProps>();
     const user = page.props.auth.user;
+    const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
     const loginHref = route('login', { redirect: normalizeRelativeUrl(page.url) });
     const [installPrompt, setInstallPrompt] = useState<any>(null);
 
@@ -52,7 +53,7 @@ export default function JRClubLayout({ children, active, actionHref }: PropsWith
                                 </Link>
                             );
                         })}
-                        {user?.role === 'admin' ? (
+                        {isAdmin ? (
                             <Link href={route('admin.dashboard')} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold tracking-normal text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-primary">
                                 <span className="material-symbols-outlined text-[17px]">admin_panel_settings</span>
                                 Admin
@@ -60,7 +61,7 @@ export default function JRClubLayout({ children, active, actionHref }: PropsWith
                         ) : null}
                     </nav>
                     <div className="flex items-center gap-1">
-                        {user?.role === 'admin' && actionHref ? (
+                        {isAdmin && actionHref ? (
                             <Link href={actionHref} className="flex h-9 w-9 items-center justify-center rounded-full text-primary hover:bg-surface-container-low">
                                 <span className="material-symbols-outlined">add</span>
                             </Link>
@@ -89,7 +90,7 @@ export default function JRClubLayout({ children, active, actionHref }: PropsWith
 
             {/* Main Content */}
             <div className="pb-32 pt-20 md:pb-8">
-                {user?.role === 'admin' && actionHref && (
+                {isAdmin && actionHref && (
                     <div className="hidden max-w-md px-4 md:mx-auto md:mb-6 md:flex md:max-w-7xl">
                         <Link href={actionHref} className="ml-auto flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-sm hover:bg-primary/90">
                             <span className="material-symbols-outlined">add</span>

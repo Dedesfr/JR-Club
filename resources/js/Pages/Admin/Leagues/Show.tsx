@@ -13,7 +13,8 @@ import EntryEditModal from '@/Components/EntryEditModal';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { formatJakartaDate, formatJakartaTime, getJakartaDateKey, JAKARTA_TIME_ZONE } from '@/lib/datetime';
 import { GameMatch, League, LeagueAward, LeagueEntry, LeagueGroupStanding, LeagueStandingGroup, MatchFormatOption, MatchSet, Standing, Team } from '@/types/jrclub';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import SecondaryButton from '@/Components/SecondaryButton';
 
@@ -75,6 +76,8 @@ const getJakartaTimeInputValue = (value: string | Date) => {
 };
 
 export default function Show({ league, users, teams, divisionOptions, standings, upperBracket, lowerBracket, matchFormats }: { league: League; users: UserOption[]; teams: Team[]; divisionOptions: { group_count: number; group_size: number }[]; standings: Standing[] | LeagueStandingGroup[]; upperBracket: GameMatch[][]; lowerBracket: GameMatch[][]; matchFormats: MatchFormatOption[] }) {
+    const { auth } = usePage<PageProps>().props;
+    const isSuperAdmin = auth.user?.role === 'super_admin';
     const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>('Overview');
     const form = useForm({
         name: league.name,
@@ -106,7 +109,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     const usesDirectEntries = league.entry_type === 'single' || league.entry_type === 'double';
     const usesTeamEntries = league.entry_type === 'team';
     const usesTournamentEntries = usesDirectEntries || usesTeamEntries;
-    const showSetupTab = usesTournamentEntries;
+    const showSetupTab = usesTournamentEntries && isSuperAdmin;
     const visibleTabs = tabs.filter((tab) => tab !== 'Setup' || showSetupTab);
     const hasExistingGroups = (league.groups?.length ?? 0) > 0;
     const hasExistingGroupMatches = (league.matches ?? []).some((match) => match.stage === 'group');
@@ -210,6 +213,12 @@ export default function Show({ league, users, teams, divisionOptions, standings,
             bracket_preset_slots: presetSlots,
             reset_counter: resetCounter,
         }, { preserveScroll: true });
+    };
+    const resetBracket = () => {
+        if (!window.confirm('Reset the seeded bracket? This deletes all bracket matches and their scores so it can be seeded again.')) {
+            return;
+        }
+        router.delete(route('admin.leagues.brackets.destroy', league.id), { preserveScroll: true });
     };
     const bracketMatches = (league.matches ?? []).filter((match) => ['upper', 'lower', 'third_place', 'lower_third_place'].includes(match.stage ?? '') && match.round != null);
     const bracketMatchesByRound = bracketMatches.reduce((acc, match) => {
@@ -762,6 +771,27 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                             ) : (
                                 <EmptyState text="This league category does not use tournament brackets." />
                             )}
+                            {showSetupTab ? (
+                                <div className="flex flex-col gap-4 rounded-xl border border-error/20 bg-surface-container-lowest p-6 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                        <div>
+                                            <h4 className="text-sm font-bold uppercase tracking-widest text-error">Reset Bracket</h4>
+                                            <p className="text-xs text-on-surface-variant mt-1">Delete the seeded bracket and its matches so it can be seeded again. The seed attempt counter is also reset.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={resetBracket}
+                                            disabled={!hasExistingBracketMatches}
+                                            className="shrink-0 rounded-full border border-error/30 bg-error/5 px-6 py-2 h-[42px] text-[0.8125rem] font-bold uppercase tracking-widest text-error transition-colors hover:bg-error/10 disabled:opacity-40 disabled:hover:bg-error/5"
+                                        >
+                                            Reset Bracket
+                                        </button>
+                                    </div>
+                                    {!hasExistingBracketMatches ? (
+                                        <p className="text-xs text-on-surface-variant">No seeded bracket yet — nothing to reset.</p>
+                                    ) : null}
+                                </div>
+                            ) : null}
                         </div>
                     ) : null}
 

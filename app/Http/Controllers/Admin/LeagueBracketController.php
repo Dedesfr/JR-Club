@@ -64,6 +64,15 @@ class LeagueBracketController extends Controller
         return back()->with('success', 'Brackets seeded.');
     }
 
+    public function destroy(League $league, BracketService $bracketService): RedirectResponse
+    {
+        $this->authorize('update', $league);
+
+        $bracketService->resetBrackets($league);
+
+        return back()->with('success', 'Bracket reset.');
+    }
+
     public function updatePreset(Request $request, League $league): RedirectResponse
     {
         $this->authorize('update', $league);
