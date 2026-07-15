@@ -132,6 +132,10 @@ export type League = {
     points_per_set?: number;
     advance_upper_count?: number;
     advance_lower_count?: number;
+    bracket_preset_enabled?: boolean;
+    bracket_preset_reveal_at?: number | null;
+    bracket_seed_count?: number;
+    bracket_preset_slots?: (number | null)[] | null;
     sport: Sport;
     awards?: LeagueAward[];
     sport_category?: SportCategory | null;

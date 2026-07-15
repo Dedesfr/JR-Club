@@ -39,6 +39,10 @@ class League extends Model
         'points_per_set',
         'advance_upper_count',
         'advance_lower_count',
+        'bracket_preset_enabled',
+        'bracket_preset_reveal_at',
+        'bracket_seed_count',
+        'bracket_preset_slots',
         'upper_champion_entry_id',
         'lower_champion_entry_id',
         'third_place_match_id',
@@ -60,6 +64,10 @@ class League extends Model
             'points_per_set' => 'integer',
             'advance_upper_count' => 'integer',
             'advance_lower_count' => 'integer',
+            'bracket_preset_enabled' => 'boolean',
+            'bracket_preset_reveal_at' => 'integer',
+            'bracket_seed_count' => 'integer',
+            'bracket_preset_slots' => 'array',
         ];
     }
 

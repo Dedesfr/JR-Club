@@ -9,6 +9,7 @@ use App\Services\LeagueFormatService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class LeagueBracketController extends Controller
@@ -56,9 +57,67 @@ class LeagueBracketController extends Controller
 
         $scheduleMap = collect($validated['schedule'] ?? [])->keyBy('round')->map->scheduled_at;
 
-        $bracketService->seedBrackets($league->fresh(), $upperEntries, $lowerEntries, $scheduleMap, (int) $validated['interval'], true);
+        $presetSlots = $this->resolvePresetSlots($league->fresh());
+
+        $bracketService->seedBrackets($league->fresh(), $upperEntries, $lowerEntries, $scheduleMap, (int) $validated['interval'], true, $presetSlots);
 
         return back()->with('success', 'Brackets seeded.');
+    }
+
+    public function updatePreset(Request $request, League $league): RedirectResponse
+    {
+        $this->authorize('update', $league);
+
+        $validated = $request->validate([
+            'bracket_preset_enabled' => ['required', 'boolean'],
+            'bracket_preset_reveal_at' => ['nullable', 'integer', 'min:1'],
+            'bracket_preset_slots' => ['nullable', 'array'],
+            'bracket_preset_slots.*' => ['nullable', Rule::exists('league_entries', 'id')->where('league_id', $league->id)],
+            'reset_counter' => ['sometimes', 'boolean'],
+        ]);
+
+        if ($validated['bracket_preset_enabled'] && empty($validated['bracket_preset_reveal_at'])) {
+            throw ValidationException::withMessages([
+                'bracket_preset_reveal_at' => 'A reveal number is required when the preset is enabled.',
+            ]);
+        }
+
+        $slots = array_values($validated['bracket_preset_slots'] ?? []);
+        $assigned = array_filter($slots, fn ($id) => $id !== null);
+
+        if (count($assigned) !== count(array_unique($assigned))) {
+            throw ValidationException::withMessages([
+                'bracket_preset_slots' => 'Each entry can be assigned to only one slot.',
+            ]);
+        }
+
+        $league->update([
+            'bracket_preset_enabled' => $validated['bracket_preset_enabled'],
+            'bracket_preset_reveal_at' => $validated['bracket_preset_enabled'] ? $validated['bracket_preset_reveal_at'] : null,
+            'bracket_preset_slots' => $validated['bracket_preset_enabled'] ? $slots : null,
+            'bracket_seed_count' => ! empty($validated['reset_counter']) ? 0 : $league->bracket_seed_count,
+        ]);
+
+        return back()->with('success', 'Bracket preset saved.');
+    }
+
+    private function resolvePresetSlots(League $league): ?array
+    {
+        if (! $league->bracket_preset_enabled) {
+            return null;
+        }
+
+        $nextCount = (int) $league->bracket_seed_count + 1;
+
+        if ($league->bracket_preset_reveal_at && $nextCount >= (int) $league->bracket_preset_reveal_at) {
+            $league->update(['bracket_seed_count' => 0]);
+
+            return array_values($league->bracket_preset_slots ?? []);
+        }
+
+        $league->update(['bracket_seed_count' => $nextCount]);
+
+        return null;
     }
 
     public function updateSchedule(Request $request, League $league, BracketService $bracketService): RedirectResponse

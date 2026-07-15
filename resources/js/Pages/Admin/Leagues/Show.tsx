@@ -4,7 +4,7 @@ import DatePicker from '@/Components/DatePicker';
 import DivisionPicker from '@/Components/DivisionPicker';
 import ParticipantPicker from '@/Components/ParticipantPicker';
 import GroupTable from '@/Components/GroupTable';
-import SelectInput from '@/Components/SelectInput';
+import SelectInput, { SelectOption, SelectOptionGroup } from '@/Components/SelectInput';
 import SetScoreEntry from '@/Components/SetScoreEntry';
 import SubstitutionModal from '@/Components/SubstitutionModal';
 import PhotoUploader from '@/Components/PhotoUploader';
@@ -23,7 +23,7 @@ type UserOption = {
     gender?: string | null;
 };
 
-const tabs = ['Overview', 'Participants', 'Groups', 'Bracket', 'Matches'] as const;
+const tabs = ['Overview', 'Participants', 'Groups', 'Bracket', 'Setup', 'Matches'] as const;
 const statusOptions = ['upcoming', 'active', 'completed'].map((status) => ({ value: status, label: status }));
 const startStageOptions = [
     { value: 'group', label: 'Group Stage' },
@@ -102,11 +102,12 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     const editSetForm = useForm({ home_points: '', away_points: '' });
     const awardForm = useForm({ title: '', winner_label: '' });
 
-
     const startsFromBracket = (league.start_stage ?? 'group') === 'bracket';
     const usesDirectEntries = league.entry_type === 'single' || league.entry_type === 'double';
     const usesTeamEntries = league.entry_type === 'team';
     const usesTournamentEntries = usesDirectEntries || usesTeamEntries;
+    const showSetupTab = usesTournamentEntries;
+    const visibleTabs = tabs.filter((tab) => tab !== 'Setup' || showSetupTab);
     const hasExistingGroups = (league.groups?.length ?? 0) > 0;
     const hasExistingGroupMatches = (league.matches ?? []).some((match) => match.stage === 'group');
     const hasExistingBracketMatches = (league.matches ?? []).some((match) => ['upper', 'lower', 'third_place', 'lower_third_place'].includes(match.stage ?? ''));
@@ -116,6 +117,100 @@ export default function Show({ league, users, teams, divisionOptions, standings,
     const upperBracketEntryCount = startsFromBracket ? (league.participant_total || league.entries?.length || 0) : bracketGroupCount * (league.advance_upper_count ?? 0);
     const lowerBracketEntryCount = startsFromBracket ? 0 : bracketGroupCount * (league.advance_lower_count ?? 0);
     const bracketSeedSize = upperBracketEntryCount;
+
+    // Entries eligible for the upper bracket: all entries for bracket-start leagues,
+    // or only those above each group's cut line (top advance_upper_count) for group-start leagues.
+    const presetEntries = useMemo<LeagueEntry[]>(() => {
+        if (startsFromBracket) return league.entries ?? [];
+        const grouped = standings.length > 0 && 'entries' in standings[0];
+        if (!grouped) return league.entries ?? [];
+        const advanceCount = league.advance_upper_count ?? 0;
+        return (standings as LeagueStandingGroup[])
+            .flatMap((group) =>
+                [...(group.entries ?? [])]
+                    .sort(compareGroupStandingRows)
+                    .slice(0, advanceCount)
+                    .map((row) => row.entry)
+            )
+            .filter(Boolean);
+    }, [startsFromBracket, standings, league.entries, league.advance_upper_count]);
+    const presetBracketSize = presetEntries.length;
+    const presetSlotCount = useMemo(() => {
+        let power = 1;
+        while (power < presetBracketSize) power *= 2;
+        return Math.max(power, 2);
+    }, [presetBracketSize]);
+    const [presetEnabled, setPresetEnabled] = useState(league.bracket_preset_enabled ?? false);
+    const [presetRevealAt, setPresetRevealAt] = useState(league.bracket_preset_reveal_at?.toString() ?? '');
+    const [presetSlots, setPresetSlots] = useState<(number | null)[]>(() => {
+        const stored = league.bracket_preset_slots ?? [];
+        return Array.from({ length: presetSlotCount }, (_, i) => stored[i] ?? null);
+    });
+
+    const presetEntryLabel = (entry: LeagueEntry): string => {
+        if (entry.group_name) return entry.group_name;
+        if (entry.team?.name) return entry.team.name;
+        if ((entry.players ?? []).length > 0) return entry.players!.map((p) => p.name).join(' / ');
+        return [entry.player1?.name, entry.player2?.name].filter(Boolean).join(' / ') || `Entry #${entry.id}`;
+    };
+
+    const entryGroupName = useMemo(() => {
+        const map: Record<number, string> = {};
+        (league.groups ?? []).forEach((group) => {
+            (group.group_entries ?? []).forEach((groupEntry) => {
+                if (groupEntry.entry?.id != null) map[groupEntry.entry.id] = group.name;
+            });
+        });
+        return map;
+    }, [league.groups]);
+
+    const presetSlotOptionsForSlot = (index: number): (SelectOption | SelectOptionGroup)[] => {
+        const selectedElsewhere = new Set(
+            presetSlots.filter((value, i): value is number => i !== index && value != null)
+        );
+        const available = presetEntries.filter((entry) => !selectedElsewhere.has(entry.id));
+
+        const byGroup = new Map<string, SelectOption[]>();
+        const ungrouped: SelectOption[] = [];
+
+        available.forEach((entry) => {
+            const option = { value: String(entry.id), label: presetEntryLabel(entry) };
+            const group = entryGroupName[entry.id];
+            if (group) {
+                if (!byGroup.has(group)) byGroup.set(group, []);
+                byGroup.get(group)!.push(option);
+            } else {
+                ungrouped.push(option);
+            }
+        });
+
+        const groups = [...byGroup.entries()]
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([label, options]) => ({ label, options }));
+
+        return [{ value: '', label: 'BYE' }, ...ungrouped, ...groups];
+    };
+
+    const updatePresetSlot = (index: number, value: number | null) => {
+        setPresetSlots((prev) => {
+            const next = [...prev];
+            if (value !== null) {
+                const existing = next.indexOf(value);
+                if (existing !== -1 && existing !== index) next[existing] = null;
+            }
+            next[index] = value;
+            return next;
+        });
+    };
+
+    const submitPreset = (resetCounter = false) => {
+        router.patch(route('admin.leagues.brackets.preset.update', league.id), {
+            bracket_preset_enabled: presetEnabled,
+            bracket_preset_reveal_at: presetRevealAt ? Number(presetRevealAt) : null,
+            bracket_preset_slots: presetSlots,
+            reset_counter: resetCounter,
+        }, { preserveScroll: true });
+    };
     const bracketMatches = (league.matches ?? []).filter((match) => ['upper', 'lower', 'third_place', 'lower_third_place'].includes(match.stage ?? '') && match.round != null);
     const bracketMatchesByRound = bracketMatches.reduce((acc, match) => {
         const round = match.round as number;
@@ -434,7 +529,7 @@ export default function Show({ league, users, teams, divisionOptions, standings,
 
             <div className="flex flex-col lg:flex-row lg:items-start lg:gap-8">
                 <div className="mb-6 flex shrink-0 flex-wrap gap-2 lg:mb-0 lg:w-56 lg:flex-col">
-                    {tabs.map((tab) => (
+                    {visibleTabs.map((tab) => (
                         <button key={tab} onClick={() => setActiveTab(tab)} className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors lg:rounded-xl lg:py-3 lg:text-left lg:text-sm lg:tracking-tight ${activeTab === tab ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-[0px_8px_16px_rgba(0,86,164,0.15)]' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'}`}>
                             {tab}
                         </button>
@@ -597,9 +692,73 @@ export default function Show({ league, users, teams, divisionOptions, standings,
                                             </div>
                                         )}
                                     </form>
+
                                     {upperBracket.length > 0 ? <BracketTree league={league} title="Upper Bracket" rounds={upperBracket} champion={league.upper_champion} thirdPlaceMatch={league.third_place_match} /> : <EmptyState text={startsFromBracket ? "Complete participants, then seed brackets to create manual assignment slots." : "Seed brackets after group standings are ready."} />}
                                     {lowerBracket.length > 0 ? <BracketTree league={league} title="Lower Bracket" rounds={lowerBracket} champion={league.lower_champion} thirdPlaceMatch={league.lower_third_place_match} /> : null}
                                 </>
+                            ) : (
+                                <EmptyState text="This league category does not use tournament brackets." />
+                            )}
+                        </div>
+                    ) : null}
+
+                    {activeTab === 'Setup' ? (
+                        <div className="grid gap-4">
+                            {showSetupTab ? (
+                                <div className="flex flex-col gap-4 rounded-xl bg-surface-container-lowest p-6 shadow-[0px_12px_32px_rgba(15,23,42,0.04)]">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                        <div>
+                                            <h4 className="text-sm font-bold uppercase tracking-widest text-on-surface-variant">Bracket Setting</h4>
+                                            <p className="text-xs text-on-surface-variant mt-1">Land on a predetermined bracket after a set number of seed attempts.</p>
+                                        </div>
+                                        <span className="rounded-full bg-surface-container-low px-3 py-1 text-xs font-medium text-on-surface">
+                                            Seed attempts: {league.bracket_seed_count ?? 0}
+                                        </span>
+                                    </div>
+
+                                    <label className="flex items-center gap-2 text-sm text-on-surface">
+                                        <input type="checkbox" checked={presetEnabled} onChange={(event) => setPresetEnabled(event.target.checked)} className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary" />
+                                        Enable bracket preset
+                                    </label>
+
+                                    {presetEnabled ? (
+                                        <>
+                                            <Field label="Reveal on attempt (N)">
+                                                <input type="number" min={1} value={presetRevealAt} onChange={(event) => setPresetRevealAt(event.target.value)} className="w-full md:w-32 bg-surface-container-low border-0 border-b-2 border-outline-variant/20 rounded-t-md px-3 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors text-on-surface text-sm" />
+                                            </Field>
+
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                {Array.from({ length: presetSlotCount }).map((_, index) => (
+                                                    <label key={index} className="grid gap-1">
+                                                        <span className="text-xs font-medium text-on-surface">Slot {index + 1}</span>
+                                                        <SelectInput
+                                                            options={presetSlotOptionsForSlot(index)}
+                                                            value={presetSlots[index] != null ? String(presetSlots[index]) : ''}
+                                                            onChange={(value) => updatePresetSlot(index, value ? Number(value) : null)}
+                                                        />
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : null}
+
+                                    <div className="flex flex-wrap gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => submitPreset(false)}
+                                            className="shrink-0 rounded-full bg-gradient-to-br from-primary to-primary-container px-6 py-2 h-[42px] text-[0.8125rem] font-bold uppercase tracking-widest text-on-primary shadow-sm hover:scale-[0.98] transition-all"
+                                        >
+                                            Save Preset
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => submitPreset(true)}
+                                            className="shrink-0 rounded-full border border-outline-variant/20 bg-surface-container-low px-6 py-2 h-[42px] text-[0.8125rem] font-bold uppercase tracking-widest text-on-surface transition-colors hover:bg-surface-container"
+                                        >
+                                            Reset Counter
+                                        </button>
+                                    </div>
+                                </div>
                             ) : (
                                 <EmptyState text="This league category does not use tournament brackets." />
                             )}

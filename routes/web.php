@@ -95,6 +95,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/leagues/{league}/brackets', [AdminLeagueBracketController::class, 'store'])->name('leagues.brackets.store');
         Route::patch('/leagues/{league}/brackets/schedule', [AdminLeagueBracketController::class, 'updateSchedule'])->name('leagues.brackets.schedule.update');
         Route::post('/leagues/{league}/bracket/adjust', [AdminLeagueBracketController::class, 'adjust'])->name('leagues.brackets.adjust');
+        Route::patch('/leagues/{league}/bracket/preset', [AdminLeagueBracketController::class, 'updatePreset'])->name('leagues.brackets.preset.update');
 
         Route::patch('/matches/{match}/schedule', [AdminLeagueMatchController::class, 'updateSchedule'])->name('matches.schedule.update');
         Route::post('/matches/{match}/substitutions', [AdminLeagueMatchController::class, 'substitute'])->name('matches.substitutions.store');

@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\DB;
 
 class BracketService
 {
-    public function seedBrackets(League $league, Collection $upperEntries, Collection $lowerEntries, \Illuminate\Support\Collection $scheduleMap = null, int $intervalMinutes = 0, bool $assignSlots = false): array
+    public function seedBrackets(League $league, Collection $upperEntries, Collection $lowerEntries, \Illuminate\Support\Collection $scheduleMap = null, int $intervalMinutes = 0, bool $assignSlots = false, ?array $presetSlots = null): array
     {
-        return DB::transaction(function () use ($league, $upperEntries, $lowerEntries, $scheduleMap, $intervalMinutes, $assignSlots) {
+        return DB::transaction(function () use ($league, $upperEntries, $lowerEntries, $scheduleMap, $intervalMinutes, $assignSlots, $presetSlots) {
             $league->update([
                 'third_place_match_id' => null,
                 'lower_third_place_match_id' => null,
@@ -21,7 +21,7 @@ class BracketService
             $league->matches()->whereIn('stage', ['upper', 'lower', 'third_place', 'lower_third_place'])->delete();
 
             $roundOffsets = [];
-            $upper = $this->seedBracket($league, 'upper', $upperEntries->values(), $scheduleMap, $intervalMinutes, $roundOffsets, $assignSlots);
+            $upper = $this->seedBracket($league, 'upper', $upperEntries->values(), $scheduleMap, $intervalMinutes, $roundOffsets, $assignSlots, $presetSlots);
             $lower = $this->seedBracket($league, 'lower', $lowerEntries->values(), $scheduleMap, $intervalMinutes, $roundOffsets, $assignSlots);
 
             $maxRounds = max(
@@ -197,7 +197,7 @@ class BracketService
         });
     }
 
-    private function seedBracket(League $league, string $stage, Collection $entries, \Illuminate\Support\Collection $scheduleMap = null, int $intervalMinutes = 0, array &$roundOffsets = [], bool $assignSlots = false): Collection
+    private function seedBracket(League $league, string $stage, Collection $entries, \Illuminate\Support\Collection $scheduleMap = null, int $intervalMinutes = 0, array &$roundOffsets = [], bool $assignSlots = false, ?array $presetSlots = null): Collection
     {
         if ($entries->isEmpty()) {
             return collect();
@@ -242,12 +242,21 @@ class BracketService
         }
 
         if ($assignSlots) {
-            $slotValues = $this->seedSlots($entries, $slotCount)->values();
-            foreach ($rounds[1] as $index => $match) {
-                $match->update([
-                    'home_entry_id' => $slotValues[$index * 2]?->id,
-                    'away_entry_id' => $slotValues[$index * 2 + 1]?->id,
-                ]);
+            if ($presetSlots !== null) {
+                foreach ($rounds[1] as $index => $match) {
+                    $match->update([
+                        'home_entry_id' => $presetSlots[$index * 2] ?? null,
+                        'away_entry_id' => $presetSlots[$index * 2 + 1] ?? null,
+                    ]);
+                }
+            } else {
+                $slotValues = $this->seedSlots($entries, $slotCount)->values();
+                foreach ($rounds[1] as $index => $match) {
+                    $match->update([
+                        'home_entry_id' => $slotValues[$index * 2]?->id,
+                        'away_entry_id' => $slotValues[$index * 2 + 1]?->id,
+                    ]);
+                }
             }
         }
 

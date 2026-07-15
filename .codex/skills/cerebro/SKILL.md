@@ -13,7 +13,7 @@ Long coding sessions often outlive a single agent's usage budget. The user might
 
 ## Step 0 — First-time setup
 
-Before save/recall will work, Cerebro MCP must be installed in the agents the user wants to use. Check whether the cerebro tools are already available (look for `mcp__cerebro__memory_create` in Claude Code, or `cerebro.*` tools in other agents).
+Before save/recall will work, Cerebro MCP must be installed in the agents the user wants to use. Check whether the cerebro tools are already available (look for `mcp__cerebro__session_create` in Claude Code, or `cerebro.*` tools in other agents).
 
 **If not yet set up**, ask the user which agents they want to install Cerebro into, then show only the relevant instructions from the list below. Don't dump all six agents at once — pick the ones they asked for.
 
@@ -153,25 +153,25 @@ Generate one at `http://localhost:3000` → **Settings → Agent Tokens**. One t
 
 3. **Resolve the project ID** via `mcp__cerebro__project_list`. If no project matches the slug, show the existing projects and ask the user whether to pick one or create a new one. If they want a new project, call `mcp__cerebro__project_create` with the slug as the name — no need to open the browser. Never silently fall back to a different project.
 
-4. **Call `memory_create`**:
+4. **Call `session_create`**:
    - `project`: the slug or ID
    - `summary`: the YAML from step 1
    - `sourceAgent`: current agent name (`claude-code`, `codex`, `opencode`, `cursor`, `windsurf`)
    - `tags`: `["session-handoff", "<source-agent-name>"]`
    - `metadata`: `{"cwd": "<current working directory>"}`
 
-5. **Confirm** the memory ID to the user. Tell them:
-   - They can verify it in the Cerebro dashboard (the ID is shown on each memory card).
-   - In any agent, they can load it instantly by just providing the ID: `"load memory <id>"` → `memory_get({ memoryId: "<id>" })` — no project needed.
+5. **Confirm** the session ID to the user. Tell them:
+   - They can verify it in the Cerebro dashboard (the ID is shown on each session card).
+   - In any agent, they can load it instantly by just providing the ID: `"load session <id>"` → `session_get({ sessionId: "<id>" })` — no project needed.
 
 ---
 
 ## Resuming a handoff
 
-0. **If the user gives you a memory ID directly** (e.g. "resume memory k97abc123"), call `mcp__cerebro__memory_get({ memoryId: "<id>" })` immediately — skip steps 1–3.
+0. **If the user gives you a session ID directly** (e.g. "resume session k97abc123"), call `mcp__cerebro__session_get({ sessionId: "<id>" })` immediately — skip steps 1–3.
 1. Otherwise, determine the project slug (cwd folder name, or ask).
 2. Resolve to a project ID via `project_list` if needed.
-3. Call `memory_search` with query `"session-handoff"`. Filter results to those with `session-handoff` in their tags, sort by `createdAt` descending, take the newest.
+3. Call `session_search` with query `"session-handoff"`. Filter results to those with `session-handoff` in their tags, sort by `createdAt` descending, take the newest.
 4. Re-state goal and status in one or two sentences and ask if the user wants to start with the first next-step. Don't dump the whole YAML — they want continuity, not a recap wall.
 5. If multiple handoffs match, list them briefly (date + agent + one-line goal) and ask which to resume.
 6. If nothing matches, say so and offer to search by keyword.
@@ -181,6 +181,14 @@ Generate one at `http://localhost:3000` → **Settings → Agent Tokens**. One t
 ## Why structured YAML
 
 Named fields let any agent parse the handoff reliably without re-reading a wall of prose. The next agent has no shared memory of the prior conversation — only this summary. If a field doesn't apply, write `none` or omit it.
+
+## Related: curated project knowledge
+
+This skill handles **session handoffs** — saving/resuming where an agent left off. For curated,
+compounding project *knowledge* (ingesting sources into a project's memory, building an
+interlinked wiki, filing answers back), use the **`cerebro-wiki`** skill instead. The two are
+complementary: sessions created here also serve as the wiki's chronological log (`session_create`
+records each ingest on the project timeline).
 
 ## Reference
 

@@ -5,6 +5,11 @@ export type SelectOption = {
     label: string;
 };
 
+export type SelectOptionGroup = {
+    label: string;
+    options: SelectOption[];
+};
+
 export const selectInputStyles: StylesConfig<SelectOption, false> = {
     control: (base, state) => ({
         ...base,
@@ -35,14 +40,15 @@ export default function SelectInput({
     isClearable = false,
     disabled = false,
 }: {
-    options: SelectOption[];
+    options: (SelectOption | SelectOptionGroup)[];
     value: string | number | null | undefined;
     onChange: (value: string) => void;
     placeholder?: string;
     isClearable?: boolean;
     disabled?: boolean;
 }) {
-    const selected = options.find((option) => option.value === String(value ?? '')) ?? null;
+    const flatOptions = options.flatMap((option) => ('options' in option ? option.options : [option]));
+    const selected = flatOptions.find((option) => option.value === String(value ?? '')) ?? null;
 
     return (
         <ReactSelect<SelectOption, false>
